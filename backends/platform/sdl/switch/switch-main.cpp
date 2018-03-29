@@ -21,6 +21,7 @@
  */
 
 #include <switch.h>
+#include <nxlink_print.h>
 
 #define FORBIDDEN_SYMBOL_EXCEPTION_stdout
 #define FORBIDDEN_SYMBOL_EXCEPTION_stderr
@@ -32,8 +33,9 @@
 
 int main(int argc, char *argv[]) {
 	
-	consoleDebugInit(debugDevice_SVC);
-	stdout = stderr;
+	//consoleDebugInit(debugDevice_SVC);
+	//stdout = stderr;
+	nxlink_print_init();
 
 	// Create our OSystem instance
 	g_system = new OSystem_SWITCH();
@@ -51,6 +53,8 @@ int main(int argc, char *argv[]) {
 
 	// Free OSystem
 	delete (OSystem_SWITCH *)g_system;
+
+	nxlink_print_exit();
 
 	return res;
 }

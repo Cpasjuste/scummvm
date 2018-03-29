@@ -2329,7 +2329,7 @@ case $_host_os in
 	switch)
 		_sdlpath="$DEVKITPRO/portlibs/switch/bin"
 		_freetypepath="$DEVKITPRO/portlibs/switch/bin"
-		_optimization_level=-O2
+		_optimization_level=-O3
 		append_var DEFINES "-D__SWITCH__"
 		append_var DEFINES "-DARM"
 		append_var CXXFLAGS "-march=armv8-a"
@@ -2854,7 +2854,8 @@ if test -n "$_host"; then
 			_build_hq_scalers=yes
 			_vkeybd=yes
 			_mt32emu=no
-			#_vorbis=no
+			_vorbis=no
+			_tremor=yes
 			#_timidity=no
 			#_eventrec=no
 			_port_mk="backends/platform/sdl/switch/switch.mk"
@@ -3347,10 +3348,6 @@ case $_backend in
 	3ds)
 		;;
 	switch)
-		#append_var LIBS ""
-		#append_var DEFINES "-DSDL_BACKEND"
-		#add_line_to_config_mk "SDL_BACKEND = 1"
-		#add_line_to_config_mk "USE_SDL2 = 1"
 		append_var MODULES "backends/platform/sdl"
 		;;
 	android)
@@ -5101,6 +5098,9 @@ case $_backend in
 		if test "$_tremor" = yes -o "$_flac" = yes; then
 			append_var LIBS "-logg"
 		fi
+		;;
+	switch)
+		append_var LIBS "-lnxlink_print -lnx"
 		;;
 	android)
 		# ssp at this point so the cxxtests link
