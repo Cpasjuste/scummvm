@@ -216,6 +216,10 @@ psp2pkg/
 *.velf
 *.vpk
 
+#Ignore Switch files
+scummvm.elf
+scummvm.nro
+
 #Ignore gmon.out created by gprof
 gmon.out
 /scummvm_libs_2015

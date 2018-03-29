@@ -493,7 +493,7 @@ get_system_exe_extension() {
 	riscos)
 		_exeext=",e1f"
 		;;
-	3ds | dreamcast | ds | gamecube | n64 | ps2 | psp | wii)
+	3ds | switch | dreamcast | ds | gamecube | n64 | ps2 | psp | wii)
 		_exeext=".elf"
 		;;
 	gph-linux)
@@ -884,7 +884,7 @@ Usage: $0 [OPTIONS]...
 
 Configuration:
   -h, --help              display this help and exit
-  --backend=BACKEND       backend to build (3ds, android, dc, dingux, ds, gcw0,
+  --backend=BACKEND       backend to build (3ds, switch, android, dc, dingux, ds, gcw0,
                           gph, iphone, ios7, linuxmoto, maemo, n64, null, openpandora,
                           ps2, psp, psp2, samsungtv, sdl, tizen, webos, wii, wince) [sdl]
 
@@ -913,6 +913,7 @@ Fine tuning of the installation directories:
 Special configuration feature:
   --host=HOST             cross-compile to target HOST (arm-linux, ...)
                           special targets: 3ds for Nintendo 3DS
+                                           switch for Nintendo Switch
                                            android-arm for Android ARM
                                            android-mips for Android MIPS
                                            android-x86 for Android x86
@@ -1402,6 +1403,15 @@ case $_host in
 	_host_cpu=arm
 	_host_alias=arm-none-eabi
 	;;
+switch)
+	_host_os=switch
+	_host_cpu=arm
+	_host_alias=aarch64-none-elf
+	test "x$prefix" = xNONE && prefix=/switch/scummvm
+	datarootdir='${prefix}/data'
+	datadir='${datarootdir}'
+	docdir='${prefix}/doc'
+	;;
 android | android-arm | android-v7a | android-arm-v7a | ouya)
 	_host_os=android
 	_host_cpu=arm
@@ -1723,7 +1733,7 @@ android)
 		exit 1
 	fi
 	;;
-3ds | ds | gamecube | wii)
+3ds | switch | ds | gamecube | wii)
 	if test -z "$DEVKITPRO"; then
 		echo "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to devkitPRO>"
 		exit 1
@@ -1991,7 +2001,7 @@ if test "$have_gcc" = yes ; then
 			case $_host_os in
 			# newlib-based system include files suppress non-C89 function
 			# declarations under __STRICT_ANSI__
-			3ds | amigaos* | android | androidsdl | dreamcast | ds | gamecube | mingw* | n64 | psp | ps2 | ps3 | psp2 | tizen | wii | wince )
+			3ds | switch | amigaos* | android | androidsdl | dreamcast | ds | gamecube | mingw* | n64 | psp | ps2 | ps3 | psp2 | tizen | wii | wince )
 				;;
 			*)
 				append_var CXXFLAGS "-ansi"
@@ -2315,6 +2325,27 @@ case $_host_os in
 		fi
 		append_var LDFLAGS "-L$DEVKITPRO/portlibs/3ds/lib"
 		append_var LIBS "-lcitro3d -lctru"
+		;;
+	switch)
+		_sdlpath="$DEVKITPRO/portlibs/switch/bin"
+		_freetypepath="$DEVKITPRO/portlibs/switch/bin"
+		_optimization_level=-O2
+		append_var DEFINES "-D__SWITCH__"
+		append_var DEFINES "-DARM"
+		append_var CXXFLAGS "-march=armv8-a"
+		append_var CXXFLAGS "-mtune=cortex-a57"
+		append_var CXXFLAGS "-mtp=soft"
+		append_var CXXFLAGS "-ffunction-sections"
+		append_var CXXFLAGS "-fPIE"
+		append_var CXXFLAGS "-I$DEVKITPRO/libnx/include"
+		append_var CXXFLAGS "-I$DEVKITPRO/portlibs/switch/include"
+		if test "$_dynamic_modules" = no ; then
+			append_var LDFLAGS "-Wl,--gc-sections"
+		else
+			append_var LDFLAGS "-Wl,--no-gc-sections"
+		fi
+		append_var LDFLAGS "-L$DEVKITPRO/portlibs/switch/lib"
+		add_line_to_config_mk 'SWITCH = 1'
 		;;
 	amigaos*)
 		append_var LDFLAGS "-Wl,--export-dynamic"
@@ -2817,6 +2848,18 @@ if test -n "$_host"; then
 			_vorbis=no
 			_port_mk="backends/platform/3ds/3ds.mk"
 			;;
+		switch)
+			_backend="switch"
+			_build_scalers=yes
+			_build_hq_scalers=yes
+			_vkeybd=yes
+			_mt32emu=no
+			#_vorbis=no
+			#_timidity=no
+			#_eventrec=no
+			_port_mk="backends/platform/sdl/switch/switch.mk"
+			append_var DEFINES "-DSWITCH"
+			;;
 		android | android-arm | android-v7a | android-arm-v7a | android-mips | android-x86 | ouya)
 			# we link a .so as default
 			append_var LDFLAGS "-shared"
@@ -3303,6 +3346,13 @@ fi
 case $_backend in
 	3ds)
 		;;
+	switch)
+		#append_var LIBS ""
+		#append_var DEFINES "-DSDL_BACKEND"
+		#add_line_to_config_mk "SDL_BACKEND = 1"
+		#add_line_to_config_mk "USE_SDL2 = 1"
+		append_var MODULES "backends/platform/sdl"
+		;;
 	android)
 		append_var DEFINES "-DREDUCE_MEMORY_USAGE"
 		append_var CXXFLAGS "-Wa,--noexecstack"
@@ -3480,7 +3530,7 @@ append_var MODULES "backends/platform/$_backend"
 # Setup SDL specifics for SDL based backends
 #
 case $_backend in
-	androidsdl | dingux | gph | linuxmoto | maemo | openpandora | samsungtv | sdl)
+	androidsdl | dingux | gph | linuxmoto | maemo | openpandora | samsungtv | sdl | switch)
 		find_sdlconfig
 		append_var INCLUDES "`$_sdlconfig --prefix="$_sdlpath" --cflags`"
 		if test "$_static_build" = yes ; then
@@ -3528,7 +3578,7 @@ esac
 # Enable 16bit support only for backends which support it
 #
 case $_backend in
-	3ds | android | androidsdl | dingux | dc | gph | iphone | ios7 | maemo | openpandora | psp | psp2 | samsungtv | sdl | tizen | webos | wii)
+	3ds | switch | android | androidsdl | dingux | dc | gph | iphone | ios7 | maemo | openpandora | psp | psp2 | samsungtv | sdl | tizen | webos | wii)
 		if test "$_16bit" = auto ; then
 			_16bit=yes
 		else
@@ -3607,7 +3657,7 @@ case $_host_os in
 	amigaos* | cygwin* | dreamcast | ds | gamecube | mingw* | n64 | ps2 | ps3 | psp2 | psp | riscos | wii | wince)
 		_posix=no
 		;;
-	3ds | android | androidsdl | beos* | bsd* | darwin* | freebsd* | gnu* | gph-linux | haiku* | hpux* | iphone | ios7 | irix*| k*bsd*-gnu* | linux* | maemo | mint* | netbsd* | openbsd* | solaris* | sunos* | uclinux* | webos)
+	3ds | switch | android | androidsdl | beos* | bsd* | darwin* | freebsd* | gnu* | gph-linux | haiku* | hpux* | iphone | ios7 | irix*| k*bsd*-gnu* | linux* | maemo | mint* | netbsd* | openbsd* | solaris* | sunos* | uclinux* | webos)
 		_posix=yes
 		;;
 	os2-emx*)
