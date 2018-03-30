@@ -2329,7 +2329,6 @@ case $_host_os in
 	switch)
 		_sdlpath="$DEVKITPRO/portlibs/switch/bin"
 		_freetypepath="$DEVKITPRO/portlibs/switch/bin"
-		_optimization_level=-O3
 		append_var DEFINES "-D__SWITCH__"
 		append_var DEFINES "-DARM"
 		append_var CXXFLAGS "-march=armv8-a"
@@ -2339,12 +2338,13 @@ case $_host_os in
 		append_var CXXFLAGS "-fPIE"
 		append_var CXXFLAGS "-I$DEVKITPRO/libnx/include"
 		append_var CXXFLAGS "-I$DEVKITPRO/portlibs/switch/include"
-		if test "$_dynamic_modules" = no ; then
-			append_var LDFLAGS "-Wl,--gc-sections"
-		else
-			append_var LDFLAGS "-Wl,--no-gc-sections"
-		fi
 		append_var LDFLAGS "-L$DEVKITPRO/portlibs/switch/lib"
+		#if test "$_debug_build" = yes; then
+			append_var DEFINES "-D__SWITCH_DEBUG__"
+			append_var LIBS	"-lnxlink_print"
+		#else
+			_optimization_level=-O3
+		#fi
 		add_line_to_config_mk 'SWITCH = 1'
 		;;
 	amigaos*)
@@ -5098,9 +5098,6 @@ case $_backend in
 		if test "$_tremor" = yes -o "$_flac" = yes; then
 			append_var LIBS "-logg"
 		fi
-		;;
-	switch)
-		append_var LIBS "-lnxlink_print -lnx"
 		;;
 	android)
 		# ssp at this point so the cxxtests link
