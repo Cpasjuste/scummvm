@@ -2330,7 +2330,6 @@ case $_host_os in
 		_sdlpath="$DEVKITPRO/portlibs/switch/bin"
 		_freetypepath="$DEVKITPRO/portlibs/switch/bin"
 		append_var DEFINES "-D__SWITCH__"
-		append_var DEFINES "-DARM"
 		append_var CXXFLAGS "-march=armv8-a"
 		append_var CXXFLAGS "-mtune=cortex-a57"
 		append_var CXXFLAGS "-mtp=soft"
@@ -2854,10 +2853,13 @@ if test -n "$_host"; then
 			_build_hq_scalers=yes
 			_vkeybd=yes
 			_mt32emu=no
-			_vorbis=no
-			_tremor=yes
-			#_timidity=no
-			#_eventrec=no
+			_timidity=no
+			#_mad=no
+			#_flac=no
+			#_vorbis=no
+			#_tremor=yes
+			#_seq_midi=no
+			_eventrec=no
 			_port_mk="backends/platform/sdl/switch/switch.mk"
 			append_var DEFINES "-DSWITCH"
 			;;
