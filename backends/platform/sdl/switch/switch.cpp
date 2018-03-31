@@ -58,7 +58,7 @@ void OSystem_SWITCH::init() {
 void OSystem_SWITCH::initBackend() {
 
 	ConfMan.registerDefault("joystick_num", 0);
-	ConfMan.registerDefault("fullscreen", false);
+	ConfMan.registerDefault("fullscreen", true);
 	ConfMan.registerDefault("aspect_ratio", false);
 	ConfMan.registerDefault("gfx_mode", "3x");
 	ConfMan.registerDefault("output_rate", 48000);
@@ -67,7 +67,7 @@ void OSystem_SWITCH::initBackend() {
 		ConfMan.setInt("joystick_num", 0);
 	}
 	if (!ConfMan.hasKey("fullscreen")) {
-		ConfMan.setBool("fullscreen", false);
+		ConfMan.setBool("fullscreen", true);
 	}
 	if (!ConfMan.hasKey("aspect_ratio")) {
 		ConfMan.setBool("aspect_ratio", false);
