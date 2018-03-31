@@ -217,8 +217,10 @@ psp2pkg/
 *.vpk
 
 #Ignore Switch files
+switch_release/
 scummvm.elf
 scummvm.nro
+scummvm_switch.zip
 
 #Ignore gmon.out created by gprof
 gmon.out
