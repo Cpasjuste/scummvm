@@ -57,12 +57,16 @@ void OSystem_SWITCH::init() {
 
 void OSystem_SWITCH::initBackend() {
 
+	ConfMan.registerDefault("savepath", "./saves/");
 	ConfMan.registerDefault("joystick_num", 0);
 	ConfMan.registerDefault("fullscreen", true);
 	ConfMan.registerDefault("aspect_ratio", false);
-	ConfMan.registerDefault("gfx_mode", "3x");
+	ConfMan.registerDefault("gfx_mode", "2x");
 	ConfMan.registerDefault("output_rate", 48000);
 
+	if (!ConfMan.hasKey("savepath")) {
+		ConfMan.set("savepath", "./saves/");
+	}
 	if (!ConfMan.hasKey("joystick_num")) {
 		ConfMan.setInt("joystick_num", 0);
 	}
@@ -73,15 +77,17 @@ void OSystem_SWITCH::initBackend() {
 		ConfMan.setBool("aspect_ratio", false);
 	}
 	if (!ConfMan.hasKey("gfx_mode")) {
-		ConfMan.set("gfx_mode", "3x");
+		ConfMan.set("gfx_mode", "2x");
 	}
 	if (!ConfMan.hasKey("output_rate")) {
 		ConfMan.setInt("output_rate", 48000);
 	}
 
 	// Create the savefile manager
-	if (_savefileManager == 0)
+	if (_savefileManager == 0) {
 		_savefileManager = new POSIXSaveFileManager();
+		ConfMan.set("savepath", "/switch/scummvm/saves/");
+	}
 
 	// Invoke parent implementation of this method
 	OSystem_SDL::initBackend();

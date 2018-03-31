@@ -1405,10 +1405,10 @@ case $_host in
 	;;
 switch)
 	_host_os=switch
-	_host_cpu=aarch64
+	_host_cpu=arm
 	_host_alias=aarch64-none-elf
 	test "x$prefix" = xNONE && prefix=/switch/scummvm
-	datarootdir='${prefix}/data'
+	datarootdir='./data'
 	datadir='${datarootdir}'
 	docdir='${prefix}/doc'
 	;;
@@ -2037,7 +2037,7 @@ echo $_use_cxx11
 # However, some platforms use GNU extensions in system header files, so
 # for these we must not use -pedantic.
 case $_host_os in
-android | androidsdl | gamecube | psp | tizen | wii | webos)
+android | androidsdl | gamecube | psp | tizen | switch | wii | webos)
 	;;
 *)
 	# ICC does not support pedantic, while GCC and clang do.
@@ -2333,8 +2333,9 @@ case $_host_os in
 		append_var CXXFLAGS "-march=armv8-a"
 		append_var CXXFLAGS "-mtune=cortex-a57"
 		append_var CXXFLAGS "-mtp=soft"
+		append_var CXXFLAGS "-ffast-math"
 		append_var CXXFLAGS "-ffunction-sections"
-		append_var CXXFLAGS "-fomit-frame-pointer"
+		append_var CXXFLAGS "-fdata-sections"
 		append_var CXXFLAGS "-fPIE"
 		append_var CXXFLAGS "-I$DEVKITPRO/libnx/include"
 		append_var CXXFLAGS "-I$DEVKITPRO/portlibs/switch/include"
@@ -2852,14 +2853,14 @@ if test -n "$_host"; then
 			;;
 		switch)
 			_backend="switch"
-			_unix=yes
 			_build_scalers=yes
 			_build_hq_scalers=yes
 			_dynamic_modules=no
 			_vkeybd=yes
-			_timidity=no
-			_seq_midi=no
-			_vorbis=no
+			#_mt32emu=no
+			#_timidity=no
+			#_seq_midi=no
+			#_vorbis=no
 			_port_mk="backends/platform/sdl/switch/switch.mk"
 			;;
 		android | android-arm | android-v7a | android-arm-v7a | android-mips | android-x86 | ouya)
