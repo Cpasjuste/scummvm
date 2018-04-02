@@ -33,8 +33,8 @@
 #include "backends/fs/posix/posix-fs.h"
 
 int access(const char *pathname, int mode) {
-	struct stat sb;
 
+	struct stat sb;
 	if (stat(pathname, &sb) == -1) {
 		return -1;
 	}
@@ -57,16 +57,12 @@ void OSystem_SWITCH::init() {
 
 void OSystem_SWITCH::initBackend() {
 
-	ConfMan.registerDefault("savepath", "./saves/");
 	ConfMan.registerDefault("joystick_num", 0);
 	ConfMan.registerDefault("fullscreen", true);
 	ConfMan.registerDefault("aspect_ratio", false);
 	ConfMan.registerDefault("gfx_mode", "2x");
 	ConfMan.registerDefault("output_rate", 48000);
 
-	if (!ConfMan.hasKey("savepath")) {
-		ConfMan.set("savepath", "./saves/");
-	}
 	if (!ConfMan.hasKey("joystick_num")) {
 		ConfMan.setInt("joystick_num", 0);
 	}
@@ -84,9 +80,10 @@ void OSystem_SWITCH::initBackend() {
 	}
 
 	// Create the savefile manager
+	ConfMan.registerDefault("savepath", "saves");
 	if (_savefileManager == 0) {
 		_savefileManager = new POSIXSaveFileManager();
-		ConfMan.set("savepath", "/switch/scummvm/saves/");
+		ConfMan.set("savepath", "saves");
 	}
 
 	// Invoke parent implementation of this method

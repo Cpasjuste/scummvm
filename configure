@@ -2333,7 +2333,7 @@ case $_host_os in
 		append_var CXXFLAGS "-march=armv8-a"
 		append_var CXXFLAGS "-mtune=cortex-a57"
 		append_var CXXFLAGS "-mtp=soft"
-		append_var CXXFLAGS "-ffast-math"
+		#append_var CXXFLAGS "-ffast-math"
 		append_var CXXFLAGS "-ffunction-sections"
 		append_var CXXFLAGS "-fdata-sections"
 		append_var CXXFLAGS "-fPIE"
@@ -2348,7 +2348,6 @@ case $_host_os in
 		else
 			_optimization_level=-O3
 		fi
-
 		;;
 	amigaos*)
 		append_var LDFLAGS "-Wl,--export-dynamic"
