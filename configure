@@ -1407,8 +1407,8 @@ switch)
 	_host_os=switch
 	_host_cpu=arm
 	_host_alias=aarch64-none-elf
-	test "x$prefix" = xNONE && prefix=/switch/scummvm
-	datarootdir='./data'
+	test "x$prefix" = xNONE && prefix=.
+	datarootdir='${prefix}/data'
 	datadir='${datarootdir}'
 	docdir='${prefix}/doc'
 	;;
@@ -2330,23 +2330,22 @@ case $_host_os in
 		_sdlpath="$DEVKITPRO/portlibs/switch/bin"
 		_freetypepath="$DEVKITPRO/portlibs/switch/bin"
 		append_var DEFINES "-DSWITCH -D__SWITCH__"
-		append_var CXXFLAGS "-march=armv8-a"
-		append_var CXXFLAGS "-mtune=cortex-a57"
-		append_var CXXFLAGS "-mtp=soft"
-		#append_var CXXFLAGS "-ffast-math"
 		append_var CXXFLAGS "-ffunction-sections"
 		append_var CXXFLAGS "-fdata-sections"
-		append_var CXXFLAGS "-fPIE"
+		#append_var CXXFLAGS "-ffast-math"
+		#append_var CXXFLAGS "-fomit-frame-pointer"
+		#append_var CXXFLAGS "-fno-strict-aliasing"
+		append_var CXXFLAGS "-fPIE -pedantic-errors"
 		append_var CXXFLAGS "-I$DEVKITPRO/libnx/include"
 		append_var CXXFLAGS "-I$DEVKITPRO/portlibs/switch/include"
 		append_var LDFLAGS "-L$DEVKITPRO/portlibs/switch/lib"
 		add_line_to_config_mk 'SWITCH = 1'
-		add_line_to_config_h "#define PREFIX \"${prefix}\""
+		#add_line_to_config_h "#define PREFIX \"${prefix}\""
 		if test "$_debug_build" = yes; then
 			append_var DEFINES "-D__SWITCH_DEBUG__"
 			append_var LIBS	"-lnxlink_print"
-		else
-			_optimization_level=-O3
+		#else
+		#	_optimization_level=-O2
 		fi
 		;;
 	amigaos*)
@@ -2856,9 +2855,10 @@ if test -n "$_host"; then
 			_build_hq_scalers=yes
 			_dynamic_modules=no
 			_vkeybd=yes
+			_timidity=no
+			_seq_midi=no
+			_eventrec=no
 			#_mt32emu=no
-			#_timidity=no
-			#_seq_midi=no
 			#_vorbis=no
 			_port_mk="backends/platform/sdl/switch/switch.mk"
 			;;

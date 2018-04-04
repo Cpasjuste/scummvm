@@ -80,12 +80,10 @@ void OSystem_SWITCH::initBackend() {
 	}
 
 	// Create the savefile manager
-	ConfMan.registerDefault("savepath", "saves");
 	if (_savefileManager == 0) {
 		_savefileManager = new POSIXSaveFileManager();
-		ConfMan.set("savepath", "saves");
 	}
-
+	
 	// Invoke parent implementation of this method
 	OSystem_SDL::initBackend();
 }
