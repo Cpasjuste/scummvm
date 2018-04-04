@@ -28,6 +28,7 @@
 #include "common/config-manager.h"
 #include "common/debug-channels.h"
 #include "backends/platform/sdl/switch/switch.h"
+#include "backends/events/switchsdl/switchsdl-events.h"
 #include "backends/saves/posix/posix-saves.h"
 #include "backends/fs/posix/posix-fs-factory.h"
 #include "backends/fs/posix/posix-fs.h"
@@ -62,6 +63,7 @@ void OSystem_SWITCH::initBackend() {
 	ConfMan.registerDefault("aspect_ratio", false);
 	ConfMan.registerDefault("gfx_mode", "2x");
 	ConfMan.registerDefault("output_rate", 48000);
+	ConfMan.registerDefault("touchpad_mouse_mode", true);
 
 	if (!ConfMan.hasKey("joystick_num")) {
 		ConfMan.setInt("joystick_num", 0);
@@ -78,12 +80,20 @@ void OSystem_SWITCH::initBackend() {
 	if (!ConfMan.hasKey("output_rate")) {
 		ConfMan.setInt("output_rate", 48000);
 	}
+	if (!ConfMan.hasKey("touchpad_mouse_mode")) {
+		ConfMan.setBool("touchpad_mouse_mode", true);
+	}
 
 	// Create the savefile manager
 	if (_savefileManager == 0) {
 		_savefileManager = new POSIXSaveFileManager();
 	}
-	
+
+	// Event source
+	if (_eventSource == 0) {
+		_eventSource = new SWITCHEventSource();
+	}
+
 	// Invoke parent implementation of this method
 	OSystem_SDL::initBackend();
 }
