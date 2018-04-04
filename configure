@@ -2335,17 +2335,16 @@ case $_host_os in
 		#append_var CXXFLAGS "-ffast-math"
 		#append_var CXXFLAGS "-fomit-frame-pointer"
 		#append_var CXXFLAGS "-fno-strict-aliasing"
-		append_var CXXFLAGS "-fPIE -pedantic-errors"
+		append_var CXXFLAGS "-fPIE"
 		append_var CXXFLAGS "-I$DEVKITPRO/libnx/include"
 		append_var CXXFLAGS "-I$DEVKITPRO/portlibs/switch/include"
 		append_var LDFLAGS "-L$DEVKITPRO/portlibs/switch/lib"
 		add_line_to_config_mk 'SWITCH = 1'
-		#add_line_to_config_h "#define PREFIX \"${prefix}\""
 		if test "$_debug_build" = yes; then
 			append_var DEFINES "-D__SWITCH_DEBUG__"
 			append_var LIBS	"-lnxlink_print"
-		#else
-		#	_optimization_level=-O2
+		else
+			_optimization_level=-O3
 		fi
 		;;
 	amigaos*)

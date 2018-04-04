@@ -34,10 +34,7 @@
 #include "base/main.h"
 
 int main(int argc, char *argv[]) {
-	
-	//consoleDebugInit(debugDevice_SVC);
-	//stdout = stderr;
-	
+
 #ifdef __SWITCH_DEBUG__
 	//consoleDebugInit(debugDevice_SVC);
 	//stdout = stderr;
