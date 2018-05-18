@@ -46,13 +46,13 @@ const LanguageDescription g_languages[] = {
 	{    "jp", "ja_JP", "Japanese", JA_JPN },
 	{    "kr", "ko_KR", "Korean", KO_KOR },
 	{    "lv", "lv_LV", "Latvian", LV_LAT },
-	{    "nb", "nb_NO", "Norwegian Bokm\xE5l", NB_NOR }, // TODO Someone should verify the unix locale
+	{    "nb", "nb_NO", "Norwegian Bokm\xE5l", NB_NOR },
 	{    "pl", "pl_PL", "Polish", PL_POL },
 	{    "br", "pt_BR", "Portuguese", PT_BRA },
 	{    "ru", "ru_RU", "Russian", RU_RUS },
 	{    "es", "es_ES", "Spanish", ES_ESP },
 	{    "se", "sv_SE", "Swedish", SE_SWE },
-	{       0,       0, 0, UNK_LANG }
+	{ nullptr, nullptr, nullptr, UNK_LANG }
 };
 
 Language parseLanguage(const String &str) {
@@ -87,7 +87,7 @@ const char *getLanguageCode(Language id) {
 		if (l->id == id)
 			return l->code;
 	}
-	return 0;
+	return nullptr;
 }
 
 const char *getLanguageLocale(Language id) {
@@ -96,7 +96,7 @@ const char *getLanguageLocale(Language id) {
 		if (l->id == id)
 			return l->unixLocale;
 	}
-	return 0;
+	return nullptr;
 }
 
 const char *getLanguageDescription(Language id) {
@@ -105,7 +105,7 @@ const char *getLanguageDescription(Language id) {
 		if (l->id == id)
 			return l->description;
 	}
-	return 0;
+	return nullptr;
 }
 
 bool checkGameGUIOptionLanguage(Language lang, const String &str) {

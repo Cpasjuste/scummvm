@@ -64,13 +64,15 @@ class SliceAnimations {
 	};
 
 	struct PageFile {
+		int                  _fileNumber;
 		SliceAnimations     *_sliceAnimations;
 		Common::File         _file;
 		Common::Array<int32> _pageOffsets;
 
-		PageFile(SliceAnimations *sliceAnimations) : _sliceAnimations(sliceAnimations) {}
+		PageFile(SliceAnimations *sliceAnimations) : _sliceAnimations(sliceAnimations), _fileNumber(-1) {}
 
 		bool  open(const Common::String &name);
+		void  close();
 		void *loadPage(uint32 page);
 	};
 
@@ -102,7 +104,7 @@ public:
 	bool open(const Common::String &name);
 
 	bool openCoreAnim();
-	bool openHDFrames();
+	bool openFrames(int fileNumber);
 
 	Palette &getPalette(int i) { return _palettes[i]; };
 	void    *getFramePtr(uint32 animation, uint32 frame);

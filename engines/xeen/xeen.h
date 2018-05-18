@@ -39,6 +39,7 @@
 #include "xeen/locations.h"
 #include "xeen/map.h"
 #include "xeen/party.h"
+#include "xeen/patcher.h"
 #include "xeen/resources.h"
 #include "xeen/saves.h"
 #include "xeen/screen.h"
@@ -77,7 +78,7 @@ enum XeenDebugChannels {
 enum Mode {
 	MODE_FF = -1,
 	MODE_STARTUP = 0,
-	MODE_1 = 1,
+	MODE_INTERACTIVE = 1,
 	MODE_COMBAT = 2,
 	MODE_3 = 3,
 	MODE_4 = 4,
@@ -85,11 +86,11 @@ enum Mode {
 	MODE_6 = 6,
 	MODE_7 = 7,
 	MODE_8 = 8,
-	MODE_RECORD_EVENTS = 9,
+	MODE_SCRIPT_IN_PROGRESS = 9,
 	MODE_CHARACTER_INFO = 10,
-	MODE_12 = 12,
+	MODE_INTERACTIVE2 = 12,
 	MODE_DIALOG_123 = 13,
-	MODE_17 = 17,
+	MODE_INTERACTIVE7 = 17,
 	MODE_86 = 86
 };
 
@@ -111,8 +112,9 @@ class XeenEngine : public Engine {
 	 */
 	struct ExtendedOptions {
 		bool _showItemCosts;
+		bool _durableArmor;
 
-		ExtendedOptions() : _showItemCosts(false) {}
+		ExtendedOptions() : _showItemCosts(false), _durableArmor(false) {}
 	};
 private:
 	const XeenGameDescription *_gameDescription;
@@ -183,6 +185,7 @@ public:
 	LocationManager *_locations;
 	Map *_map;
 	Party *_party;
+	Patcher *_patcher;
 	Resources *_resources;
 	SavesManager *_saves;
 	Screen *_screen;
@@ -191,7 +194,6 @@ public:
 	Spells *_spells;
 	Windows *_windows;
 	Mode _mode;
-	GameEvent _gameEvent;
 	GameMode _gameMode;
 	bool _noDirectionSense;
 	bool _startupWindowActive;
@@ -209,6 +211,7 @@ public:
 	uint16 getVersion() const;
 	uint32 getGameID() const;
 	uint32 getGameFeatures() const;
+	bool getIsCD() const;
 
 	int getRandomNumber(int maxNumber);
 
@@ -220,9 +223,9 @@ public:
 	void GUIError(const char *msg, ...) GCC_PRINTF(2, 3);
 
 	/**
-	 * Returns true if the game should be exited (and likely return to game menu)
+	 * Returns true if the game should be exited (either quitting, exiting to the main menu, or loading a savegame)
 	 */
-	bool shouldExit() const { return _gameMode != GMODE_NONE || shouldQuit(); }
+	bool shouldExit() const { return _gameMode != GMODE_NONE || isLoadPending() || shouldQuit(); }
 
 	/**
 	 * Returns true if a savegame load is pending

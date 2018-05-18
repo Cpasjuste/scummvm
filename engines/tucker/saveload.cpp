@@ -141,7 +141,7 @@ Common::Error TuckerEngine::loadGameState(int slot) {
 }
 
 
-TuckerEngine::SavegameError TuckerEngine::readSavegameHeader(const char *target, int slot, SavegameHeader &header) {
+WARN_UNUSED_RESULT TuckerEngine::SavegameError TuckerEngine::readSavegameHeader(const char *target, int slot, SavegameHeader &header) {
 	Common::String fileName = generateGameStateFileName(target, slot);
 	Common::InSaveFile *file = g_system->getSavefileManager()->openForLoading(fileName);
 
@@ -155,8 +155,8 @@ TuckerEngine::SavegameError TuckerEngine::readSavegameHeader(const char *target,
 	return savegameError;
 }
 
-TuckerEngine::SavegameError TuckerEngine::readSavegameHeader(Common::InSaveFile *file, SavegameHeader &header, bool loadThumbnail) {
-	header.version   = -1;
+WARN_UNUSED_RESULT TuckerEngine::SavegameError TuckerEngine::readSavegameHeader(Common::InSaveFile *file, SavegameHeader &header, bool skipThumbnail) {
+	header.version   = 0;
 	header.flags     = 0;
 	header.description.clear();
 	header.saveDate  = 0;
@@ -196,10 +196,8 @@ TuckerEngine::SavegameError TuckerEngine::readSavegameHeader(Common::InSaveFile 
 		header.saveTime = file->readUint32LE();
 		header.playTime = file->readUint32LE();
 
-		if (loadThumbnail) {
-			header.thumbnail = Graphics::loadThumbnail(*file);
-		} else {
-			Graphics::skipThumbnail(*file);
+		if (!Graphics::loadThumbnail(*file, header.thumbnail, skipThumbnail)) {
+			return kSavegameIoError;
 		}
 	}
 
@@ -288,13 +286,19 @@ bool TuckerEngine::isAutosaveAllowed(const char *target) {
 
 void TuckerEngine::writeAutosave() {
 	if (canSaveGameStateCurrently()) {
+		// unconditionally reset last autosave timestamp so we don't start
+		// hammering the disk in case we can't/don't actually write the file
+		_lastSaveTime = _system->getMillis();
+
 		if (!isAutosaveAllowed()) {
 			warning("Refusing to overwrite non-autosave savegame in slot %i, skipping autosave", kAutoSaveSlot);
 			return;
 		}
 
-		writeSavegame(kAutoSaveSlot, "Autosave", true);
-		_lastSaveTime = _system->getMillis();
+		if (writeSavegame(kAutoSaveSlot, "Autosave", true).getCode() != Common::kNoError) {
+			warning("Can't create autosave in slot %i, game not saved", kAutoSaveSlot);
+			return;
+		}
 	}
 }
 

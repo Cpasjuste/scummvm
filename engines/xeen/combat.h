@@ -58,7 +58,7 @@ enum ShootType {
 };
 
 enum CombatMode {
-	COMBATMODE_STARTUP = 0, COMBATMODE_1 = 1, COMBATMODE_2 = 2
+	COMBATMODE_STARTUP = 0, COMBATMODE_INTERACTIVE = 1, COMBATMODE_2 = 2
 };
 
 enum PowType {
@@ -77,6 +77,7 @@ enum RangeType {
 class XeenEngine;
 class Character;
 class XeenItem;
+class MonsterStruct;
 
 struct PowSlot {
 	bool _active;
@@ -151,7 +152,7 @@ private:
 public:
 	Common::Array<Character *> _combatParty;
 	bool _charsBlocked[PARTY_AND_MONSTERS];
-	Common::Array<int> _charsGone;
+	int _charsGone[PARTY_AND_MONSTERS];
 	SpriteResource _powSprites;
 	int _attackMonsters[ATTACK_MONSTERS_COUNT];
 	int _monster2Attack;
@@ -203,6 +204,11 @@ public:
 	 * Clear the list of ros projectiles are on headed for part members
 	 */
 	void clearShooting();
+
+	/**
+	 * Resets all combat related data
+	 */
+	void reset();
 
 	/**
 	 * Gives damage to character or characters in the party
@@ -273,16 +279,28 @@ public:
 
 	/**
 	 * Determines whether a given monster can move
+	 * @param pt			Monster position
+	 * @param wallShift		Shift mask for determining direction being moved
+	 * @param xDiff			X Delta for move
+	 * @param yDiff			Y Delta for move
+	 * @param monsterId		Monster number being tested
 	 */
-	bool monsterCanMove(const Common::Point &pt, int wallShift,
-		int v1, int v2, int monsterId);
+	bool canMonsterMove(const Common::Point &pt, int wallShift, int xDiff, int yDiff, int monsterId);
 
 	/**
 	 * Moves a monster by a given delta amount if it's a valid move
 	 */
 	void moveMonster(int monsterId, const Common::Point &moveDelta);
 
+	/**
+	 * Handle a monster's turn at attacking combat party members
+	 */
 	void doMonsterTurn(int monsterId);
+
+	/**
+	 * Handles a monster's turn at attacking a specific member of the combat party
+	 */
+	void doMonsterTurn(int monsterId, int charNum);
 
 	/**
 	 * Called when combat has ended
@@ -305,6 +323,11 @@ public:
 	 * Fires off a ranged attack at all oncoming monsters
 	 */
 	void shootRangedWeapon();
+
+	/**
+	 * Returns true if there are any monsters in the vacinity
+	 */
+	bool areMonstersPresent() const;
 };
 
 } // End of namespace Xeen

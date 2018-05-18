@@ -37,10 +37,14 @@ namespace Mohawk {
 namespace MystStacks {
 
 Stoneship::Stoneship(MohawkEngine_Myst *vm) :
-		MystScriptParser(vm), _state(vm->_gameState->_stoneship) {
+		MystScriptParser(vm),
+		_state(vm->_gameState->_stoneship) {
 	setupOpcodes();
 
 	_tunnelRunning = false;
+	_tunnelNextTime = 0;
+	_tunnelAlarmSound = 0;
+	_tunnelImagesCount = 0;
 
 	_state.lightState = 0;
 	_state.generatorDepletionTime = 0;
@@ -61,6 +65,31 @@ Stoneship::Stoneship(MohawkEngine_Myst *vm) :
 		_state.generatorPowerAvailable = 2;
 	else
 		_state.generatorPowerAvailable = 0;
+
+	_batteryCharging = false;
+	_batteryDepleting = false;
+	_batteryNextTime = 0;
+	_batteryLastCharge = 0;
+	_batteryGaugeRunning = false;
+	_batteryGauge = nullptr;
+
+	_hologramTurnedOn = 0;
+	_hologramDisplay = nullptr;
+	_hologramSelection = nullptr;
+	_hologramDisplayPos = 0;
+
+	_telescopeRunning = false;
+	_telescopePosition = 0;
+	_telescopePanorama = 0;
+	_telescopeOldMouse = 0;
+	_telescopeLighthouseOff = 0;
+	_telescopeLighthouseOn = 0;
+	_telescopeLighthouseState = false;
+	_telescopeNexTime = 0;
+
+	_cloudOrbMovie = nullptr;
+	_cloudOrbSound = 0;
+	_cloudOrbStopSound = 0;
 }
 
 Stoneship::~Stoneship() {
@@ -251,9 +280,9 @@ uint16 Stoneship::getVar(uint16 var) {
 			return 0; // Closed
 		}
 	case 102: // Red page
-		return !(_globals.redPagesInBook & 8) && (_globals.heldPage != 10);
+		return !(_globals.redPagesInBook & 8) && (_globals.heldPage != kRedStoneshipPage);
 	case 103: // Blue page
-		return !(_globals.bluePagesInBook & 8) && (_globals.heldPage != 4);
+		return !(_globals.bluePagesInBook & 8) && (_globals.heldPage != kBlueStoneshipPage);
 	default:
 		return MystScriptParser::getVar(var);
 	}
@@ -305,18 +334,18 @@ void Stoneship::toggleVar(uint16 var) {
 		break;
 	case 102: // Red page
 		if (!(_globals.redPagesInBook & 8)) {
-			if (_globals.heldPage == 10)
-				_globals.heldPage = 0;
+			if (_globals.heldPage == kRedStoneshipPage)
+				_globals.heldPage = kNoPage;
 			else
-				_globals.heldPage = 10;
+				_globals.heldPage = kRedStoneshipPage;
 		}
 		break;
 	case 103: // Blue page
 		if (!(_globals.bluePagesInBook & 8)) {
-			if (_globals.heldPage == 4)
-				_globals.heldPage = 0;
+			if (_globals.heldPage == kBlueStoneshipPage)
+				_globals.heldPage = kNoPage;
 			else
-				_globals.heldPage = 4;
+				_globals.heldPage = kBlueStoneshipPage;
 		}
 		break;
 	default:
@@ -399,7 +428,7 @@ void Stoneship::o_pumpTurnOff(uint16 var, const ArgumentsArray &args) {
 
 		for (uint i = 0; i < _vm->_resources.size(); i++) {
 			MystArea *resource = _vm->_resources[i];
-			if (resource->type == kMystAreaImageSwitch && resource->getImageSwitchVar() == buttonVar) {
+			if (resource->hasType(kMystAreaImageSwitch) && resource->getImageSwitchVar() == buttonVar) {
 				static_cast<MystAreaImageSwitch *>(resource)->drawConditionalDataToScreen(0, true);
 				break;
 			}

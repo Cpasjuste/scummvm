@@ -39,14 +39,11 @@
 #include "sludge/sludge.h"
 #include "sludge/sludger.h"
 #include "sludge/speech.h"
-#include "sludge/transition.h"
 #include "sludge/timing.h"
 
 namespace Sludge {
 
 extern VariableStack *noStack;
-
-int dialogValue = 0;
 
 int main_loop(Common::String filename) {
 
@@ -63,7 +60,7 @@ int main_loop(Common::String filename) {
 
 	while (!g_sludge->_evtMan->quit()) {
 		g_sludge->_evtMan->checkInput();
-		walkAllPeople();
+		g_sludge->_peopleMan->walkAllPeople();
 		if (g_sludge->_evtMan->handleInput()) {
 			runSludge();
 		}

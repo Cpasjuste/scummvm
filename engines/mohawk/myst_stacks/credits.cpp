@@ -23,6 +23,7 @@
 #include "mohawk/myst.h"
 #include "mohawk/myst_areas.h"
 #include "mohawk/myst_graphics.h"
+#include "mohawk/cursors.h"
 #include "mohawk/sound.h"
 #include "mohawk/video.h"
 #include "mohawk/myst_stacks/credits.h"
@@ -34,9 +35,11 @@ namespace MystStacks {
 
 // NOTE: Credits Start Card is 10000
 
-Credits::Credits(MohawkEngine_Myst *vm) : MystScriptParser(vm) {
+Credits::Credits(MohawkEngine_Myst *vm) :
+		MystScriptParser(vm),
+		_creditsRunning(false),
+		_curImage(0) {
 	setupOpcodes();
-	_curImage = 0;
 }
 
 Credits::~Credits() {
@@ -80,13 +83,17 @@ uint16 Credits::getVar(uint16 var) {
 	case 0: // Credits Image Control
 		return _curImage;
 	case 1: // Credits Music Control (Good / bad ending)
-		return _globals.ending != 4;
+		return _globals.ending != kBooksDestroyed;
 	default:
 		return MystScriptParser::getVar(var);
 	}
 }
 
 void Credits::o_runCredits(uint16 var, const ArgumentsArray &args) {
+	// The credits stack does not have all the cursors, reset to the default cursor.
+	_globals.heldPage = kNoPage;
+	_vm->setMainCursor(kDefaultMystCursor);
+
 	// Activate the credits
 	_creditsRunning = true;
 	_curImage = 0;

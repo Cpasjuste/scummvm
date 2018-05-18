@@ -75,6 +75,7 @@
 #include "bladerunner/zbuffer.h"
 
 #include "common/array.h"
+#include "common/config-manager.h"
 #include "common/error.h"
 #include "common/events.h"
 #include "common/savefile.h"
@@ -436,13 +437,6 @@ bool BladeRunnerEngine::startup(bool hasSavegames) {
 	if (!r)
 		return false;
 
-	// TODO: Support cdframes
-
-	r = _sliceAnimations->openHDFrames();
-	if (!r) {
-		return false;
-	}
-
 	r = _sliceAnimations->openCoreAnim();
 	if (!r) {
 		return false;
@@ -482,8 +476,20 @@ void BladeRunnerEngine::initChapterAndScene() {
 		_actors[i]->movementTrackNext(true);
 	}
 
-	_settings->setChapter(1);
-	_settings->setNewSetAndScene(_gameInfo->getInitialSetId(), _gameInfo->getInitialSceneId());
+	if (ConfMan.hasKey("boot_param")) {
+		int param = ConfMan.getInt("boot_param"); // CTTTSSS
+		int chapter = param / 1000000;
+		param -= chapter * 1000000;
+		int set = param / 1000;
+		param -= set * 1000;
+		int scene = param;
+
+		_settings->setChapter(chapter);
+		_settings->setNewSetAndScene(set, scene);
+	} else {
+		_settings->setChapter(1);
+		_settings->setNewSetAndScene(_gameInfo->getInitialSetId(), _gameInfo->getInitialSceneId());
+	}
 }
 
 void BladeRunnerEngine::shutdown() {
@@ -854,6 +860,9 @@ void BladeRunnerEngine::gameTick() {
 			if (_debugger->_viewSceneObjects) {
 				_debugger->drawSceneObjects();
 			}
+			if (_debugger->_viewObstacles) {
+				_obstacles->draw();
+			}
 
 			blitToScreen(_surfaceFront);
 			_system->delayMillis(10);
@@ -1147,7 +1156,7 @@ void BladeRunnerEngine::handleMouseAction(int x, int y, bool mainButton, bool bu
 		int exitIndex = _scene->_exits->getRegionAtXY(x, y);
 		int regionIndex = _scene->_regions->getRegionAtXY(x, y);
 
-		if ((sceneObjectId < kSceneObjectOffsetActors || sceneObjectId >= kSceneObjectOffsetActors) && exitIndex >= 0) {
+		if ((sceneObjectId < kSceneObjectOffsetActors || sceneObjectId >= kSceneObjectOffsetItems) && exitIndex >= 0) {
 			handleMouseClickExit(exitIndex, x, y, buttonDown);
 		} else if (regionIndex >= 0) {
 			handleMouseClickRegion(regionIndex, x, y, buttonDown);
@@ -1555,7 +1564,6 @@ bool BladeRunnerEngine::openArchive(const Common::String &name) {
 		 * archive when it runs out of slots. */
 
 		error("openArchive: No more archive slots");
-		return false;
 	}
 
 	_archives[i].open(name);
@@ -1588,9 +1596,11 @@ Common::SeekableReadStream *BladeRunnerEngine::getResourceStream(const Common::S
 		if (!_archives[i].isOpen()) {
 			continue;
 		}
+
 		if (false) {
 			debug("getResource: Searching archive %s for %s.", _archives[i].getName().c_str(), name.c_str());
 		}
+
 		Common::SeekableReadStream *stream = _archives[i].createReadStreamForMember(name);
 		if (stream) {
 			return stream;

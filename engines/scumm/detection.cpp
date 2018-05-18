@@ -961,7 +961,7 @@ public:
 	virtual bool hasFeature(MetaEngineFeature f) const;
 	virtual GameList getSupportedGames() const;
 	virtual GameDescriptor findGame(const char *gameid) const;
-	virtual GameList detectGames(const Common::FSList &fslist) const;
+	virtual GameList detectGames(const Common::FSList &fslist, bool useUnknownGameDialog = false) const;
 
 	virtual Common::Error createInstance(OSystem *syst, Engine **engine) const;
 
@@ -1026,7 +1026,7 @@ static Common::String generatePreferredTarget(const DetectorResult &x) {
 	return res;
 }
 
-GameList ScummMetaEngine::detectGames(const Common::FSList &fslist) const {
+GameList ScummMetaEngine::detectGames(const Common::FSList &fslist, bool /*useUnknownGameDialog*/) const {
 	GameList detectedGames;
 	Common::List<DetectorResult> results;
 
@@ -1324,6 +1324,14 @@ SaveStateDescriptor ScummMetaEngine::querySaveMetaInfos(const char *target, int 
 	}
 
 	SaveStateDescriptor desc(slot, saveDesc);
+
+	// Do not allow save slot 0 (used for auto-saving) to be deleted or
+	// overwritten.
+	if (slot == 0) {
+		desc.setWriteProtectedFlag(true);
+		desc.setDeletableFlag(false);
+	}
+
 	desc.setThumbnail(thumbnail);
 
 	if (infoPtr) {

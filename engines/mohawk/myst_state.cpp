@@ -78,8 +78,10 @@ MystGameState::MystGameState(MohawkEngine_Myst *vm, Common::SaveFileManager *sav
 	// Unknown
 	_globals.u0 = 2;
 	// Current Age / Stack - Start in Myst
-	_globals.currentAge = 7;
+	_globals.currentAge = kMystStart;
+	_globals.heldPage = kNoPage;
 	_globals.u1 = 1;
+	_globals.ending = kDniNotVisited;
 
 	// Library Bookcase Door - Default to Up
 	_myst.libraryBookcaseDoor = 1;
@@ -121,13 +123,13 @@ bool MystGameState::load(int slot) {
 
 	// Set our default cursor
 	_vm->_cursor->showCursor();
-	if (_globals.heldPage == 0 || _globals.heldPage > 13)
+	if (_globals.heldPage == kNoPage)
 		_vm->setMainCursor(kDefaultMystCursor);
-	else if (_globals.heldPage < 7)
+	else if (_globals.heldPage < kRedLibraryPage) //A blue page is held
 		_vm->setMainCursor(kBluePageCursor);
-	else if (_globals.heldPage < 13)
+	else if (_globals.heldPage < kWhitePage) //A red page is held
 		_vm->setMainCursor(kRedPageCursor);
-	else // if (globals.heldPage == 13)
+	else
 		_vm->setMainCursor(kWhitePageCursor);
 
 	return true;
@@ -272,7 +274,12 @@ SaveStateDescriptor MystGameState::querySaveMetaInfos(int slot) {
 	desc.setSaveDate(metadata.saveYear, metadata.saveMonth, metadata.saveDay);
 	desc.setSaveTime(metadata.saveHour, metadata.saveMinute);
 	desc.setPlayTime(metadata.totalPlayTime);
-	desc.setThumbnail(Graphics::loadThumbnail(*metadataFile));
+	Graphics::Surface *thumbnail;
+	if (!Graphics::loadThumbnail(*metadataFile, thumbnail)) {
+		delete metadataFile;
+		return SaveStateDescriptor();
+	}
+	desc.setThumbnail(thumbnail);
 
 	delete metadataFile;
 

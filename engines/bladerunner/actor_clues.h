@@ -32,6 +32,8 @@ class SaveFileReadStream;
 class SaveFileWriteStream;
 
 class ActorClues {
+	static const int kClueCount = 288;
+
 	struct Clue {
 		int clueId;
 		int weight;
@@ -52,6 +54,12 @@ class ActorClues {
 	Common::Array<Clue> _clues;
 
 public:
+	struct CluesUS {
+		int clueId;
+		int modifier;
+	};
+
+public:
 	ActorClues(BladeRunnerEngine *_vm, int cluesType);
 
 	void add(int actorId, int clueId, int unknown, bool acquired, bool unknownFlag, int fromActorId);
@@ -59,6 +67,12 @@ public:
 	void acquire(int clueId, bool flag2, int fromActorId);
 	void lose(int clueId);
 	bool isAcquired(int clueId) const;
+	int getWeight(int clueId) const;
+
+	int getModifier(int actorId, int otherActorId, int clueId);
+
+	void acquireCluesByRelations(int actorId, int otherActorId);
+	int findAcquirableCluesFromActor(int actorId, int targetActorId, CluesUS *list, int size);
 
 	int getFromActorId(int clueId) const;
 
@@ -73,6 +87,7 @@ public:
 	int getField1(int clueId) const;
 
 	int getCount() const;
+	int getClueIdByIndex(int index) const;
 
 	void removeAll();
 

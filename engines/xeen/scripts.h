@@ -220,7 +220,6 @@ private:
 	MazeEvent *_event;
 	Common::Point _currentPos;
 	Common::Stack<StackEntry> _stack;
-	Common::String _message;
 	Common::String _displayMessage;
 
 	typedef EventParameters::Iterator ParamsIterator;
@@ -545,6 +544,11 @@ private:
 	 * Displays a message
 	 */
 	void display(bool justifyFlag, int var46);
+
+	/**
+	 * Convert a CD time from the World of Xeen playCD opcodes to ScummVM CD frame number (which is at 75Hz)
+	 */
+	uint convertCDTime(uint srcTime);
 public:
 	int _animCounter;
 	bool _eventSkipped;
@@ -552,6 +556,7 @@ public:
 	DamageType _nEdamageType;
 	int _itemType;
 	Common::Array<MirrorEntry> _mirror;
+	Common::String _message;
 public:
 	Scripts(XeenEngine *vm);
 

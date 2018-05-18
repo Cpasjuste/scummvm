@@ -227,13 +227,19 @@ SaveStateDescriptor LilliputMetaEngine::querySaveMetaInfos(const char *target, i
 		}
 
 		uint32 saveNameLength = file->readUint16BE();
-		char saveName[256];
-		file->read(saveName, saveNameLength);
-		saveName[saveNameLength] = 0;
+		Common::String saveName;
+		for (uint32 i = 0; i < saveNameLength; ++i) {
+			char curChr = file->readByte();
+			saveName += curChr;
+		}
 
 		SaveStateDescriptor desc(slot, saveName);
 
-		Graphics::Surface *const thumbnail = Graphics::loadThumbnail(*file);
+		Graphics::Surface *thumbnail;
+		if (!Graphics::loadThumbnail(*file, thumbnail)) {
+			delete file;
+			return SaveStateDescriptor();
+		}
 		desc.setThumbnail(thumbnail);
 
 		desc.setDeletableFlag(true);

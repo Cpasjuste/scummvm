@@ -37,6 +37,17 @@ void AttributePair::synchronize(Common::Serializer &s) {
 
 /*------------------------------------------------------------------------*/
 
+int CharacterArray::indexOf(const Character &c) {
+	for (uint idx = 0; idx < size(); ++idx) {
+		if ((*this)[idx] == c)
+			return idx;
+	}
+
+	return -1;
+}
+
+/*------------------------------------------------------------------------*/
+
 Character::Character(): _weapons(this), _armor(this), _accessories(this), _misc(this), _items(this) {
 	clear();
 	_faceSprites = nullptr;
@@ -226,8 +237,8 @@ void Character::synchronize(Common::Serializer &s) {
 
 	s.syncAsUint16LE(_townUnknown);
 	s.syncAsByte(_savedMazeId);
-	s.syncAsUint16LE(_currentHp);
-	s.syncAsUint16LE(_currentSp);
+	s.syncAsSint16LE(_currentHp);
+	s.syncAsSint16LE(_currentSp);
 	s.syncAsUint16LE(_birthYear);
 	s.syncAsUint32LE(_experience);
 	s.syncAsByte(_currentAdventuringSpell);
@@ -399,7 +410,7 @@ int Character::statColor(int amount, int threshold) {
 		return 2;
 	else if (amount == threshold)
 		return 15;
-	else if (amount <= (threshold / 4))
+	else if (amount >= (threshold / 4))
 		return 9;
 	else
 		return 32;
@@ -543,7 +554,7 @@ int Character::itemScan(int itemId) const {
 	for (int idx = 0; idx < INV_ITEMS_TOTAL; ++idx) {
 		const XeenItem &item = _weapons[idx];
 
-		if (item._frame && !(item._bonusFlags & 0xC0) && itemId < 11
+		if (item._frame && !item.isBad() && itemId < 11
 				&& itemId != 3 && item._material >= 59 && item._material <= 130) {
 			int mIndex = (int)item.getAttributeCategory();
 			if (mIndex > PERSONALITY)
@@ -558,7 +569,7 @@ int Character::itemScan(int itemId) const {
 	for (int idx = 0; idx < INV_ITEMS_TOTAL; ++idx) {
 		const XeenItem &item = _armor[idx];
 
-		if (item._frame && !(item._bonusFlags & 0xC0)) {
+		if (item._frame && !item.isBad()) {
 			if (itemId < 11 && itemId != 3 && item._material >= 59 && item._material <= 130) {
 				int mIndex = (int)item.getAttributeCategory();
 				if (mIndex > PERSONALITY)
@@ -589,7 +600,7 @@ int Character::itemScan(int itemId) const {
 	for (int idx = 0; idx < INV_ITEMS_TOTAL; ++idx) {
 		const XeenItem &item = _accessories[idx];
 
-		if (item._frame && !(item._bonusFlags & 0xC0)) {
+		if (item._frame && !item.isBad()) {
 			if (itemId < 11 && itemId != 3 && item._material >= 59 && item._material <= 130) {
 				int mIndex = (int)item.getAttributeCategory();
 				if (mIndex > PERSONALITY)
@@ -861,7 +872,20 @@ bool Character::guildMember() const {
 	FileManager &files = *g_vm->_files;
 	Party &party = *g_vm->_party;
 
-	if (files._ccNum) {
+	if (g_vm->getGameID() == GType_Swords) {
+		switch (party._mazeId) {
+		case 49:
+			return true;
+		case 53:
+			return hasAward(83);
+		case 63:
+			return hasAward(85);
+		case 92:
+			return hasAward(84);
+		default:
+			return hasAward(87);
+		}
+	} else if (files._ccNum) {
 		switch (party._mazeId) {
 		case 29:
 			return hasAward(CASTLEVIEW_GUILD_MEMBER);
@@ -944,6 +968,7 @@ int Character::getNumAwards() const {
 ItemCategory Character::makeItem(int p1, int itemIndex, int p3) {
 	XeenEngine *vm = Party::_vm;
 	Scripts &scripts = *vm->_scripts;
+	int itemOffset = vm->getGameID() == GType_Swords ? 6 : 0;
 
 	if (!p1)
 		return CATEGORY_WEAPON;
@@ -952,22 +977,22 @@ ItemCategory Character::makeItem(int p1, int itemIndex, int p3) {
 	int v4 = vm->getRandomNumber(100);
 	int v6 = vm->getRandomNumber(p1 < 6 ? 100 : 80);
 	ItemCategory category;
-	int v16 = 0, v14 = 0, miscBonus = 0, miscId = 0, v8 = 0, v12 = 0;
+	int v16 = 0, v14 = 0, miscCharges = 0, miscId = 0, v8 = 0, v12 = 0;
 
 	// Randomly pick a category and item Id
 	if (p3 == 12) {
-		if (scripts._itemType < 35) {
+		if (scripts._itemType < (35 + itemOffset)) {
 			category = CATEGORY_WEAPON;
 			itemId = scripts._itemType;
-		} else if (scripts._itemType < 49) {
+		} else if (scripts._itemType < (49 + itemOffset)) {
 			category = CATEGORY_ARMOR;
-			itemId = scripts._itemType - 35;
-		} else if (scripts._itemType < 60) {
+			itemId = scripts._itemType - (35 + itemOffset);
+		} else if (scripts._itemType < (60 + itemOffset)) {
 			category = CATEGORY_ACCESSORY;
-			itemId = scripts._itemType - 49;
+			itemId = scripts._itemType - (49 + itemOffset);
 		} else {
 			category = CATEGORY_MISC;
-			itemId = scripts._itemType - 60;
+			itemId = scripts._itemType - (60 + itemOffset);
 		}
 	} else {
 		switch (p3) {
@@ -1144,7 +1169,7 @@ ItemCategory Character::makeItem(int p1, int itemIndex, int p3) {
 			break;
 
 		case 4:
-			miscBonus = vm->getRandomNumber(Res.MAKE_ITEM_ARR5[p1][0], Res.MAKE_ITEM_ARR5[p1][1]);
+			miscCharges = vm->getRandomNumber(Res.MAKE_ITEM_ARR5[p1][0], Res.MAKE_ITEM_ARR5[p1][1]);
 			break;
 
 		default:
@@ -1157,7 +1182,7 @@ ItemCategory Character::makeItem(int p1, int itemIndex, int p3) {
 		if (p1 != 1) {
 			newItem._material = (v14 ? v14 + 58 : 0) + (v16 ? v16 + 36 : 0) + v12;
 			if (vm->getRandomNumber(20) == 10)
-				newItem._bonusFlags = vm->getRandomNumber(1, 6);
+				newItem._state._counter = vm->getRandomNumber(1, 6);
 		}
 		break;
 
@@ -1170,7 +1195,7 @@ ItemCategory Character::makeItem(int p1, int itemIndex, int p3) {
 
 	case CATEGORY_MISC:
 		newItem._id = miscId;
-		newItem._bonusFlags = miscBonus;
+		newItem._state._counter = miscCharges;
 		break;
 
 	default:
@@ -1211,7 +1236,7 @@ void Character::subtractHitPoints(int amount) {
 
 	// Subtract the given HP amount
 	_currentHp -= amount;
-	bool flag = _currentHp <= 10;
+	bool breakFlag = _currentHp <= (g_vm->_extOptions._durableArmor ? -80 : -10);
 	assert(_currentHp < 65000);
 
 	if (_currentHp < 1) {
@@ -1221,17 +1246,17 @@ void Character::subtractHitPoints(int amount) {
 			sound.playFX(38);
 		} else {
 			_conditions[DEAD] = 1;
-			flag = true;
+			breakFlag = true;
 			if (_currentHp > 0)
 				_currentHp = 0;
 		}
 
-		if (flag) {
-			// Check for breaking equipped armor
+		if (breakFlag) {
+			// Break any equipped armor the character has
 			for (int idx = 0; idx < INV_ITEMS_TOTAL; ++idx) {
 				XeenItem &item = _armor[idx];
 				if (item._id && item._frame)
-					item._bonusFlags |= ITEMFLAG_BROKEN;
+					item._state._broken = true;
 			}
 		}
 	}
@@ -1239,7 +1264,7 @@ void Character::subtractHitPoints(int amount) {
 
 bool Character::hasSlayerSword() const {
 	for (uint idx = 0; idx < INV_ITEMS_TOTAL; ++idx) {
-		if (_weapons[idx]._id == 34)
+		if (_weapons[idx]._id == XEEN_SLAYER_SWORD)
 			// Character has Xeen Slayer sword
 			return true;
 	}

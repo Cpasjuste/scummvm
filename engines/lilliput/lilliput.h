@@ -75,17 +75,16 @@ enum InterfaceHotspotStatus {
 	kHotspotSelected = 3
 };
 
+#define kSeqNone	0
+#define kSeqNoInc	1 << 0
+#define kSeqRepeat	1 << 1
+
 struct LilliputGameDescription;
 
 struct SmallAnim {
 	bool _active;
 	Common::Point _pos;
 	int16 _frameIndex[8];
-};
-
-struct MinMax {
-	int16 min;
-	int16 max;
 };
 
 class LilliputEngine : public Engine {
@@ -117,18 +116,15 @@ public:
 	byte _keyboard_oldIndex;
 	Common::Event _keyboard_buffer[8];
 	byte _byte12A05;
-	byte _byte12A06;
-	byte _byte12A07;
-	byte _byte12A08;
 	bool _refreshScreenFlag;
 	byte _byte16552;
 	int8 _lastInterfaceHotspotIndex;
 	byte _lastInterfaceHotspotButton; // Unused: set by 2 functions, but never used elsewhere
 	byte _debugFlag; // Mostly useless, as the associated functions are empty
-	byte _byte14837; // Unused byte, set by an opcode
+	byte _debugFlag2; // Unused byte, set by an opcode
 
 	byte _codeEntered[3];
-	char _array1692B[4];
+	char _homeInDirLikelyhood[4];
 	byte *_bufferIsoMap;
 	byte *_bufferCubegfx;
 	byte *_bufferMen;
@@ -149,25 +145,24 @@ public:
 	int _nextCharacterIndex;
 	int8 _waitingSignal;
 	int8 _waitingSignalCharacterId;
-	uint16 _word1817B;
+	uint16 _newModesEvaluatedNumber;
 	Common::Point _savedSurfaceUnderMousePos;
 	bool _displayGreenHand;
 	bool _isCursorGreenHand;
 	int _currentDisplayCharacter;
 	int _displayStringIndex;
-	int _word1289D;
-	Common::Point _word16937Pos;
+	int _signalTimer;
+	Common::Point _curCharacterTilePos;
 
 	int16 _mapSavedPixelIndex[40];
 	byte _mapSavedPixel[40];
-	int16 _array11D49[40];
-	int16 _array1289F[40];
+	int16 _characterSignals[40];
+	int16 _signalArr[40];
 	int16 _signalArray[30];
 
-	byte *_rulesChunk1;
+	byte *_sequencesArr;
 	int16 _currentScriptCharacter;
-	int16 _characterPositionX[40];
-	int16 _characterPositionY[40];
+	Common::Point _characterPos[40];
 	int8 _characterPosAltitude[40];
 	int16 _characterFrameArray[40];
 	int8 _characterCarried[40];
@@ -175,11 +170,10 @@ public:
 	byte _characterAboveDist[40];
 	byte _spriteSizeArray[40];
 	byte _characterDirectionArray[40];
-	byte _rulesBuffer2_10[40];
+	byte _characterMobility[40];
 	byte _characterTypes[40];
 	byte _characterBehaviour[40];
-	byte _characterHomePosX[40];
-	byte _characterHomePosY[40];
+	Common::Point _characterHomePos[40];
 	byte _characterVariables[1400 + 3120];
 	byte *_currentCharacterAttributes;
 	byte _poseArray[40 * 32];
@@ -193,34 +187,28 @@ public:
 	int *_arrayGameScriptIndex;
 	int _gameScriptIndexSize;
 	byte *_arrayGameScripts;
-	byte _rulesChunk9[60];
-	byte _rulesChunk10_size;
-	int16 *_rulesChunk10;
-	byte *_rulesChunk11;
+	byte _cubeFlags[60];
+	byte _listNumb;
+	int16 *_listIndex;
+	byte *_listArr;
 	int16 _rectNumb;
-	MinMax _rectXMinMax[40];
-	MinMax _rectYMinMax[40];
-	Common::Point _rulesBuffer12Pos3[40];
-	Common::Point _rulesBuffer12Pos4[40];
+	Common::Rect _enclosureRect[40];
+	Common::Point _keyPos[40];
+	Common::Point _portalPos[40];
 	int _interfaceHotspotNumb;
 	byte _interfaceTwoStepAction[20];
-	int16 _interfaceHotspotsX[20];
-	int16 _interfaceHotspotsY[20];
+	Common::Point _interfaceHotspots[20];
 	Common::KeyCode _keyboardMapping[20];
-	int16 _characterTargetPosX[40];
-	int16 _characterTargetPosY[40];
+	Common::Point _characterTargetPos[40];
 	byte _savedSurfaceUnderMouse[16 * 16];
 	byte _charactersToDisplay[40];
-	int16 _characterRelativePositionX[40];
-	int16 _characterRelativePositionY[40];
-	int16 _characterDisplayX[40];
-	int16 _characterDisplayY[40];
+	Common::Point _characterRelativePos[40];
+	Common::Point _characterDisplay[40];
 	int8 _characterMagicPuffFrame[40];
-	int16 _characterSubTargetPosX[40];
-	int16 _characterSubTargetPosY[40];
-	byte _stingArray[40];
-	byte _array16C54[4];
-	byte _array16C58[4];
+	Common::Point _characterSubTargetPos[40];
+	byte _specialCubes[40];
+	byte _doorEntranceMask[4];
+	byte _doorExitMask[4];
 	byte _savedSurfaceGameArea1[176 * 256]; // 45056
 	byte _savedSurfaceGameArea2[176 * 256]; // 45056
 	byte _savedSurfaceGameArea3[176 * 256]; // 45056
@@ -256,7 +244,7 @@ public:
 	void displaySmallIndexedAnim(byte index, byte subIndex);
 
 	void unselectInterfaceHotspots();
-	void sub15F75();
+	void startNavigateFromMap();
 	void resetSmallAnims();
 	void paletteFadeOut();
 	void paletteFadeIn();
@@ -265,34 +253,34 @@ public:
 	void scrollToViewportCharacterTarget();
 	void viewportScrollTo(Common::Point goalPos);
 	void checkSpeechClosing();
-	void sub16626();
-	void sub16A08(int index);
-	byte sub16A76(int indexb, int indexs);
-	void sub17224(byte type, byte index, int var4);
-	void sub17264(byte index, int var4);
-	int16 findHotspot(Common::Point pos);
-	int16 reverseFindHotspot(Common::Point pos);
-	byte sub16722(int index, Common::Point var1);
-	byte sub166EA(int index);
-	void sub167EF(int index);
+	void updateCharPosSequence();
+	void evaluateDirections(int index);
+	byte homeInAvoidDeadEnds(int indexb, int indexs);
+	void signalDispatcher(byte type, byte index, int var4);
+	void sendMessageToCharacter(byte index, int var4);
+	int16 checkEnclosure(Common::Point pos);
+	int16 checkOuterEnclosure(Common::Point pos);
+	byte sequenceSetMobility(int index, Common::Point var1);
+	byte sequenceEnd(int index);
+	void homeInPathFinding(int index);
 
 	void renderCharacters(byte *buf, Common::Point pos);
 
 	void checkNumericCode();
 	void keyboard_handleInterfaceShortcuts(bool &forceReturnFl);
-	byte sub16799(int index, Common::Point param1);
+	byte sequenceCharacterHomeIn(int index, Common::Point param1);
 	byte getDirection(Common::Point param1, Common::Point param2);
 	void addCharToBuf(byte character);
 	void numberToString(int param1);
-	void sub12F37();
-	byte sub16675_moveCharacter(int idx, Common::Point var1);
-	void sub16685(int idx, Common::Point var1);
-	void sub16EBC();
-	void sub16CA0();
-	byte sub166DD(int index, Common::Point var1);
-	void sub171CF();
+	void handleCharacterTimers();
+	byte sequenceMoveCharacter(int idx, int moveType, int poseType);
+	void setCharacterPose(int idx, int poseIdx);
+	void checkSpecialCubes();
+	void checkInteractions();
+	byte sequenceSetCharacterDirection(int index, int direction, int poseType);
+	void handleSignals();
 	void checkInterfaceActivationDelay();
-	int16 sub16DD5(int x1, int y1, int x2, int y2);
+	int16 checkObstacle(int x1, int y1, int x2, int y2);
 	void displayCharactersOnMap();
 	void restoreMapPoints();
 	void displayHeroismIndicator();
@@ -316,12 +304,12 @@ public:
 	void moveCharacterSpeed4(int index);
 	void moveCharacterBack2(int index);
 	void moveCharacterSpeed3(int index);
-	void sub16B31_moveCharacter(int index, int16 speed);
-	void sub16B8F_moveCharacter(int index, Common::Point pos, int direction);
-	byte sub1675D(int index, Common::Point var1);
-	byte sub16729(int index, Common::Point var1);
-	byte sub166F7(int index, Common::Point var1, int tmpVal);
-	void sub1693A_chooseDirections(int index);
+	void moveCharacterForward(int index, int16 speed);
+	void checkCollision(int index, Common::Point pos, int direction);
+	byte sequenceSeekMovingCharacter(int index, Common::Point var1);
+	byte sequenceSound(int index, Common::Point var1);
+	byte sequenceRepeat(int index, Common::Point var1, int tmpVal);
+	void homeInChooseDirection(int index);
 
 	void initGame(const LilliputGameDescription *gd);
 	byte *loadVGA(Common::String filename, int fileSize, bool loadPal);

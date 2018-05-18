@@ -27,19 +27,39 @@
 
 namespace Xeen {
 
+void ItemState::synchronize(Common::Serializer &s) {
+	byte b = _counter | (_cursed ? 0x40 : 0) | (_broken ? 0x80 : 0);
+	s.syncAsByte(b);
+
+	if (s.isLoading()) {
+		_counter = b & 63;
+		_cursed = (b & 0x40) != 0;
+		_broken = (b & 0x80) != 0;
+	}
+}
+
+void ItemState::operator=(byte val) {
+	_counter = val & 63;
+	_cursed = (val & 0x40) != 0;
+	_broken = (val & 0x80) != 0;
+}
+
+/*------------------------------------------------------------------------*/
+
 XeenItem::XeenItem() {
 	clear();
 }
 
 void XeenItem::clear() {
-	_material = _id = _bonusFlags = 0;
+	_material = _id = 0;
+	_state.clear();
 	_frame = 0;
 }
 
 void XeenItem::synchronize(Common::Serializer &s) {
 	s.syncAsByte(_material);
 	s.syncAsByte(_id);
-	s.syncAsByte(_bonusFlags);
+	_state.synchronize(s);
 	s.syncAsByte(_frame);
 }
 
@@ -66,22 +86,36 @@ AttributeCategory XeenItem::getAttributeCategory() const {
 }
 
 const char *XeenItem::getItemName(ItemCategory category, uint id) {
-	if (id < 82)
-		return Res.ITEM_NAMES[category][id];
-
 	const char **questItems = (g_vm->getGameID() == GType_Swords) ? Res.QUEST_ITEM_NAMES_SWORDS : Res.QUEST_ITEM_NAMES;
-	switch (category) {
-	case CATEGORY_WEAPON:
-		return questItems[id - 82];
+	const uint QUEST_OFFSET = g_vm->getGameID() == GType_Swords ? 88 : 82;
 
-	case CATEGORY_ARMOR:
-		return questItems[id - 82 + 35];
-
-	case CATEGORY_ACCESSORY:
-		return questItems[id - 82 + 35 + 14];
-
-	default:
-		return questItems[id - 82 + 35 + 14 + 11];
+	if (id < QUEST_OFFSET) {
+		switch (category) {
+		case CATEGORY_WEAPON:
+			assert(id < 41);
+			return Res.WEAPON_NAMES[id];
+		case CATEGORY_ARMOR:
+			assert(id < 14);
+			return Res.ARMOR_NAMES[id];
+		case CATEGORY_ACCESSORY:
+			assert(id < 11);
+			return Res.ACCESSORY_NAMES[id];
+		default:
+			assert(id < 22);
+			return Res.MISC_NAMES[id];
+		}
+	} else {
+		switch (category) {
+		case CATEGORY_WEAPON:
+			return questItems[id - QUEST_OFFSET];
+		case CATEGORY_ARMOR:
+			return questItems[id - QUEST_OFFSET + 35];
+		case CATEGORY_ACCESSORY:
+			return questItems[id - QUEST_OFFSET + 35 + 14];
+		default:
+			assert(g_vm->getGameID() != GType_Swords);
+			return questItems[id - QUEST_OFFSET + 35 + 14 + 11];
+		}
 	}
 }
 
@@ -170,7 +204,7 @@ bool InventoryItems::discardItem(int itemIndex) {
 	XeenItem &item = operator[](itemIndex);
 	XeenEngine *vm = Party::_vm;
 
-	if (item._bonusFlags & ITEMFLAG_CURSED) {
+	if (item._state._cursed) {
 		ErrorScroll::show(vm, Res.CANNOT_DISCARD_CURSED_ITEM);
 	} else {
 		Common::String itemDesc = getFullDescription(itemIndex, 4);
@@ -189,7 +223,7 @@ bool InventoryItems::discardItem(int itemIndex) {
 
 void InventoryItems::sort() {
 	for (uint idx = 0; idx < size(); ++idx) {
-		if (operator[](idx)._id == 0) {
+		if (operator[](idx).empty()) {
 			// Found empty slot
 			operator[](idx).clear();
 
@@ -210,7 +244,7 @@ void InventoryItems::removeItem(int itemIndex) {
 	XeenItem &item = operator[](itemIndex);
 	XeenEngine *vm = Party::_vm;
 
-	if (item._bonusFlags & ITEMFLAG_CURSED)
+	if (item._state._cursed)
 		ErrorScroll::show(vm, Res.CANNOT_REMOVE_CURSED_ITEM);
 	else
 		item._frame = 0;
@@ -244,7 +278,7 @@ void InventoryItems::enchantItem(int itemIndex, int amount) {
 
 bool InventoryItems::isFull() const {
 	assert(size() == INV_ITEMS_TOTAL);
-	return operator[](size() - 1)._id != 0;
+	return !operator[](size() - 1).empty();
 }
 
 void InventoryItems::capitalizeItem(Common::String &name) {
@@ -311,14 +345,13 @@ Common::String WeaponItems::getFullDescription(int itemIndex, int displayNum) {
 	Resources &res = *getVm()->_resources;
 
 	Common::String desc = Common::String::format("\f%02u%s%s%s\f%02u%s%s%s", displayNum,
-		!i._bonusFlags ? res._maeNames[i._material].c_str() : "",
-		(i._bonusFlags & ITEMFLAG_BROKEN) ? Res.ITEM_BROKEN : "",
-		(i._bonusFlags & ITEMFLAG_CURSED) ? Res.ITEM_CURSED : "",
+		i._state._cursed || i._state._broken ? "" : res._maeNames[i._material].c_str(),
+		i._state._broken ? Res.ITEM_BROKEN : "",
+		i._state._cursed ? Res.ITEM_CURSED : "",
 		displayNum,
 		Res.WEAPON_NAMES[i._id],
-		!i._bonusFlags ? "" : Res.BONUS_NAMES[i._bonusFlags & ITEMFLAG_BONUS_MASK],
-		(i._bonusFlags & (ITEMFLAG_BROKEN | ITEMFLAG_CURSED)) ||
-			!i._bonusFlags ? "\b " : ""
+		!i._state._counter ? "" : Res.BONUS_NAMES[i._state._counter],
+		(i._state._cursed || i._state._broken) || !i._id ? "\b " : ""
 	);
 	capitalizeItem(desc);
 	return desc;
@@ -329,12 +362,12 @@ void WeaponItems::enchantItem(int itemIndex, int amount) {
 	XeenItem &item = operator[](itemIndex);
 	Character tempCharacter;
 
-	if (item._material == 0 && item._bonusFlags == 0 && item._id != 34) {
+	if (item._material == 0 && item._state.empty() && item._id < XEEN_SLAYER_SWORD) {
 		tempCharacter.makeItem(amount, 0, 1);
 		XeenItem &tempItem = tempCharacter._weapons[0];
 
 		item._material = tempItem._material;
-		item._bonusFlags = tempItem._bonusFlags;
+		item._state = tempItem._state;
 		sound.playFX(19);
 	} else {
 		InventoryItems::enchantItem(itemIndex, amount);
@@ -373,10 +406,9 @@ Common::String WeaponItems::getAttributes(XeenItem &item, const Common::String &
 	}
 
 	// Handle weapon effective against
-	int effective = item._bonusFlags & ITEMFLAG_BONUS_MASK;
+	Effectiveness effective = (Effectiveness)item._state._counter;
 	if (effective) {
-		specialPower = Common::String::format(Res.EFFECTIVE_AGAINST,
-			Res.EFFECTIVENESS_NAMES[effective]);
+		specialPower = Common::String::format(Res.EFFECTIVE_AGAINST, Res.EFFECTIVENESS_NAMES[effective]);
 	}
 
 	return Common::String::format(Res.ITEM_DETAILS, classes.c_str(),
@@ -481,13 +513,12 @@ Common::String ArmorItems::getFullDescription(int itemIndex, int displayNum) {
 	Resources &res = *getVm()->_resources;
 
 	Common::String desc = Common::String::format("\f%02u%s%s%s\f%02u%s%s", displayNum,
-		!i._bonusFlags ? "" : res._maeNames[i._material].c_str(),
-		(i._bonusFlags & ITEMFLAG_BROKEN) ? Res.ITEM_BROKEN : "",
-		(i._bonusFlags & ITEMFLAG_CURSED) ? Res.ITEM_CURSED : "",
+		i._state._cursed || i._state._broken ? "" : res._maeNames[i._material].c_str(),
+		i._state._broken ? Res.ITEM_BROKEN : "",
+		i._state._cursed ? Res.ITEM_CURSED : "",
 		displayNum,
 		Res.ARMOR_NAMES[i._id],
-		(i._bonusFlags & (ITEMFLAG_BROKEN | ITEMFLAG_CURSED)) ||
-			!i._bonusFlags ? "\b " : ""
+		(i._state._cursed || i._state._broken) || !i._id ? "\b " : ""
 	);
 	capitalizeItem(desc);
 	return desc;
@@ -498,12 +529,12 @@ void ArmorItems::enchantItem(int itemIndex, int amount) {
 	XeenItem &item = operator[](itemIndex);
 	Character tempCharacter;
 
-	if (item._material == 0 && item._bonusFlags == 0) {
+	if (item._material == 0 && item._state.empty()) {
 		tempCharacter.makeItem(amount, 0, 2);
 		XeenItem &tempItem = tempCharacter._armor[0];
 
 		item._material = tempItem._material;
-		item._bonusFlags = tempItem._bonusFlags;
+		item._state = tempItem._state;
 		sound.playFX(19);
 	} else {
 		InventoryItems::enchantItem(itemIndex, amount);
@@ -565,6 +596,8 @@ void AccessoryItems::equipItem(int itemIndex) {
 				return;
 			}
 		}
+
+		item._frame = 12;
 	} else if (item._id <= 7) {
 		int count = 0;
 		for (uint idx = 0; idx < size(); ++idx) {
@@ -595,13 +628,12 @@ Common::String AccessoryItems::getFullDescription(int itemIndex, int displayNum)
 	Resources &res = *getVm()->_resources;
 
 	Common::String desc = Common::String::format("\f%02u%s%s%s\f%02u%s%s", displayNum,
-		!i._bonusFlags ? "" : res._maeNames[i._material].c_str(),
-		(i._bonusFlags & ITEMFLAG_BROKEN) ? Res.ITEM_BROKEN : "",
-		(i._bonusFlags & ITEMFLAG_CURSED) ? Res.ITEM_CURSED : "",
+		i._state._cursed || i._state._broken ? "" : res._maeNames[i._material].c_str(),
+		i._state._broken ? Res.ITEM_BROKEN : "",
+		i._state._cursed ? Res.ITEM_CURSED : "",
 		displayNum,
 		Res.ACCESSORY_NAMES[i._id],
-		(i._bonusFlags & (ITEMFLAG_BROKEN | ITEMFLAG_CURSED)) ||
-			!i._bonusFlags ? "\b " : ""
+		(i._state._cursed || i._state._broken) || !i._id ? "\b " : ""
 	);
 	capitalizeItem(desc);
 	return desc;
@@ -640,16 +672,15 @@ Common::String AccessoryItems::getAttributes(XeenItem &item, const Common::Strin
 
 Common::String MiscItems::getFullDescription(int itemIndex, int displayNum) {
 	XeenItem &i = operator[](itemIndex);
-	Resources &res = *getVm()->_resources;
 
-	Common::String desc = Common::String::format("\f%02u%s%s%s\f%02u%s%s", displayNum,
-		!i._bonusFlags ? "" : res._maeNames[i._material].c_str(),
-		(i._bonusFlags & ITEMFLAG_BROKEN) ? Res.ITEM_BROKEN : "",
-		(i._bonusFlags & ITEMFLAG_CURSED) ? Res.ITEM_CURSED : "",
+	Common::String desc = Common::String::format("\f%02u%s%s\f%02u%s%s%s%s", displayNum,
+		i._state._broken ? Res.ITEM_BROKEN : "",
+		i._state._cursed ? Res.ITEM_CURSED : "",
 		displayNum,
-		Res.MISC_NAMES[i._id],
-		(i._bonusFlags & (ITEMFLAG_BROKEN | ITEMFLAG_CURSED)) ||
-			!i._id ? "\b " : ""
+		Res.MISC_NAMES[i._material],
+		(i._state._cursed || i._state._broken) || !i._id ? "" : Res.ITEM_OF,
+		(i._state._cursed || i._state._broken) ? "" : Res.SPECIAL_NAMES[i._id],
+		(i._state._cursed || i._state._broken) || !i._id ? "\b " : ""
 	);
 	capitalizeItem(desc);
 	return desc;
@@ -697,17 +728,37 @@ const InventoryItems &InventoryItemsGroup::operator[](ItemCategory category) con
 
 void InventoryItemsGroup::breakAllItems() {
 	for (int idx = 0; idx < INV_ITEMS_TOTAL; ++idx) {
-		if (_owner->_weapons[idx]._id != 34) {
-			_owner->_weapons[idx]._bonusFlags |= ITEMFLAG_BROKEN;
+		if (_owner->_weapons[idx]._id < XEEN_SLAYER_SWORD) {
+			_owner->_weapons[idx]._state._broken = true;
 			_owner->_weapons[idx]._frame = 0;
 		}
 
-		_owner->_armor[idx]._bonusFlags |= ITEMFLAG_BROKEN;
-		_owner->_accessories[idx]._bonusFlags |= ITEMFLAG_BROKEN;
-		_owner->_misc[idx]._bonusFlags |= ITEMFLAG_BROKEN;
+		_owner->_armor[idx]._state._broken = true;
+		_owner->_accessories[idx]._state._broken = true;
+		_owner->_misc[idx]._state._broken = true;
 		_owner->_armor[idx]._frame = 0;
 		_owner->_accessories[idx]._frame = 0;
 	}
+}
+
+void InventoryItemsGroup::curseUncurse(bool curse) {
+	for (int idx = 0; idx < INV_ITEMS_TOTAL; ++idx) {
+		_owner->_weapons[idx]._state._cursed = curse && _owner->_weapons[idx]._id < XEEN_SLAYER_SWORD;
+		_owner->_armor[idx]._state._cursed = curse;
+		_owner->_accessories[idx]._state._cursed = curse;
+		_owner->_misc[idx]._state._cursed = curse;
+	}
+}
+
+bool InventoryItemsGroup::hasCursedItems() const {
+	for (int idx = 0; idx < INV_ITEMS_TOTAL; ++idx) {
+		for (ItemCategory cat = CATEGORY_WEAPON; cat <= CATEGORY_MISC; cat = (ItemCategory)((int)cat + 1)) {
+			if ((*this)[cat][idx]._state._cursed)
+				return true;
+		}
+	}
+
+	return false;
 }
 
 } // End of namespace Xeen

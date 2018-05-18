@@ -6,9 +6,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.8.0svn\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2018-03-12 11:46+0100\n"
-"PO-Revision-Date: 2017-11-28 17:59+0300\n"
-"Last-Translator: Ivan Lukyanov <greencis@mail.ru>\n"
+"POT-Creation-Date: 2018-05-17 20:49+0200\n"
+"PO-Revision-Date: 2018-04-18 10:17+0000\n"
+"Last-Translator: Adrian Fruehwirth <bonki@scummvm.org>\n"
 "Language-Team: Russian <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/ru/>\n"
 "Language: ru_RU\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Poedit 2.0.4\n"
+"X-Generator: Weblate 2.9\n"
 "X-Language-name: Russian\n"
 
 #: gui/about.cpp:94
@@ -169,7 +169,7 @@ msgstr ""
 #: engines/sword1/control.cpp:887 engines/sword1/logic.cpp:1633
 #: engines/sword2/animation.cpp:425 engines/sword2/animation.cpp:445
 #: engines/sword2/animation.cpp:461 engines/sword2/animation.cpp:471
-#: engines/zvision/file/save_manager.cpp:224
+#: engines/zvision/file/save_manager.cpp:230
 msgid "OK"
 msgstr "OK"
 
@@ -540,7 +540,8 @@ msgstr ""
 "Вы действительно хотите сбросить все установки FluidSynth в значения по "
 "умолчанию?"
 
-#: gui/gui-manager.cpp:119 backends/keymapper/remap-dialog.cpp:53
+#: gui/gui-manager.cpp:119 engines/unknown-game-dialog.cpp:73
+#: engines/unknown-game-dialog.cpp:85 backends/keymapper/remap-dialog.cpp:53
 #: engines/scumm/help.cpp:126 engines/scumm/help.cpp:141
 #: engines/scumm/help.cpp:166 engines/scumm/help.cpp:192
 #: engines/scumm/help.cpp:210
@@ -1597,28 +1598,28 @@ msgstr ""
 msgid "Select a Theme"
 msgstr "Выберите тему"
 
-#: gui/ThemeEngine.cpp:258
+#: gui/ThemeEngine.cpp:256
 msgid "Disabled GFX"
 msgstr "Без графики"
 
-#: gui/ThemeEngine.cpp:258
+#: gui/ThemeEngine.cpp:256
 msgctxt "lowres"
 msgid "Disabled GFX"
 msgstr "Без графики"
 
-#: gui/ThemeEngine.cpp:259
+#: gui/ThemeEngine.cpp:257
 msgid "Standard Renderer"
 msgstr "Стандартный растеризатор"
 
-#: gui/ThemeEngine.cpp:259 engines/scumm/dialogs.cpp:660
+#: gui/ThemeEngine.cpp:257 engines/scumm/dialogs.cpp:660
 msgid "Standard"
 msgstr "Стандартный"
 
-#: gui/ThemeEngine.cpp:261
+#: gui/ThemeEngine.cpp:259
 msgid "Antialiased Renderer"
 msgstr "Растеризатор со сглаживанием"
 
-#: gui/ThemeEngine.cpp:261
+#: gui/ThemeEngine.cpp:259
 msgid "Antialiased"
 msgstr "Со сглаживанием"
 
@@ -1644,7 +1645,7 @@ msgstr ""
 msgid "Proceed"
 msgstr "Продолжить"
 
-#: gui/widget.cpp:379 gui/widget.cpp:381 gui/widget.cpp:387 gui/widget.cpp:389
+#: gui/widget.cpp:356 gui/widget.cpp:358 gui/widget.cpp:364 gui/widget.cpp:366
 msgid "Clear value"
 msgstr "Очистить значение"
 
@@ -1787,7 +1788,7 @@ msgstr "Ежемесячно"
 msgid "<Bad value>"
 msgstr "<Неправильное значение>"
 
-#: engines/advancedDetector.cpp:330
+#: engines/advancedDetector.cpp:331
 #, c-format
 msgid ""
 "The game in '%s' seems to be an unknown %s engine game variant.\n"
@@ -1800,7 +1801,7 @@ msgstr ""
 "Пожалуйста, сообщите команде ScummVM на %s следующие данные вместе с "
 "названием игры, её версией, языком и др.:"
 
-#: engines/advancedDetector.cpp:338
+#: engines/advancedDetector.cpp:343
 msgid "Matched game IDs:"
 msgstr "Возможные ID игры:"
 
@@ -1839,8 +1840,8 @@ msgstr "~В~ главное меню"
 
 #: engines/dialogs.cpp:116 engines/agi/saveload.cpp:761
 #: engines/avalanche/parser.cpp:1900 engines/cge/events.cpp:72
-#: engines/cge2/events.cpp:65 engines/cine/various.cpp:348
-#: engines/cruise/menu.cpp:212 engines/dm/loadsave.cpp:196
+#: engines/cge2/events.cpp:64 engines/cine/various.cpp:348
+#: engines/cruise/menu.cpp:212 engines/dm/loadsave.cpp:199
 #: engines/drascula/saveload.cpp:383 engines/dreamweb/saveload.cpp:262
 #: engines/gnap/menu.cpp:464 engines/hugo/file.cpp:298
 #: engines/mads/nebular/dialogs_nebular.cpp:350 engines/mohawk/dialogs.cpp:106
@@ -1859,9 +1860,9 @@ msgstr "Сохранить игру:"
 #: backends/platform/wince/CEActionsSmartphone.cpp:45
 #: backends/platform/wince/CEActionsSmartphone.cpp:231
 #: engines/agi/saveload.cpp:761 engines/avalanche/parser.cpp:1900
-#: engines/cge/events.cpp:72 engines/cge2/events.cpp:65
+#: engines/cge/events.cpp:72 engines/cge2/events.cpp:64
 #: engines/cine/various.cpp:348 engines/cruise/menu.cpp:212
-#: engines/dm/loadsave.cpp:196 engines/drascula/saveload.cpp:383
+#: engines/dm/loadsave.cpp:199 engines/drascula/saveload.cpp:383
 #: engines/dreamweb/saveload.cpp:262 engines/gnap/menu.cpp:464
 #: engines/hugo/file.cpp:298 engines/mads/nebular/dialogs_nebular.cpp:350
 #: engines/mohawk/dialogs.cpp:106 engines/mohawk/riven.cpp:545
@@ -1980,21 +1981,57 @@ msgstr ""
 msgid "Start anyway"
 msgstr "Всё равно запустить"
 
+#: engines/unknown-game-dialog.cpp:48
+msgid ""
+"Use the button below to copy the required game information into your "
+"clipboard."
+msgstr ""
+
+#: engines/unknown-game-dialog.cpp:55
+msgid "You can also directly report your game to the Bug Tracker!"
+msgstr ""
+
+#: engines/unknown-game-dialog.cpp:74 engines/unknown-game-dialog.cpp:90
+msgid "Copy to clipboard"
+msgstr ""
+
+#: engines/unknown-game-dialog.cpp:75 engines/unknown-game-dialog.cpp:104
+#, fuzzy
+msgid "Report game"
+msgstr "Восстановить игру:"
+
+#: engines/unknown-game-dialog.cpp:144
+msgid ""
+"All necessary information about your game has been copied into the clipboard"
+msgstr ""
+
+#: engines/unknown-game-dialog.cpp:146
+msgid "Copying the game information to the clipboard has failed!"
+msgstr ""
+
 #: audio/adlib.cpp:2290
 msgid "AdLib Emulator"
 msgstr "Эмулятор AdLib"
 
-#: audio/fmopl.cpp:62
+#: audio/fmopl.cpp:71
 msgid "MAME OPL emulator"
 msgstr "Эмулятор MAME OPL"
 
-#: audio/fmopl.cpp:64
+#: audio/fmopl.cpp:73
 msgid "DOSBox OPL emulator"
 msgstr "Эмулятор DOSBox OPL"
 
-#: audio/fmopl.cpp:67
+#: audio/fmopl.cpp:76
+msgid "Nuked OPL emulator"
+msgstr "Эмулятор Nuked OPL"
+
+#: audio/fmopl.cpp:79
 msgid "ALSA Direct FM"
 msgstr "Прямой FM ALSA"
+
+#: audio/fmopl.cpp:82
+msgid "OPL2LPT"
+msgstr "OPL2LPT"
 
 #: audio/mididrv.cpp:209
 #, c-format
@@ -2789,7 +2826,7 @@ msgstr "Проверить обновления..."
 #: engines/access/resources.cpp:44 engines/drascula/drascula.cpp:966
 #: engines/hugo/hugo.cpp:437 engines/lure/lure.cpp:64
 #: engines/mortevielle/mortevielle.cpp:306 engines/sky/compact.cpp:131
-#: engines/supernova/supernova.cpp:290 engines/teenagent/resources.cpp:97
+#: engines/supernova/supernova.cpp:175 engines/teenagent/resources.cpp:97
 #: engines/tony/tony.cpp:198 engines/toon/toon.cpp:4918
 #, c-format
 msgid "Unable to locate the '%s' engine data file."
@@ -2797,7 +2834,7 @@ msgstr "Не удалось найти файл движка %s."
 
 #: engines/access/resources.cpp:52 engines/drascula/drascula.cpp:980
 #: engines/hugo/hugo.cpp:448 engines/lure/lure.cpp:73
-#: engines/mortevielle/mortevielle.cpp:315 engines/supernova/supernova.cpp:300
+#: engines/mortevielle/mortevielle.cpp:315 engines/supernova/supernova.cpp:185
 #: engines/tony/tony.cpp:210 engines/toon/toon.cpp:4930
 #, c-format
 msgid "The '%s' engine data file is corrupt."
@@ -2841,6 +2878,7 @@ msgstr "Использовать оригинальные экраны записи/чтения игры"
 #: engines/drascula/detection.cpp:332 engines/dreamweb/detection.cpp:49
 #: engines/neverhood/detection.cpp:178 engines/sci/detection.cpp:453
 #: engines/sherlock/detection.cpp:72 engines/toltecs/detection.cpp:201
+#: engines/zvision/detection_tables.h:52
 msgid "Use the original save/load screens instead of the ScummVM ones"
 msgstr ""
 "Использовать оригинальные экраны чтения и сохранения игры вместо сделанных в "
@@ -2890,9 +2928,9 @@ msgstr ""
 "вместо ввода в реальном времени."
 
 #: engines/agi/saveload.cpp:774 engines/avalanche/parser.cpp:1888
-#: engines/cge/events.cpp:83 engines/cge2/events.cpp:76
+#: engines/cge/events.cpp:83 engines/cge2/events.cpp:75
 #: engines/cine/various.cpp:359 engines/dm/dm.cpp:276
-#: engines/dm/loadsave.cpp:184 engines/drascula/saveload.cpp:396
+#: engines/dm/loadsave.cpp:187 engines/drascula/saveload.cpp:396
 #: engines/dreamweb/saveload.cpp:170 engines/gnap/menu.cpp:473
 #: engines/hugo/file.cpp:400 engines/mads/nebular/dialogs_nebular.cpp:377
 #: engines/neverhood/menumodule.cpp:893
@@ -2904,9 +2942,9 @@ msgid "Restore game:"
 msgstr "Восстановить игру:"
 
 #: engines/agi/saveload.cpp:774 engines/avalanche/parser.cpp:1888
-#: engines/cge/events.cpp:83 engines/cge2/events.cpp:76
+#: engines/cge/events.cpp:83 engines/cge2/events.cpp:75
 #: engines/cine/various.cpp:359 engines/dm/dm.cpp:276
-#: engines/dm/loadsave.cpp:184 engines/drascula/saveload.cpp:396
+#: engines/dm/loadsave.cpp:187 engines/drascula/saveload.cpp:396
 #: engines/dreamweb/saveload.cpp:170 engines/gnap/menu.cpp:473
 #: engines/hugo/file.cpp:400 engines/mads/nebular/dialogs_nebular.cpp:377
 #: engines/neverhood/menumodule.cpp:893
@@ -2917,7 +2955,7 @@ msgstr "Восстановить игру:"
 msgid "Restore"
 msgstr "Восстановить"
 
-#: engines/agos/saveload.cpp:159 engines/scumm/scumm.cpp:2441
+#: engines/agos/saveload.cpp:159 engines/scumm/scumm.cpp:2444
 #, c-format
 msgid ""
 "Failed to load saved game from file:\n"
@@ -2939,7 +2977,7 @@ msgstr ""
 "\n"
 "%s"
 
-#: engines/agos/saveload.cpp:202 engines/scumm/scumm.cpp:2452
+#: engines/agos/saveload.cpp:202 engines/scumm/scumm.cpp:2455
 #, c-format
 msgid ""
 "Successfully saved game in file:\n"
@@ -2955,11 +2993,11 @@ msgstr ""
 msgid "Cutscene file '%s' not found!"
 msgstr "Файл заставки '%s' не найден!"
 
-#: engines/cge/detection.cpp:105 engines/cge2/detection.cpp:101
+#: engines/cge/detection.cpp:105 engines/cge2/detection.cpp:111
 msgid "Color Blind Mode"
 msgstr "Режим без цвета"
 
-#: engines/cge/detection.cpp:106 engines/cge2/detection.cpp:102
+#: engines/cge/detection.cpp:106 engines/cge2/detection.cpp:112
 msgid "Enable Color Blind Mode by default"
 msgstr "Включить режим для людей со слабым восприятием цвета"
 
@@ -3256,16 +3294,16 @@ msgstr "Анимированный интерфейс игры"
 msgid "Naughty game mode"
 msgstr "Откровенный режим игры"
 
-#: engines/mohawk/detection.cpp:169
+#: engines/mohawk/detection.cpp:162
 msgid "Play the Myst fly by movie"
 msgstr "Проигрывать ролик пролёта над Myst"
 
-#: engines/mohawk/detection.cpp:170
+#: engines/mohawk/detection.cpp:163
 msgid "The Myst fly by movie was not played by the original engine."
 msgstr "Ролик пролёта над Myst не проигрывался оригинальным движком."
 
 #. I18N: Option for fast scene switching
-#: engines/mohawk/dialogs.cpp:183 engines/mohawk/dialogs.cpp:269
+#: engines/mohawk/dialogs.cpp:183 engines/mohawk/dialogs.cpp:272
 msgid "~Z~ip Mode Activated"
 msgstr "~Р~ежим быстрого перехода активирован"
 
@@ -3286,27 +3324,27 @@ msgstr "Показать ~к~арту"
 msgid "Main Men~u~"
 msgstr "Главное мен~ю~"
 
-#: engines/mohawk/dialogs.cpp:270
+#: engines/mohawk/dialogs.cpp:273
 msgid "~W~ater Effect Enabled"
 msgstr "~Э~ффекты воды включены"
 
-#: engines/mohawk/dialogs.cpp:272
+#: engines/mohawk/dialogs.cpp:275
 msgid "Transitions:"
 msgstr "Переходы:"
 
-#: engines/mohawk/dialogs.cpp:274
+#: engines/mohawk/dialogs.cpp:277
 msgid "Disabled"
 msgstr "Выключены"
 
-#: engines/mohawk/dialogs.cpp:275
+#: engines/mohawk/dialogs.cpp:278
 msgid "Fastest"
 msgstr "Быстрые"
 
-#: engines/mohawk/dialogs.cpp:276
+#: engines/mohawk/dialogs.cpp:279
 msgid "Normal"
 msgstr "Обычные"
 
-#: engines/mohawk/dialogs.cpp:277
+#: engines/mohawk/dialogs.cpp:280
 msgid "Best"
 msgstr "Лучшие"
 
@@ -3709,11 +3747,11 @@ msgstr ""
 "Во избежание пиратства Lite-версия игры Putt-Putt Saves the Zoo для iOS\n"
 "не поддерживается. Полную версию игры можно купить в iTunes Store."
 
-#: engines/scumm/detection.cpp:1347
+#: engines/scumm/detection.cpp:1355
 msgid "Show Object Line"
 msgstr "Показывать строку объектов"
 
-#: engines/scumm/detection.cpp:1348
+#: engines/scumm/detection.cpp:1356
 msgid "Show the names of objects at the bottom of the screen"
 msgstr "Показывать названия объектов внизу экрана"
 
@@ -4391,7 +4429,7 @@ msgstr ""
 "Режим \"родного\" MIDI требует обновление Roland Upgrade от\n"
 "LucasArts, но не хватает %s. Переключаюсь на AdLib."
 
-#: engines/scumm/scumm.cpp:2738
+#: engines/scumm/scumm.cpp:2740
 msgid ""
 "Usually, Maniac Mansion would start now. But for that to work, the game "
 "files for Maniac Mansion have to be in the 'Maniac' directory inside the "
@@ -4473,13 +4511,13 @@ msgstr "Вступление с дискет"
 msgid "Use the floppy version's intro (CD version only)"
 msgstr "Использовать вступление с гибких дисков (только для CD-версии игры)"
 
-#: engines/supernova/supernova.cpp:308
+#: engines/supernova/supernova.cpp:193
 #, fuzzy, c-format
 msgid ""
 "Incorrect version of the '%s' engine data file found. Expected %d but got %d."
 msgstr "Неверная версия файла движка %s. Ожидается %d.%d, а найдена %d.%d."
 
-#: engines/supernova/supernova.cpp:335
+#: engines/supernova/supernova.cpp:220
 #, fuzzy, c-format
 msgid "Unable to locate the text for %s language in '%s' engine data file."
 msgstr "Не удалось найти файл движка %s."
@@ -4603,27 +4641,39 @@ msgstr "Сохранённая игра №%d загружена"
 msgid "Could not quick load the saved game #%d"
 msgstr "Не удалось быстро загрузить сохранённую игру №%d"
 
-#: engines/wintermute/detection.cpp:58
+#: engines/wintermute/detection.cpp:59
 msgid "Show FPS-counter"
 msgstr "Показать счётчик кадров в секунду"
 
-#: engines/wintermute/detection.cpp:59
+#: engines/wintermute/detection.cpp:60
 msgid "Show the current number of frames per second in the upper left corner"
 msgstr "Показать в верхнем левом углу текущее количество кадров в секунду"
 
-#: engines/wintermute/detection.cpp:68
+#: engines/wintermute/detection.cpp:69
 msgid "Sprite bilinear filtering (SLOW)"
 msgstr "Билинейная фильтрация спрайтов (медленно)"
 
-#: engines/wintermute/detection.cpp:69
+#: engines/wintermute/detection.cpp:70
 msgid "Apply bilinear filtering to individual sprites"
 msgstr "Применить билинейную фильтрацию для индивидуальных спрайтов"
 
-#: engines/zvision/detection_tables.h:52
-msgid "Use the original save/load screens instead of the ScummVM interface"
+#: engines/xeen/detection.cpp:89
+msgid "Show item costs in standard inventory mode"
 msgstr ""
-"Использовать оригинальные экраны записи и сохранения игры вместо сделанных в "
-"ScummVM"
+
+#: engines/xeen/detection.cpp:90
+msgid ""
+"Shows item costs in standard inventory mode, allowing the value of items to "
+"be compared"
+msgstr ""
+
+#: engines/xeen/detection.cpp:99
+msgid "More durable armor"
+msgstr ""
+
+#: engines/xeen/detection.cpp:100
+msgid "Armor won't break until character is at -80HP, rather than merely -10HP"
+msgstr ""
 
 #: engines/zvision/detection_tables.h:61
 msgid "Double FPS"
@@ -4659,7 +4709,7 @@ msgstr ""
 "Использовать MPEG-видео из DVD-версии вместо видео низкого разрешения в "
 "формате AVI"
 
-#: engines/zvision/file/save_manager.cpp:220
+#: engines/zvision/file/save_manager.cpp:226
 #, c-format
 msgid ""
 "This saved game uses version %u, but this engine only supports up to version "
@@ -4668,6 +4718,11 @@ msgstr ""
 "Этот файл сохранённой игры имеет версию %u, но движок поддерживает только "
 "версии не выше %d. Для использования этого файла необходима свежая версия "
 "движка."
+
+#~ msgid "Use the original save/load screens instead of the ScummVM interface"
+#~ msgstr ""
+#~ "Использовать оригинальные экраны записи и сохранения игры вместо "
+#~ "сделанных в ScummVM"
 
 #~ msgid "(You can always enable it in the options dialog on the Misc tab)"
 #~ msgstr "(Вы всегда можете включить её в настройках на закладке \"Разное\")"

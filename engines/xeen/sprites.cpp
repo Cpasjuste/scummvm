@@ -146,6 +146,9 @@ void SpriteResource::drawOffset(XSurface &dest, uint16 offset, const Common::Poi
 			dest.create(xOffset + width, yOffset + height);
 		bounds = Common::Rect(0, 0, dest.w, dest.h);
 	}
+	if (flags & SPRFLAG_SCENE_CLIPPED) {
+		bounds.clip(Common::Rect(8, 8, 223, 141));
+	}
 
 	uint16 scaleMaskXCopy = scaleMaskX;
 	Common::Rect drawBounds;
@@ -281,17 +284,23 @@ void SpriteResource::drawOffset(XSurface &dest, uint16 offset, const Common::Poi
 				if (bit) {
 					// Check whether there's a pixel to write, and we're within the allowable bounds. Note that for
 					// the SPRFLAG_SCENE_CLIPPED or when enlarging, we also have an extra horizontal bounds check
-					if (*lineP != -1 && xp >= bounds.left && xp < bounds.right &&
-							((!(flags & SPRFLAG_SCENE_CLIPPED) && !enlarge) || (xp >= SCENE_CLIP_LEFT && xp < SCENE_CLIP_RIGHT))) {
+					if (*lineP != -1 && xp >= bounds.left && xp < bounds.right) {
 						drawBounds.left = MIN(drawBounds.left, xp);
 						drawBounds.right = MAX((int)drawBounds.right, xp + 1);
 						*destP = (byte)*lineP;
-						if (enlarge)
+						if (enlarge) {
 							*(destP + SCREEN_WIDTH) = (byte)*lineP;
+							*(destP + 1) = (byte)*lineP;
+							*(destP + 1 + SCREEN_WIDTH) = (byte)*lineP;
+						}
 					}
 
-					++destP;
 					++xp;
+					++destP;
+					if (enlarge) {
+						++destP;
+						++xp;
+					}
 				}
 			}
 

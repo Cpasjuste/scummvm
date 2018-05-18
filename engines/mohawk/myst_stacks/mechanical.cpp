@@ -36,23 +36,53 @@ namespace Mohawk {
 namespace MystStacks {
 
 Mechanical::Mechanical(MohawkEngine_Myst *vm) :
-		MystScriptParser(vm), _state(vm->_gameState->_mechanical) {
+		MystScriptParser(vm),
+		_state(vm->_gameState->_mechanical) {
 	setupOpcodes();
 
 	_elevatorGoingMiddle = false;
 	_elevatorPosition = 0;
+	_elevatorGoingDown = 0;
+	_elevatorRotationSpeed = 0;
+	_elevatorRotationGearPosition = 0;
+	_elevatorRotationSoundId = 0;
+	_elevatorRotationLeverMoving = false;
+	_elevatorTooLate = false;
+	_elevatorInCabin = false;
+	_elevatorTopCounter = 0;
+	_elevatorNextTime = 0;
 
 	_crystalLit = 0;
 
 	_mystStaircaseState = false;
 	_fortressPosition = 0;
-	_fortressRotationSpeed = 0;
-	_fortressSimulationSpeed = 0;
 	_gearsWereRunning = false;
 
 	_fortressRotationShortMovieWorkaround = false;
 	_fortressRotationShortMovieCount = 0;
 	_fortressRotationShortMovieLast = 0;
+
+	_fortressRotationRunning = false;
+	_fortressRotationSpeed = 0;
+	_fortressRotationBrake = 0;
+	_fortressRotationGears = nullptr;
+
+	_fortressSimulationRunning = false;
+	_fortressSimulationInit = false;
+	_fortressSimulationSpeed = 0;
+	_fortressSimulationBrake = 0;
+	_fortressSimulationStartSound1 = 0;
+	_fortressSimulationStartSound2 = 0;
+	_fortressSimulationHolo = nullptr;
+	_fortressSimulationStartup = nullptr;
+	_fortressSimulationHoloRate = 0;
+
+	_birdSinging = false;
+	_birdCrankStartTime = 0;
+	_birdSingEndTime = 0;
+	_bird = nullptr;
+
+	_snakeBox = nullptr;
 }
 
 Mechanical::~Mechanical() {
@@ -140,12 +170,12 @@ uint16 Mechanical::getVar(uint16 var) {
 		return _state.sirrusPanelState;
 	case 2: // Achenar's Secret Room Crate Lid Open and Blue Page Present
 		if (_state.achenarCrateOpened) {
-			if (_globals.bluePagesInBook & 4 || _globals.heldPage == 3)
+			if (_globals.bluePagesInBook & 4 || _globals.heldPage == kBlueMechanicalPage)
 				return 2;
 			else
 				return 3;
 		} else {
-			return _globals.bluePagesInBook & 4 || _globals.heldPage == 3;
+			return _globals.bluePagesInBook & 4 || _globals.heldPage == kBlueMechanicalPage;
 		}
 	case 3: // Achenar's Secret Room Crate State
 		return _state.achenarCrateOpened;
@@ -193,9 +223,9 @@ uint16 Mechanical::getVar(uint16 var) {
 	case 22: // Crystal Lit Flag - Red
 		return _crystalLit == 2;
 	case 102: // Red page
-		return !(_globals.redPagesInBook & 4) && (_globals.heldPage != 9);
+		return !(_globals.redPagesInBook & 4) && (_globals.heldPage != kRedMechanicalPage);
 	case 103: // Blue page
-		return !(_globals.bluePagesInBook & 4) && (_globals.heldPage != 3);
+		return !(_globals.bluePagesInBook & 4) && (_globals.heldPage != kBlueMechanicalPage);
 	default:
 		return MystScriptParser::getVar(var);
 	}
@@ -229,18 +259,18 @@ void Mechanical::toggleVar(uint16 var) {
 		break;
 	case 102: // Red page
 		if (!(_globals.redPagesInBook & 4)) {
-			if (_globals.heldPage == 9)
-				_globals.heldPage = 0;
+			if (_globals.heldPage == kRedMechanicalPage)
+				_globals.heldPage = kNoPage;
 			else
-				_globals.heldPage = 9;
+				_globals.heldPage = kRedMechanicalPage;
 		}
 		break;
 	case 103: // Blue page
 		if (!(_globals.bluePagesInBook & 4)) {
-			if (_globals.heldPage == 3)
-				_globals.heldPage = 0;
+			if (_globals.heldPage == kBlueMechanicalPage)
+				_globals.heldPage = kNoPage;
 			else
-				_globals.heldPage = 3;
+				_globals.heldPage = kBlueMechanicalPage;
 		}
 		break;
 	default:

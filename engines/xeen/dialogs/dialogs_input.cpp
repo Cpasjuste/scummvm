@@ -69,7 +69,6 @@ int Input::getString(Common::String &line, uint maxLen, int maxWidth, bool isNum
 		}
 	}
 
-	_vm->_interface->clearEvents();
 	_vm->_noDirectionSense = false;
 	return line.size();
 }
@@ -85,9 +84,9 @@ Common::KeyState Input::waitForKey(const Common::String &msg) {
 	intf._tillMove = 0;
 
 	bool flag = !_vm->_startupWindowActive && !windows[25]._enabled
-		&& _vm->_mode != MODE_FF && _vm->_mode != MODE_17;
+		&& _vm->_mode != MODE_FF && _vm->_mode != MODE_INTERACTIVE7;
 
-	Common::KeyState ks;
+	PendingEvent pe;
 	while (!_vm->shouldExit()) {
 		events.updateGameCounter();
 
@@ -101,11 +100,8 @@ Common::KeyState Input::waitForKey(const Common::String &msg) {
 			windows[3].update();
 
 		events.wait(1);
-
-		if (events.isKeyPending()) {
-			events.getKey(ks);
+		if (events.getEvent(pe) && pe.isKeyboard())
 			break;
-		}
 	}
 
 	_window->writeString("");
@@ -114,7 +110,7 @@ Common::KeyState Input::waitForKey(const Common::String &msg) {
 	intf._tillMove = oldTillMove;
 	intf._upDoorText = oldUpDoorText;
 
-	return ks;
+	return pe._keyState;
 }
 
 void Input::animateCursor() {
@@ -145,7 +141,6 @@ int StringInput::show(XeenEngine *vm, bool type, const Common::String &msg1,
 int StringInput::execute(bool type, const Common::String &expected,
 		const Common::String &title, int opcode) {
 	FileManager &files = *_vm->_files;
-	Interface &intf = *_vm->_interface;
 	Scripts &scripts = *_vm->_scripts;
 	Windows &windows = *_vm->_windows;
 	Window &w = windows[6];
@@ -159,9 +154,9 @@ int StringInput::execute(bool type, const Common::String &expected,
 	Common::String line;
 	if (getString(line, 30, 200, false)) {
 		if (type) {
-			if (line == intf._interfaceText) {
+			if (!line.compareToIgnoreCase(scripts._message)) {
 				result = true;
-			} else if (line == expected) {
+			} else if (!line.compareToIgnoreCase(expected)) {
 				result = (opcode == 55) ? -1 : 1;
 			}
 		} else {
@@ -220,8 +215,8 @@ int NumericInput::execute(int maxLength, int maxWidth) {
 
 /*------------------------------------------------------------------------*/
 
-int Choose123::show(XeenEngine *vm, int numOptions) {
-	assert(numOptions <= 3);
+int Choose123::show(XeenEngine *vm, uint numOptions) {
+	assert(numOptions <= 9);
 	Choose123 *dlg = new Choose123(vm);
 	int result = dlg->execute(numOptions);
 	delete dlg;
@@ -229,7 +224,7 @@ int Choose123::show(XeenEngine *vm, int numOptions) {
 	return result;
 }
 
-int Choose123::execute(int numOptions) {
+int Choose123::execute(uint numOptions) {
 	EventsManager &events = *_vm->_events;
 	Interface &intf = *_vm->_interface;
 	LocationManager &loc = *_vm->_locations;
@@ -257,24 +252,17 @@ int Choose123::execute(int numOptions) {
 			}
 
 			events.wait(delay);
+			checkEvents(_vm);
+
 			if (_vm->shouldExit())
 				return 0;
 		} while (!_buttonValue);
 
-		switch (_buttonValue) {
-		case Common::KEYCODE_ESCAPE:
+		if (_buttonValue == Common::KEYCODE_ESCAPE) {
 			result = 0;
-			break;
-		case Common::KEYCODE_1:
-		case Common::KEYCODE_2:
-		case Common::KEYCODE_3: {
-			int v = _buttonValue - Common::KEYCODE_1 + 1;
-			if (v <= numOptions)
-				result = v;
-			break;
-		}
-		default:
-			break;
+		} else if (_buttonValue >= Common::KEYCODE_1 && _buttonValue < (Common::KEYCODE_1 + (int)numOptions)) {
+			_buttonValue -= Common::KEYCODE_0;
+			result = (_buttonValue == (int)numOptions) ? 0 : _buttonValue;
 		}
 	}
 
@@ -284,15 +272,17 @@ int Choose123::execute(int numOptions) {
 	return result;
 }
 
-void Choose123::loadButtons(int numOptions) {
+void Choose123::loadButtons(uint numOptions) {
+	assert(numOptions > 0 && numOptions <= 9);
 	_iconSprites.load("choose.icn");
+	const int XPOS[3] = { 235, 260, 286 };
+	const int YPOS[3] = { 75, 96, 117 };
 
-	if (numOptions >= 1)
-		addButton(Common::Rect(235, 75, 259, 95), Common::KEYCODE_1, &_iconSprites);
-	if (numOptions >= 2)
-		addButton(Common::Rect(260, 75, 284, 95), Common::KEYCODE_2, &_iconSprites);
-	if (numOptions >= 3)
-		addButton(Common::Rect(286, 75, 311, 95), Common::KEYCODE_3, &_iconSprites);
+	for (uint idx = 0; idx < numOptions; ++idx) {
+		Common::Rect r(24, 20);
+		r.moveTo(XPOS[idx % 3], YPOS[idx / 3]);
+		addButton(r, Common::KEYCODE_1 + idx, &_iconSprites);
+	}
 }
 
 /*------------------------------------------------------------------------*/

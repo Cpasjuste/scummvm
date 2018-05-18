@@ -198,7 +198,7 @@ private:
 	int _dayOfWeek;
 	int _v10, _v11, _v12;
 	int _v13, _v14;
-	bool _flag1;
+	bool _blessed;
 	int _v5, _v6;
 protected:
 	/**
@@ -253,7 +253,7 @@ protected:
 	int _mazeId;
 	Direction _mazeDir;
 	Common::Point _mazePos;
-	bool _mazeFlag;
+	bool _keyFound;
 protected:
 	/**
 	 * Sets the new location
@@ -364,7 +364,7 @@ public:
 	/**
 	 * Show a given location, and return any result
 	 */
-	int doAction(LocationAction actionId);
+	int doAction(int actionId);
 
 	/**
 	 * Returns true if a town location (bank, blacksmith, etc.) is currently active

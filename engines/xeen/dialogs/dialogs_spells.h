@@ -93,7 +93,6 @@ private:
 	void loadButtons();
 public:
 	static int show(XeenEngine *vm);
-	static int show(XeenEngine *vm, Character *&c);
 };
 
 class SpellOnWho : public ButtonContainer {
@@ -163,6 +162,15 @@ public:
 class IdentifyMonster : public ButtonContainer {
 private:
 	IdentifyMonster(XeenEngine *vm) : ButtonContainer(vm) {}
+
+	void execute();
+public:
+	static void show(XeenEngine *vm);
+};
+
+class DetectMonsters : public ButtonContainer {
+private:
+	DetectMonsters(XeenEngine *vm) : ButtonContainer(vm) {}
 
 	void execute();
 public:

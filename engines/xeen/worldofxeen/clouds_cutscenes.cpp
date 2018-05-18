@@ -21,7 +21,6 @@
  */
 
 #include "xeen/worldofxeen/clouds_cutscenes.h"
-#include "xeen/worldofxeen/worldofxeen_resources.h"
 #include "xeen/sound.h"
 
 namespace Xeen {
@@ -42,6 +41,7 @@ bool CloudsCutscenes::showCloudsIntro() {
 
 	bool darkCc = files._ccNum;
 	files.setGameCc(0);
+	sound._musicSide = 0;
 
 	bool seenIntro = showCloudsTitle() && showCloudsIntroInner();
 

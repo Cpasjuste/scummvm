@@ -40,6 +40,7 @@ MystScriptEntry::MystScriptEntry() {
 	var = 0;
 	resourceId = 0;
 	u1 = 0;
+	opcode = 0;
 }
 
 const uint8 MystScriptParser::_stackMap[11] = {
@@ -79,8 +80,10 @@ MystScriptParser::MystScriptParser(MohawkEngine_Myst *vm) :
 	_invokingResource = nullptr;
 	_savedCardId = 0;
 	_savedCursorId = 0;
+	_savedMapCardId = 0;
 	_tempVar = 0;
 	_scriptNestingLevel = 0;
+	_startTime = 0;
 }
 
 MystScriptParser::~MystScriptParser() {
@@ -375,7 +378,7 @@ void MystScriptParser::o_takePage(uint16 var, const ArgumentsArray &args) {
 			cursorId = kDefaultMystCursor;
 	}
 
-	uint16 oldPage = _globals.heldPage;
+	HeldPage oldPage = _globals.heldPage;
 
 	// Take / drop page
 	toggleVar(var);
@@ -385,7 +388,7 @@ void MystScriptParser::o_takePage(uint16 var, const ArgumentsArray &args) {
 		_vm->redrawArea(var);
 
 		// Set new cursor
-		if (_globals.heldPage)
+		if (_globals.heldPage != kNoPage)
 			_vm->setMainCursor(cursorId);
 		else
 			_vm->setMainCursor(kDefaultMystCursor);
@@ -600,9 +603,11 @@ void MystScriptParser::o_copyImageToBackBuffer(uint16 var, const ArgumentsArray 
 
 	Common::Rect dstRect = Common::Rect(args[5], args[6], 544, 333);
 
-	if (dstRect.left == -1 || dstRect.top == -1) {
-		// Interpreted as full screen
+	if (dstRect.left == -1) {
 		dstRect.left = 0;
+	}
+
+	if (dstRect.top == -1) {
 		dstRect.top = 0;
 	}
 
@@ -622,6 +627,8 @@ void MystScriptParser::o_copyImageToBackBuffer(uint16 var, const ArgumentsArray 
 }
 
 void MystScriptParser::o_changeBackgroundSound(uint16 var, const ArgumentsArray &args) {
+	soundWaitStop();
+
 	// Used on Stoneship Card 2080
 	// Used on Channelwood Card 3225 with argc = 8 i.e. Conditional Sound List
 	Common::MemoryWriteStreamDynamic writeStream = Common::MemoryWriteStreamDynamic(DisposeAfterUse::YES);
@@ -749,10 +756,10 @@ void MystScriptParser::o_changeCardPlaySoundDirectional(uint16 var, const Argume
 	debugC(kDebugScript, "\tdelay between steps: %d", delayBetweenSteps);
 	debugC(kDebugScript, "\tanimated update data size: %d", dataSize);
 
+	_vm->changeToCard(cardId, kNoTransition);
+
 	if (soundId)
 		_vm->_sound->playEffect(soundId);
-
-	_vm->changeToCard(cardId, kNoTransition);
 
 	animatedUpdate(ArgumentsArray(args.begin() + 4, dataSize), delayBetweenSteps);
 }
@@ -784,12 +791,16 @@ void MystScriptParser::o_soundWaitStop(uint16 var, const ArgumentsArray &args) {
 	// Used on Selenitic Card 1191 (Maze Runner)
 	// Used on Mechanical Card 6267 (Code Lock)
 	// Used when Button is pushed...
-	while (_vm->_sound->isEffectPlaying())
+	soundWaitStop();
+}
+
+void MystScriptParser::soundWaitStop() const {
+	while (_vm->_sound->isEffectPlaying() && !Engine::shouldQuit())
 		_vm->doFrame();
 }
 
 void MystScriptParser::o_quit(uint16 var, const ArgumentsArray &args) {
-	_vm->quitGame();
+	Engine::quitGame();
 }
 
 void MystScriptParser::showMap() {
@@ -800,6 +811,8 @@ void MystScriptParser::showMap() {
 }
 
 void MystScriptParser::o_exitMap(uint16 var, const ArgumentsArray &args) {
+	assert(_savedMapCardId);
+
 	_vm->changeToCard(_savedMapCardId, kTransitionCopy);
 }
 

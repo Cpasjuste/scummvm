@@ -968,7 +968,7 @@ const char *const GOLD_GEMS =
 	"Gems\x3r\t000%s\x2\x3""c\v096\t013G\f37o\fdld\t040G\f37e\fdms\t067ESC\x1";
 
 const char *const GOLD_GEMS_2 =
-	"\t000\v000\x3""c%s\x3l\n"
+	"\x3""c\v000\t000%s\x3l\n"
 	"\n"
 	"\x4""077Gold\x3r\t000%s\x3l\n"
 	"\x4""077Gems\x3r\t000%s\x3l\t000\v051\x4""077\n"
@@ -1041,6 +1041,12 @@ const int DARK_SPELL_RANGES[12][2] = {
 	{ 0, 20 }, { 16, 35 }, { 27, 37 }, { 29, 39 },
 	{ 0, 17 }, { 14, 34 }, { 26, 37 }, { 29, 39 },
 	{ 0, 20 }, { 16, 35 }, { 27, 37 }, { 29, 39 }
+};
+
+const int SWORDS_SPELL_RANGES[12][2] = {
+	{ 0, 20 },{ 16, 35 },{ 27, 39 },{ 29, 39 },
+	{ 0, 17 },{ 14, 34 },{ 26, 39 },{ 29, 39 },
+	{ 0, 20 },{ 16, 35 },{ 27, 39 },{ 29, 39 }
 };
 
 const int CLOUDS_GUILD_SPELLS[5][20] = {
@@ -1283,6 +1289,8 @@ const char *const BTN_GOLD = "G\fdold";
 
 const char *const ITEM_BROKEN = "\f32broken ";
 const char *const ITEM_CURSED = "\f09cursed ";
+const char *const ITEM_OF = "of ";
+
 const char *const BONUS_NAMES[7] = {
 	"", "Dragon Slayer", "Undead Eater", "Golem Smasher",
 	"Bug Zapper", "Monster Masher", "Beast Bopper"
@@ -1314,6 +1322,20 @@ const char *const MISC_NAMES[22] = {
 	nullptr, "rod ", "jewel ", "gem ", "box ", "orb ", "horn ", "coin ",
 	"wand ", "whistle ", "potion ", "scroll ", "bogus", "bogus", "bogus",
 	"bogus", "bogus", "bogus", "bogus", "bogus", "bogus", "bogus"
+};
+
+const char *const SPECIAL_NAMES[74] = {
+	nullptr, "light", "awakening", "magic arrows", "first aid", "fists", "energy blasts", "sleeping",
+	"revitalization", "curing", "sparking", "shrapmetal", "insect repellent", "toxic clouds", "elemental protection",
+	"pain", "jumping", "beast control", "clairvoyance", "undead turning", "levitation", "wizard eyes", "blessing",
+	"monster identification",  "lightning", "holy bonuses", "power curing", "nature's cures", "beacons",
+	"shielding", "heroism", "hypnotism", "water walking", "frost biting", "monster finding", "fireballs",
+	"cold rays", "antidotes", "acid spraying", "time distortion", "dragon sleep", "vaccination", "teleportation",
+	"death", "free movement", "golem stopping", "poison volleys", "deadly swarms", "shelter", "daily protection",
+	"daily sorcerery", "feasting", "fiery flails", "recharging", "freezing", "town portals", "stone to flesh",
+	"raising the dead", "etherealization", "dancing swords", "moon rays", "mass distortion", "prismatic light",
+	"enchant item", "incinerating", "holy words", "resurrection", "storms", "megavoltage", "infernos",
+	"sun rays", "implosions", "star bursts", "the GODS!"
 };
 
 const char *const ELEMENTAL_NAMES[6] = {
@@ -1582,6 +1604,7 @@ const char *const QUESTS_DIALOG_TEXT =
 	"\t289Exit";
 const char *const CLOUDS_OF_XEEN_LINE = "\b \b*-- \f04Clouds of Xeen\fd --";
 const char *const DARKSIDE_OF_XEEN_LINE = "\b \b*-- \f04Darkside of Xeen\fd --";
+const char *const SWORDS_OF_XEEN_LINE = "\b \b*-- \f04Swords of Xeen\fd --";
 
 const char *const NO_QUEST_ITEMS =
 	"\r\x3""c\v000	000Quest Items\x3l\x2\n"
@@ -1739,7 +1762,7 @@ const char *const WHICH_ELEMENT1 =
 	"\f15E\fdlec\t074\f15C\fdold\t104\f15A\fdcid\x1";
 
 const char *const WHICH_ELEMENT2 =
-	"\r\x3""cWhich Element?', 2, 0Bh, '034\t014\f15F\fdire\t044"
+	"\r\x3""cWhich Element?\x2\v034\t014\f15F\fdire\t044"
 	"\f15E\fdlec\t074\f15C\fdold\t104\f15A\fdcid\x1";
 
 const char *const DETECT_MONSTERS = "\x3""cDetect Monsters";
@@ -1752,7 +1775,7 @@ const char *const LLOYDS_BEACON =
 	"%s\x3l\n"
 	"x = %d\x3r\t000y = %d\x3""c\x2\v122\t021\f15S\fdet\t060\f15R\fdeturn\x1";
 
-const char *const HOW_MANY_SQUARES = "\x3""cTeleport\nHow many squares %s (1-9)";
+const char *const HOW_MANY_SQUARES = "\x3""cTeleport\nHow many squares %s (1-9)\n";
 
 const char *const TOWN_PORTAL =
 	"\x3""cTown Portal\x3l\n"
@@ -1766,8 +1789,18 @@ const char *const TOWN_PORTAL =
 	"To which Town (1-5)\n"
 	"\n";
 
-const int TOWN_MAP_NUMBERS[2][5] = {
-	{ 28, 29, 30, 31, 32 }, { 29, 31, 33, 35, 37 }
+const char *const TOWN_PORTAL_SWORDS =
+	"\x3""cTown Portal\x3l\n"
+	"\n"
+	"\t0101. %s\n"
+	"\t0102. %s\n"
+	"\t0103. %s\x3""c\n"
+	"\n"
+	"To which Town (1-3)\n"
+	"\n";
+
+const int TOWN_MAP_NUMBERS[3][5] = {
+	{ 28, 29, 30, 31, 32 }, { 29, 31, 33, 35, 37 }, { 53, 92, 63, 0, 0 }
 };
 
 const char *const MONSTER_DETAILS =
@@ -1906,6 +1939,40 @@ const char *const MUSIC_FILES2[6][7] = {
 };
 
 const char *const DIFFICULTY_TEXT = "\v000\t000\x3""cSelect Game Preference";
+const char *const SAVE_OFF_LIMITS = "\x3""c\v002\t000The Gods of Game Restoration deem this area off limits!\n"
+	"Sorry, no saving in this maze.";
+
+const char *const CLOUDS_INTRO1 = "\f00\v082\t040\x3"
+	"cKing Burlock\v190\t040Peasants\v082\t247"
+	"Lord Xeen\v190\t258Xeen's Pet\v179\t150Crodo";
+
+const char *const DARKSIDE_ENDING1 = "\n\x3" "cCongratulations\n"
+	"\n"
+	"Your Final Score is:\n"
+	"\n"
+	"%010lu\n"
+	"\x3" "l\n"
+	"Please send this score to the Ancient's Headquarters "
+	"where you'll be added to the Hall of Legends!\n"
+	"\n"
+	"Ancient's Headquarters\n"
+	"New World Computing, Inc.\n"
+	"P.O. Box 4302\n"
+	"Hollywood, CA 90078";
+
+const char *const DARKSIDE_ENDING2 = "\n"
+	"Adventurers,\n"
+	"\n"
+	"I will save your game in Castleview.\n"
+	"\n"
+	"The World of Xeen still needs you!\n"
+	"\n"
+	"Load your game afterwards and come visit me in the "
+	"Great Pyramid for further instructions";
+
+const char *const PHAROAH_ENDING_TEXT1 = "\fd\v001\t001%s\x3" "c\t000\v180Press a Key!\x3" "l";
+const char *const PHAROAH_ENDING_TEXT2 = "\f04\v000\t000%s\x3" "c\t000\v180Press a Key!\x3" "l\fd";
+
 
 void writeConstants(CCArchive &cc) {
 	Common::MemFile file;
@@ -2033,6 +2100,7 @@ void writeConstants(CCArchive &cc) {
 	file.syncNumbers2D((const int *)CLOUDS_GUILD_SPELLS, 5, 20);
 	file.syncNumbers2D((const int *)DARK_SPELL_OFFSETS, 3, 39);
 	file.syncNumbers2D((const int *)DARK_SPELL_RANGES, 12, 2);
+	file.syncNumbers2D((const int *)SWORDS_SPELL_RANGES, 12, 2);
 	file.syncNumbers((const int *)SPELL_GEM_COST, 77);
 	file.syncString(NOT_A_SPELL_CASTER);
 	file.syncString(SPELLS_LEARNED_ALL);
@@ -2096,11 +2164,13 @@ void writeConstants(CCArchive &cc) {
 	file.syncString(BTN_GOLD);
 	file.syncString(ITEM_BROKEN);
 	file.syncString(ITEM_CURSED);
+	file.syncString(ITEM_OF);
 	file.syncStrings(BONUS_NAMES, 7);
 	file.syncStrings(WEAPON_NAMES, 41);
 	file.syncStrings(ARMOR_NAMES, 14);
 	file.syncStrings(ACCESSORY_NAMES, 11);
 	file.syncStrings(MISC_NAMES, 22);
+	file.syncStrings(SPECIAL_NAMES, 74);
 	file.syncStrings(ELEMENTAL_NAMES, 6);
 	file.syncStrings(ATTRIBUTE_NAMES, 10);
 	file.syncStrings(EFFECTIVENESS_NAMES, 7);
@@ -2160,6 +2230,7 @@ void writeConstants(CCArchive &cc) {
 	file.syncString(QUESTS_DIALOG_TEXT);
 	file.syncString(CLOUDS_OF_XEEN_LINE);
 	file.syncString(DARKSIDE_OF_XEEN_LINE);
+	file.syncString(SWORDS_OF_XEEN_LINE);
 	file.syncString(NO_QUEST_ITEMS);
 	file.syncString(NO_CURRENT_QUESTS);
 	file.syncString(NO_AUTO_NOTES);
@@ -2209,7 +2280,8 @@ void writeConstants(CCArchive &cc) {
 	file.syncString(LLOYDS_BEACON);
 	file.syncString(HOW_MANY_SQUARES);
 	file.syncString(TOWN_PORTAL);
-	file.syncNumbers2D((const int *)TOWN_MAP_NUMBERS, 2, 5);
+	file.syncString(TOWN_PORTAL_SWORDS);
+	file.syncNumbers2D((const int *)TOWN_MAP_NUMBERS, 3, 5);
 	file.syncString(MONSTER_DETAILS);
 	file.syncStrings(MONSTER_SPECIAL_ATTACKS, 23);
 	file.syncString(IDENTIFY_MONSTERS);
@@ -2243,6 +2315,12 @@ void writeConstants(CCArchive &cc) {
 	file.syncStrings(MUSIC_FILES1, 5);
 	file.syncStrings2D((const char *const *)MUSIC_FILES2, 6, 7);
 	file.syncString(DIFFICULTY_TEXT);
+	file.syncString(SAVE_OFF_LIMITS);
+	file.syncString(CLOUDS_INTRO1);
+	file.syncString(DARKSIDE_ENDING1);
+	file.syncString(DARKSIDE_ENDING2);
+	file.syncString(PHAROAH_ENDING_TEXT1);
+	file.syncString(PHAROAH_ENDING_TEXT2);
 
 	cc.add("CONSTANTS", file);
 }

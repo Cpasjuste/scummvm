@@ -54,25 +54,16 @@
 
 namespace Sludge {
 
-int speechMode = 0;
-SpritePalette pastePalette;
-
 Variable *launchResult = NULL;
 
-extern int lastFramesPerSecond, thumbWidth, thumbHeight;
+extern int lastFramesPerSecond;
 extern bool allowAnyFilename;
-extern bool captureAllKeys;
 extern VariableStack *noStack;
 extern StatusStuff  *nowStatus;
-extern ScreenRegion *overRegion;
 extern int numBIFNames, numUserFunc;
 
 extern Common::String *allUserFunc;
 extern Common::String *allBIFNames;
-
-extern byte brightnessLevel;
-extern byte fadeMode;
-extern uint16 saveEncoding;
 
 int paramNum[] = { -1, 0, 1, 1, -1, -1, 1, 3, 4, 1, 0, 0, 8, -1,    // SAY->MOVEMOUSE
                    -1, 0, 0, -1, -1, 1, 1, 1, 1, 4, 1, 1, 2, 1,// FOCUS->REMOVEREGION
@@ -198,7 +189,7 @@ builtIn(howFrozen) {
 
 builtIn(setCursor) {
 	UNUSEDALL
-	PersonaAnimation  *aa = getAnimationFromVar(fun->stack->thisVar);
+	PersonaAnimation *aa = getAnimationFromVar(fun->stack->thisVar);
 	g_sludge->_cursorMan->pickAnimCursor(aa);
 	trimStack(fun->stack);
 	return BR_CONTINUE;
@@ -403,7 +394,7 @@ builtIn(pasteImage) {
 	if (!getValueType(x, SVT_INT, fun->stack->thisVar))
 		return BR_ERROR;
 	trimStack(fun->stack);
-	PersonaAnimation  *pp = getAnimationFromVar(fun->stack->thisVar);
+	PersonaAnimation *pp = getAnimationFromVar(fun->stack->thisVar);
 	trimStack(fun->stack);
 	if (pp == NULL)
 		return BR_CONTINUE;
@@ -775,7 +766,7 @@ builtIn(setPasteColour) {
 	if (!getRGBParams(red, green, blue, fun))
 		return BR_ERROR;
 
-	setFontColour(pastePalette, (byte)red, (byte)green, (byte)blue);
+	g_sludge->_txtMan->setPasterColor((byte)red, (byte)green, (byte)blue);
 	return BR_CONTINUE;
 }
 
@@ -846,7 +837,7 @@ builtIn(pasteString) {
 	trimStack(fun->stack);
 	if (x == IN_THE_CENTRE)
 		x = g_sludge->_gfxMan->getCenterX(g_sludge->_txtMan->stringWidth(newText));
-	g_sludge->_txtMan->pasteStringToBackdrop(newText, x, y, pastePalette);
+	g_sludge->_txtMan->pasteStringToBackdrop(newText, x, y);
 	return BR_CONTINUE;
 }
 
@@ -858,7 +849,7 @@ builtIn(anim) {
 	}
 
 	// First store the frame numbers and take 'em off the stack
-	PersonaAnimation  *ba = createPersonaAnim(numParams - 1, fun->stack);
+	PersonaAnimation *ba = new PersonaAnimation(numParams - 1, fun->stack);
 
 	// Only remaining paramter is the file number
 	int fileNumber;
@@ -870,7 +861,7 @@ builtIn(anim) {
 	LoadedSpriteBank *sprBanky = g_sludge->_gfxMan->loadBankForAnim(fileNumber);
 	if (!sprBanky)
 		return BR_ERROR;    // File not found, fatal done already
-	setBankFile(ba, sprBanky);
+	ba->theSprites = sprBanky;
 
 	// Return value
 	newAnimationVariable(fun->reg, ba);
@@ -1217,18 +1208,18 @@ builtIn(setFloor) {
 		int v;
 		getValueType(v, SVT_FILE, fun->stack->thisVar);
 		trimStack(fun->stack);
-		if (!setFloor(v))
+		if (!g_sludge->_floorMan->setFloor(v))
 			return BR_ERROR;
 	} else {
 		trimStack(fun->stack);
-		setFloorNull();
+		g_sludge->_floorMan->setFloorNull();
 	}
 	return BR_CONTINUE;
 }
 
 builtIn(showFloor) {
 	UNUSEDALL
-	drawFloor();
+	g_sludge->_floorMan->drawFloor();
 	return BR_CONTINUE;
 }
 
@@ -1284,6 +1275,7 @@ builtIn(setLightMap) {
 
 builtIn(setSpeechMode) {
 	UNUSEDALL
+	int speechMode;
 	if (!getValueType(speechMode, SVT_INT, fun->stack->thisVar))
 		return BR_ERROR;
 	trimStack(fun->stack);
@@ -1291,6 +1283,7 @@ builtIn(setSpeechMode) {
 		fatal("Valid parameters are be SPEECHANDTEXT, SPEECHONLY or TEXTONLY");
 		return BR_ERROR;
 	}
+	g_sludge->_speechMan->setSpeechMode(speechMode);
 	return BR_CONTINUE;
 }
 
@@ -1313,9 +1306,9 @@ builtIn(skipSpeech) {
 
 builtIn(getOverObject) {
 	UNUSEDALL
-	if (overRegion)
+	if (g_sludge->_regionMan->getOverRegion())
 		// Return value
-		setVariable(fun->reg, SVT_OBJTYPE, overRegion->thisType->objectNum);
+		setVariable(fun->reg, SVT_OBJTYPE, g_sludge->_regionMan->getOverRegion()->thisType->objectNum);
 	else
 		// Return value
 		setVariable(fun->reg, SVT_INT, 0);
@@ -1343,11 +1336,11 @@ builtIn(getObjectX) {
 		return BR_ERROR;
 	trimStack(fun->stack);
 
-	OnScreenPerson *pers = findPerson(objectNumber);
+	OnScreenPerson *pers = g_sludge->_peopleMan->findPerson(objectNumber);
 	if (pers) {
 		setVariable(fun->reg, SVT_INT, pers->x);
 	} else {
-		ScreenRegion *la = getRegionForObject(objectNumber);
+		ScreenRegion *la = g_sludge->_regionMan->getRegionForObject(objectNumber);
 		if (la) {
 			setVariable(fun->reg, SVT_INT, la->sX);
 		} else {
@@ -1364,11 +1357,11 @@ builtIn(getObjectY) {
 		return BR_ERROR;
 	trimStack(fun->stack);
 
-	OnScreenPerson *pers = findPerson(objectNumber);
+	OnScreenPerson *pers = g_sludge->_peopleMan->findPerson(objectNumber);
 	if (pers) {
 		setVariable(fun->reg, SVT_INT, pers->y);
 	} else {
-		ScreenRegion *la = getRegionForObject(objectNumber);
+		ScreenRegion *la = g_sludge->_regionMan->getRegionForObject(objectNumber);
 		if (la) {
 			setVariable(fun->reg, SVT_INT, la->sY);
 		} else {
@@ -1405,7 +1398,7 @@ builtIn(addScreenRegion) {
 	if (!getValueType(objectNumber, SVT_OBJTYPE, fun->stack->thisVar))
 		return BR_ERROR;
 	trimStack(fun->stack);
-	if (addScreenRegion(x1, y1, x2, y2, sX, sY, di, objectNumber))
+	if (g_sludge->_regionMan->addScreenRegion(x1, y1, x2, y2, sX, sY, di, objectNumber))
 		return BR_CONTINUE;
 	return BR_ERROR;
 
@@ -1417,19 +1410,19 @@ builtIn(removeScreenRegion) {
 	if (!getValueType(objectNumber, SVT_OBJTYPE, fun->stack->thisVar))
 		return BR_ERROR;
 	trimStack(fun->stack);
-	removeScreenRegion(objectNumber);
+	g_sludge->_regionMan->removeScreenRegion(objectNumber);
 	return BR_CONTINUE;
 }
 
 builtIn(showBoxes) {
 	UNUSEDALL
-	showBoxes();
+	g_sludge->_regionMan->showBoxes();
 	return BR_CONTINUE;
 }
 
 builtIn(removeAllScreenRegions) {
 	UNUSEDALL
-	killAllRegions();
+	g_sludge->_regionMan->kill();
 	return BR_CONTINUE;
 }
 
@@ -1452,7 +1445,7 @@ builtIn(addCharacter) {
 	if (!getValueType(objectNumber, SVT_OBJTYPE, fun->stack->thisVar))
 		return BR_ERROR;
 	trimStack(fun->stack);
-	if (addPerson(x, y, objectNumber, p))
+	if (g_sludge->_peopleMan->addPerson(x, y, objectNumber, p))
 		return BR_CONTINUE;
 	return BR_ERROR;
 }
@@ -1463,7 +1456,7 @@ builtIn(hideCharacter) {
 	if (!getValueType(objectNumber, SVT_OBJTYPE, fun->stack->thisVar))
 		return BR_ERROR;
 	trimStack(fun->stack);
-	setShown(false, objectNumber);
+	g_sludge->_peopleMan->setShown(false, objectNumber);
 	return BR_CONTINUE;
 }
 
@@ -1473,14 +1466,14 @@ builtIn(showCharacter) {
 	if (!getValueType(objectNumber, SVT_OBJTYPE, fun->stack->thisVar))
 		return BR_ERROR;
 	trimStack(fun->stack);
-	setShown(true, objectNumber);
+	g_sludge->_peopleMan->setShown(true, objectNumber);
 	return BR_CONTINUE;
 }
 
 builtIn(removeAllCharacters) {
 	UNUSEDALL
 	killSpeechTimers();
-	killMostPeople();
+	g_sludge->_peopleMan->killMostPeople();
 	return BR_CONTINUE;
 }
 
@@ -1493,7 +1486,7 @@ builtIn(setCharacterDrawMode) {
 	if (!getValueType(obj, SVT_OBJTYPE, fun->stack->thisVar))
 		return BR_ERROR;
 	trimStack(fun->stack);
-	setDrawMode(di, obj);
+	g_sludge->_peopleMan->setDrawMode(di, obj);
 	return BR_CONTINUE;
 }
 builtIn(setCharacterTransparency) {
@@ -1505,7 +1498,7 @@ builtIn(setCharacterTransparency) {
 	if (!getValueType(obj, SVT_OBJTYPE, fun->stack->thisVar))
 		return BR_ERROR;
 	trimStack(fun->stack);
-	setPersonTransparency(obj, x);
+	g_sludge->_peopleMan->setPersonTransparency(obj, x);
 	return BR_CONTINUE;
 }
 builtIn(setCharacterColourise) {
@@ -1526,7 +1519,7 @@ builtIn(setCharacterColourise) {
 	if (!getValueType(obj, SVT_OBJTYPE, fun->stack->thisVar))
 		return BR_ERROR;
 	trimStack(fun->stack);
-	setPersonColourise(obj, r, g, b, mix);
+	g_sludge->_peopleMan->setPersonColourise(obj, r, g, b, mix);
 	return BR_CONTINUE;
 }
 
@@ -1539,7 +1532,7 @@ builtIn(setScale) {
 	if (!getValueType(val1, SVT_INT, fun->stack->thisVar))
 		return BR_ERROR;
 	trimStack(fun->stack);
-	setScale((int16)val1, (int16)val2);
+	g_sludge->_peopleMan->setScale((int16)val1, (int16)val2);
 	return BR_CONTINUE;
 }
 
@@ -1551,7 +1544,7 @@ builtIn(stopCharacter) {
 	trimStack(fun->stack);
 
 	// Return value
-	setVariable(fun->reg, SVT_INT, stopPerson(obj));
+	setVariable(fun->reg, SVT_INT, g_sludge->_peopleMan->stopPerson(obj));
 	return BR_CONTINUE;
 }
 
@@ -1562,7 +1555,7 @@ builtIn(pasteCharacter) {
 		return BR_ERROR;
 	trimStack(fun->stack);
 
-	OnScreenPerson *thisPerson = findPerson(obj);
+	OnScreenPerson *thisPerson = g_sludge->_peopleMan->findPerson(obj);
 	if (thisPerson) {
 		PersonaAnimation  *myAnim;
 		myAnim = thisPerson->myAnim;
@@ -1584,15 +1577,15 @@ builtIn(pasteCharacter) {
 builtIn(animate) {
 	UNUSEDALL
 	int obj;
-	PersonaAnimation  *pp = getAnimationFromVar(fun->stack->thisVar);
+	PersonaAnimation *pp = getAnimationFromVar(fun->stack->thisVar);
 	if (pp == NULL)
 		return BR_ERROR;
 	trimStack(fun->stack);
 	if (!getValueType(obj, SVT_OBJTYPE, fun->stack->thisVar))
 		return BR_ERROR;
 	trimStack(fun->stack);
-	animatePerson(obj, pp);
-	setVariable(fun->reg, SVT_INT, timeForAnim(pp));
+	g_sludge->_peopleMan->animatePerson(obj, pp);
+	setVariable(fun->reg, SVT_INT, pp->getTotalTime());
 	return BR_CONTINUE;
 }
 
@@ -1606,7 +1599,7 @@ builtIn(setCostume) {
 	if (!getValueType(obj, SVT_OBJTYPE, fun->stack->thisVar))
 		return BR_ERROR;
 	trimStack(fun->stack);
-	animatePerson(obj, pp);
+	g_sludge->_peopleMan->animatePerson(obj, pp);
 	return BR_CONTINUE;
 }
 
@@ -1619,7 +1612,7 @@ builtIn(floatCharacter) {
 	if (!getValueType(obj, SVT_OBJTYPE, fun->stack->thisVar))
 		return BR_ERROR;
 	trimStack(fun->stack);
-	setVariable(fun->reg, SVT_INT, floatCharacter(di, obj));
+	setVariable(fun->reg, SVT_INT, g_sludge->_peopleMan->floatCharacter(di, obj));
 	return BR_CONTINUE;
 }
 
@@ -1632,7 +1625,7 @@ builtIn(setCharacterWalkSpeed) {
 	if (!getValueType(obj, SVT_OBJTYPE, fun->stack->thisVar))
 		return BR_ERROR;
 	trimStack(fun->stack);
-	setVariable(fun->reg, SVT_INT, setCharacterWalkSpeed(di, obj));
+	setVariable(fun->reg, SVT_INT, g_sludge->_peopleMan->setCharacterWalkSpeed(di, obj));
 	return BR_CONTINUE;
 }
 
@@ -1645,7 +1638,7 @@ builtIn(turnCharacter) {
 	if (!getValueType(obj, SVT_OBJTYPE, fun->stack->thisVar))
 		return BR_ERROR;
 	trimStack(fun->stack);
-	setVariable(fun->reg, SVT_INT, turnPersonToFace(obj, di));
+	setVariable(fun->reg, SVT_INT, g_sludge->_peopleMan->turnPersonToFace(obj, di));
 	return BR_CONTINUE;
 }
 
@@ -1658,7 +1651,7 @@ builtIn(setCharacterExtra) {
 	if (!getValueType(obj, SVT_OBJTYPE, fun->stack->thisVar))
 		return BR_ERROR;
 	trimStack(fun->stack);
-	setVariable(fun->reg, SVT_INT, setPersonExtra(obj, di));
+	setVariable(fun->reg, SVT_INT, g_sludge->_peopleMan->setPersonExtra(obj, di));
 	return BR_CONTINUE;
 }
 
@@ -1668,7 +1661,7 @@ builtIn(removeCharacter) {
 	if (!getValueType(objectNumber, SVT_OBJTYPE, fun->stack->thisVar))
 		return BR_ERROR;
 	trimStack(fun->stack);
-	removeOneCharacter(objectNumber);
+	g_sludge->_peopleMan->removeOneCharacter(objectNumber);
 	return BR_CONTINUE;
 }
 
@@ -1688,12 +1681,12 @@ static BuiltReturn moveChr(int numParams, LoadedFunction *fun, bool force, bool 
 			trimStack(fun->stack);
 
 			if (force) {
-				if (forceWalkingPerson(x, y, objectNumber, fun, -1))
+				if (g_sludge->_peopleMan->forceWalkingPerson(x, y, objectNumber, fun, -1))
 					return BR_PAUSE;
 			} else if (immediate) {
-				jumpPerson(x, y, objectNumber);
+				g_sludge->_peopleMan->jumpPerson(x, y, objectNumber);
 			} else {
-				if (makeWalkingPerson(x, y, objectNumber, fun, -1))
+				if (g_sludge->_peopleMan->makeWalkingPerson(x, y, objectNumber, fun, -1))
 					return BR_PAUSE;
 			}
 			return BR_CONTINUE;
@@ -1709,17 +1702,17 @@ static BuiltReturn moveChr(int numParams, LoadedFunction *fun, bool force, bool 
 			if (!getValueType(objectNumber, SVT_OBJTYPE, fun->stack->thisVar))
 				return BR_ERROR;
 			trimStack(fun->stack);
-			reggie = getRegionForObject(toObj);
+			reggie = g_sludge->_regionMan->getRegionForObject(toObj);
 			if (reggie == NULL)
 				return BR_CONTINUE;
 
 			if (force) {
-				if (forceWalkingPerson(reggie->sX, reggie->sY, objectNumber, fun, reggie->di))
+				if (g_sludge->_peopleMan->forceWalkingPerson(reggie->sX, reggie->sY, objectNumber, fun, reggie->di))
 					return BR_PAUSE;
 			} else if (immediate) {
-				jumpPerson(reggie->sX, reggie->sY, objectNumber);
+				g_sludge->_peopleMan->jumpPerson(reggie->sX, reggie->sY, objectNumber);
 			} else {
-				if (makeWalkingPerson(reggie->sX, reggie->sY, objectNumber, fun, reggie->di))
+				if (g_sludge->_peopleMan->makeWalkingPerson(reggie->sX, reggie->sY, objectNumber, fun, reggie->di))
 					return BR_PAUSE;
 			}
 			return BR_CONTINUE;
@@ -1946,7 +1939,7 @@ builtIn(isScreenRegion) {
 	if (!getValueType(objectNumber, SVT_OBJTYPE, fun->stack->thisVar))
 		return BR_ERROR;
 	trimStack(fun->stack);
-	setVariable(fun->reg, SVT_INT, getRegionForObject(objectNumber) != NULL);
+	setVariable(fun->reg, SVT_INT, g_sludge->_regionMan->getRegionForObject(objectNumber) != NULL);
 	return BR_CONTINUE;
 }
 
@@ -1974,17 +1967,12 @@ builtIn(setFontSpacing) {
 
 builtIn(transitionLevel) {
 	UNUSEDALL
-	int number;
-	if (!getValueType(number, SVT_INT, fun->stack->thisVar))
+	int brightnessLevel;
+	if (!getValueType(brightnessLevel, SVT_INT, fun->stack->thisVar))
 		return BR_ERROR;
 	trimStack(fun->stack);
 
-	if (number < 0)
-		brightnessLevel = 0;
-	else if (number > 255)
-		brightnessLevel = 255;
-	else
-		brightnessLevel = number;
+	g_sludge->_gfxMan->setBrightnessLevel(brightnessLevel);
 
 	setVariable(fun->reg, SVT_INT, 1);
 	return BR_CONTINUE;
@@ -1992,9 +1980,10 @@ builtIn(transitionLevel) {
 
 builtIn(captureAllKeys) {
 	UNUSEDALL
-	captureAllKeys = getBoolean(fun->stack->thisVar);
+	// This built-in function doesn't have any effect any more, we capture all keys by default
+	bool captureAllKeysDeprecated = getBoolean(fun->stack->thisVar);
 	trimStack(fun->stack);
-	setVariable(fun->reg, SVT_INT, captureAllKeys);
+	setVariable(fun->reg, SVT_INT, captureAllKeysDeprecated);
 	return BR_CONTINUE;
 }
 
@@ -2008,7 +1997,7 @@ builtIn(spinCharacter) {
 		return BR_ERROR;
 	trimStack(fun->stack);
 
-	OnScreenPerson *thisPerson = findPerson(objectNumber);
+	OnScreenPerson *thisPerson = g_sludge->_peopleMan->findPerson(objectNumber);
 	if (thisPerson) {
 		thisPerson->wantAngle = number;
 		thisPerson->spinning = true;
@@ -2027,7 +2016,7 @@ builtIn(getCharacterDirection) {
 	if (!getValueType(objectNumber, SVT_OBJTYPE, fun->stack->thisVar))
 		return BR_ERROR;
 	trimStack(fun->stack);
-	OnScreenPerson *thisPerson = findPerson(objectNumber);
+	OnScreenPerson *thisPerson = g_sludge->_peopleMan->findPerson(objectNumber);
 	if (thisPerson) {
 		setVariable(fun->reg, SVT_INT, thisPerson->direction);
 	} else {
@@ -2042,7 +2031,7 @@ builtIn(isCharacter) {
 	if (!getValueType(objectNumber, SVT_OBJTYPE, fun->stack->thisVar))
 		return BR_ERROR;
 	trimStack(fun->stack);
-	OnScreenPerson *thisPerson = findPerson(objectNumber);
+	OnScreenPerson *thisPerson = g_sludge->_peopleMan->findPerson(objectNumber);
 	setVariable(fun->reg, SVT_INT, thisPerson != NULL);
 	return BR_CONTINUE;
 }
@@ -2053,7 +2042,7 @@ builtIn(normalCharacter) {
 	if (!getValueType(objectNumber, SVT_OBJTYPE, fun->stack->thisVar))
 		return BR_ERROR;
 	trimStack(fun->stack);
-	OnScreenPerson *thisPerson = findPerson(objectNumber);
+	OnScreenPerson *thisPerson = g_sludge->_peopleMan->findPerson(objectNumber);
 	if (thisPerson) {
 		thisPerson->myAnim = thisPerson->myPersona->animation[thisPerson->direction];
 		setVariable(fun->reg, SVT_INT, 1);
@@ -2069,7 +2058,7 @@ builtIn(isMoving) {
 	if (!getValueType(objectNumber, SVT_OBJTYPE, fun->stack->thisVar))
 		return BR_ERROR;
 	trimStack(fun->stack);
-	OnScreenPerson *thisPerson = findPerson(objectNumber);
+	OnScreenPerson *thisPerson = g_sludge->_peopleMan->findPerson(objectNumber);
 	if (thisPerson) {
 		setVariable(fun->reg, SVT_INT, thisPerson->walking);
 	} else {
@@ -2160,7 +2149,7 @@ builtIn(burnString) {
 	trimStack(fun->stack);
 	if (x == IN_THE_CENTRE)
 		x = g_sludge->_gfxMan->getCenterX(g_sludge->_txtMan->stringWidth(newText));
-	g_sludge->_txtMan->burnStringToBackdrop(newText, x, y, pastePalette);
+	g_sludge->_txtMan->burnStringToBackdrop(newText, x, y);
 	return BR_CONTINUE;
 }
 
@@ -2174,7 +2163,7 @@ builtIn(setCharacterSpinSpeed) {
 		return BR_ERROR;
 	trimStack(fun->stack);
 
-	OnScreenPerson *thisPerson = findPerson(who);
+	OnScreenPerson *thisPerson = g_sludge->_peopleMan->findPerson(who);
 
 	if (thisPerson) {
 		thisPerson->spinSpeed = speed;
@@ -2195,7 +2184,7 @@ builtIn(setCharacterAngleOffset) {
 		return BR_ERROR;
 	trimStack(fun->stack);
 
-	OnScreenPerson *thisPerson = findPerson(who);
+	OnScreenPerson *thisPerson = g_sludge->_peopleMan->findPerson(who);
 
 	if (thisPerson) {
 		thisPerson->angleOffset = angle;
@@ -2211,7 +2200,7 @@ builtIn(transitionMode) {
 	int n;
 	if (!getValueType(n, SVT_INT, fun->stack->thisVar))
 		return BR_ERROR;
-	fadeMode = n;
+	g_sludge->_gfxMan->setFadeMode(n);
 	trimStack(fun->stack);
 	setVariable(fun->reg, SVT_INT, 1);
 	return BR_CONTINUE;
@@ -2254,7 +2243,7 @@ builtIn(saveCustomData) {
 		fatal("First parameter isn't a stack");
 		return BR_ERROR;
 	}
-	if (!stackToFile(fileName, fun->stack->thisVar))
+	if (!CustomSaveHelper::stackToFile(fileName, fun->stack->thisVar))
 		return BR_ERROR;
 	trimStack(fun->stack);
 	return BR_CONTINUE;
@@ -2279,7 +2268,7 @@ builtIn(loadCustomData) {
 	fun->reg.varData.theStack->first = NULL;
 	fun->reg.varData.theStack->last = NULL;
 	fun->reg.varData.theStack->timesUsed = 1;
-	if (!fileToStack(newText, fun->reg.varData.theStack))
+	if (!CustomSaveHelper::fileToStack(newText, fun->reg.varData.theStack))
 		return BR_ERROR;
 	return BR_CONTINUE;
 }
@@ -2289,7 +2278,7 @@ builtIn(setCustomEncoding) {
 	int n;
 	if (!getValueType(n, SVT_INT, fun->stack->thisVar))
 		return BR_ERROR;
-	saveEncoding = n;
+	CustomSaveHelper::_saveEncoding = n;
 	trimStack(fun->stack);
 	setVariable(fun->reg, SVT_INT, 1);
 	return BR_CONTINUE;
@@ -2391,7 +2380,7 @@ builtIn(getCharacterScale) {
 		return BR_ERROR;
 	trimStack(fun->stack);
 
-	OnScreenPerson *pers = findPerson(objectNumber);
+	OnScreenPerson *pers = g_sludge->_peopleMan->findPerson(objectNumber);
 	if (pers) {
 		setVariable(fun->reg, SVT_INT, pers->scale * 100);
 	} else {
@@ -2462,13 +2451,14 @@ builtIn(showThumbnail) {
 
 builtIn(setThumbnailSize) {
 	UNUSEDALL
+	int thumbHeight, thumbWidth;
 	if (!getValueType(thumbHeight, SVT_INT, fun->stack->thisVar))
 		return BR_ERROR;
 	trimStack(fun->stack);
 	if (!getValueType(thumbWidth, SVT_INT, fun->stack->thisVar))
 		return BR_ERROR;
 	trimStack(fun->stack);
-	if (!g_sludge->_gfxMan->checkSizeValide(thumbWidth, thumbHeight)) {
+	if (!g_sludge->_gfxMan->setThumbnailSize(thumbWidth, thumbHeight)) {
 		Common::String buff = Common::String::format("%i x %i", thumbWidth, thumbWidth);
 		fatal("Invalid thumbnail size", buff);
 		return BR_ERROR;

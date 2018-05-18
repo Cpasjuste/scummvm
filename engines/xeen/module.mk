@@ -6,7 +6,6 @@ MODULE_OBJS := \
 	worldofxeen/worldofxeen_cutscenes.o \
 	worldofxeen/worldofxeen_menu.o \
 	worldofxeen/worldofxeen.o \
-	worldofxeen/worldofxeen_resources.o \
 	swordsofxeen/swordsofxeen.o \
 	swordsofxeen/swordsofxeen_menu.o \
 	dialogs/credits_screen.o \
@@ -47,6 +46,7 @@ MODULE_OBJS := \
 	locations.o \
 	map.o \
 	party.o \
+	patcher.o \
 	resources.o \
 	saves.o \
 	screen.o \

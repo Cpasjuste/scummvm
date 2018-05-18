@@ -62,6 +62,16 @@ static const ADGameDescription gameDescriptions[] = {
 		},
 
 		{
+			"sfinx", "Freeware v1.1",
+			{
+				{"vol.cat", 0, "aa402aed24a72c53a4d1211c456b79dd", 129024},
+				{"vol.dat", 0, "5966ac26d91d664714349669f9dd09b5", 34180367},
+				AD_LISTEND
+			},
+			Common::PL_POL, Common::kPlatformDOS, ADGF_NO_FLAGS, GUIO1(GAMEOPTION_COLOR_BLIND_DEFAULT_OFF)
+		},
+
+		{
 			"sfinx", "Freeware v0.3",
 			{
 				{"vol.cat", 0, "f158e469dccbebc5a632eb848df89779", 129024},
@@ -185,6 +195,7 @@ bool CGE2MetaEngine::hasFeature(MetaEngineFeature f) const {
 		(f == kSavesSupportMetaInfo) ||
 		(f == kSavesSupportThumbnail) ||
 		(f == kSavesSupportCreationDate) ||
+		(f == kSavesSupportPlayTime) ||
 		(f == kSupportsListSaves) ||
 		(f == kSupportsLoadingDuringStartup) ||
 		(f == kSimpleSavesNames);
@@ -221,10 +232,6 @@ SaveStateList CGE2MetaEngine::listSaves(const char *target) const {
 					// Valid savegame
 					if (CGE2::CGE2Engine::readSavegameHeader(file, header)) {
 						saveList.push_back(SaveStateDescriptor(slotNum, header.saveName));
-						if (header.thumbnail) {
-							header.thumbnail->free();
-							delete header.thumbnail;
-						}
 					}
 				} else {
 					// Must be an original format savegame
@@ -253,7 +260,7 @@ SaveStateDescriptor CGE2MetaEngine::querySaveMetaInfos(const char *target, int s
 		f->read(buffer, kSavegameStrSize + 1);
 
 		bool hasHeader = !strncmp(buffer, kSavegameStr, kSavegameStrSize + 1) &&
-			CGE2::CGE2Engine::readSavegameHeader(f, header);
+			CGE2::CGE2Engine::readSavegameHeader(f, header, false);
 		delete f;
 
 		if (!hasHeader) {
@@ -266,6 +273,10 @@ SaveStateDescriptor CGE2MetaEngine::querySaveMetaInfos(const char *target, int s
 			desc.setThumbnail(header.thumbnail);
 			desc.setSaveDate(header.saveYear, header.saveMonth, header.saveDay);
 			desc.setSaveTime(header.saveHour, header.saveMinutes);
+
+			if (header.playTime) {
+				desc.setPlayTime(header.playTime * 1000);
+			}
 
 			// Slot 0 is used for the 'automatic save on exit' save in Soltys, thus
 			// we prevent it from being deleted or overwritten by accident.

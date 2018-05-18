@@ -49,6 +49,7 @@ XeenEngine::XeenEngine(OSystem *syst, const XeenGameDescription *gameDesc)
 	_locations = nullptr;
 	_map = nullptr;
 	_party = nullptr;
+	_patcher = nullptr;
 	_resources = nullptr;
 	_saves = nullptr;
 	_screen = nullptr;
@@ -75,6 +76,7 @@ XeenEngine::~XeenEngine() {
 	delete _locations;
 	delete _map;
 	delete _party;
+	delete _patcher;
 	delete _saves;
 	delete _screen;
 	delete _scripts;
@@ -100,6 +102,7 @@ bool XeenEngine::initialize() {
 	_locations = new LocationManager();
 	_map = new Map(this);
 	_party = new Party(this);
+	_patcher = new Patcher();
 	_saves = new SavesManager(_targetName);
 	_screen = new Screen(this);
 	_scripts = new Scripts(this);
@@ -126,6 +129,7 @@ void XeenEngine::loadSettings() {
 	_finalScore = ConfMan.hasKey("final_score") ? ConfMan.getInt("final_score") : 0;
 
 	_extOptions._showItemCosts = ConfMan.hasKey("ShowItemCosts") && ConfMan.getBool("ShowItemCosts");
+	_extOptions._durableArmor = ConfMan.hasKey("DurableArmor") && ConfMan.getBool("DurableArmor");
 
 	// If requested, load a savegame instead of showing the intro
 	if (ConfMan.hasKey("save_slot")) {
@@ -189,11 +193,12 @@ Common::Error XeenEngine::loadGameState(int slot) {
 }
 
 bool XeenEngine::canLoadGameStateCurrently() {
-	return _mode != MODE_COMBAT && _mode != MODE_STARTUP;
+	return _mode != MODE_STARTUP;
 }
 
 bool XeenEngine::canSaveGameStateCurrently() {
-	return _mode != MODE_COMBAT && _mode != MODE_STARTUP;
+	return _mode != MODE_COMBAT && _mode != MODE_STARTUP && _mode != MODE_SCRIPT_IN_PROGRESS
+		&& (_map->mazeData()._mazeFlags & RESTRICTION_SAVE) == 0;
 }
 
 void XeenEngine::playGame() {
@@ -202,6 +207,7 @@ void XeenEngine::playGame() {
 	SpriteResource::setClippedBottom(140);
 
 	play();
+	_sound->stopAllAudio();
 }
 
 void XeenEngine::play() {
@@ -217,6 +223,7 @@ void XeenEngine::play() {
 		_party->_mazePosition.y = 21;
 	}
 
+	_map->clearMaze();
 	if (_loadSaveSlot >= 0) {
 		_saves->newGame();
 		_saves->loadGameState(_loadSaveSlot);
@@ -237,7 +244,7 @@ void XeenEngine::play() {
 
 	_combat->_moveMonsters = true;
 	if (_mode == MODE_STARTUP) {
-		_mode = MODE_1;
+		_mode = MODE_INTERACTIVE;
 		_screen->fadeIn();
 	}
 
@@ -254,7 +261,7 @@ void XeenEngine::play() {
 
 void XeenEngine::gameLoop() {
 	// Main game loop
-	while (!shouldExit()) {
+	while (isLoadPending() || !shouldExit()) {
 		if (isLoadPending()) {
 			// Load any pending savegame
 			int saveSlot = _loadSaveSlot;
@@ -266,7 +273,9 @@ void XeenEngine::gameLoop() {
 		_map->cellFlagLookup(_party->_mazePosition);
 		if (_map->_currentIsEvent) {
 			_gameMode = (GameMode)_scripts->checkEvents();
-			if (shouldExit() || _gameMode)
+			if (isLoadPending())
+				continue;
+			if (shouldExit())
 				return;
 		}
 		_party->giveTreasure();

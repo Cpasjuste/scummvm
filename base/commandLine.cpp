@@ -68,18 +68,18 @@ static const char HELP_STRING[] =
 	"  -h, --help               Display a brief help text and exit\n"
 	"  -z, --list-games         Display list of supported games and exit\n"
 	"  -t, --list-targets       Display list of configured targets and exit\n"
-	"  --list-saves=TARGET      Display a list of saved games for the game (TARGET) specified\n"
+	"  --list-saves             Display a list of saved games for the target specified\n"
+	"                           with --game=TARGET, or all targets if none is specified\n"
 	"  -a, --add                Add all games from current or specified directory.\n"
 	"                           If --game=ID is passed only the game with id ID is added. See also --detect\n"
-	"                           Use --path=PATH before -a, --add to specify a directory.\n"
+	"                           Use --path=PATH to specify a directory.\n"
 	"  --detect                 Display a list of games with their ID from current or\n"
 	"                           specified directory without adding it to the config.\n"
-	"                           Use --path=PATH before --detect to specify a directory.\n"
+	"                           Use --path=PATH to specify a directory.\n"
 	"  --game=ID                In combination with --add or --detect only adds or attempts to\n"
 	"                           detect the game with id ID.\n"
 	"  --auto-detect            Display a list of games from current or specified directory\n"
-	"                           and start the first one. Use --path=PATH before --auto-detect\n"
-	"                           to specify a directory.\n"
+	"                           and start the first one. Use --path=PATH to specify a directory.\n"
 	"  --recursive              In combination with --add or --detect recurse down all subdirectories\n"
 #if defined(WIN32) && !defined(_WIN32_WCE) && !defined(__SYMBIAN32__)
 	"  --console                Enable the console window (default:enabled)\n"
@@ -131,7 +131,14 @@ static const char HELP_STRING[] =
 	"  --native-mt32            True Roland MT-32 (disable GM emulation)\n"
 	"  --enable-gs              Enable Roland GS mode for MIDI playback\n"
 	"  --output-rate=RATE       Select output sample rate in Hz (e.g. 22050)\n"
-	"  --opl-driver=DRIVER      Select AdLib (OPL) emulator (db, mame)\n"
+	"  --opl-driver=DRIVER      Select AdLib (OPL) emulator (db, mame"
+#ifndef DISABLE_NUKED_OPL
+                                                                     ", nuked"
+#endif
+#ifdef ENABLE_OPL2LPT
+                                                                     ", opl2lpt"
+#endif
+                                                                              ")\n"
 	"  --aspect-ratio           Enable aspect ratio correction\n"
 	"  --render-mode=MODE       Enable additional render modes (hercGreen, hercAmber,\n"
 	"                           cga, ega, vga, amiga, fmtowns, pc9821, pc9801, 2gs,\n"
@@ -148,7 +155,7 @@ static const char HELP_STRING[] =
 	"  --alt-intro              Use alternative intro for CD versions of Beneath a\n"
 	"                           Steel Sky and Flight of the Amazon Queen\n"
 #endif
-	"  --copy-protection        Enable copy protection in SCUMM games, when\n"
+	"  --copy-protection        Enable copy protection in games, when\n"
 	"                           ScummVM disables it by default.\n"
 	"  --talkspeed=NUM          Set talk speed for games (default: 60)\n"
 #if defined(ENABLE_SCUMM) || defined(ENABLE_GROOVIE)
@@ -189,6 +196,11 @@ static void usage(const char *s, ...) {
 	exit(1);
 }
 
+static void ensureFirstCommand(const Common::String &existingCommand, const char *newCommand) {
+	if (!existingCommand.empty())
+		usage("--%s: Cannot accept more than one command (already found --%s).", newCommand, existingCommand.c_str());
+}
+
 #endif // DISABLE_COMMAND_LINE
 
 
@@ -220,6 +232,7 @@ void registerDefaults() {
 	ConfMan.registerDefault("music_driver", "auto");
 	ConfMan.registerDefault("mt32_device", "null");
 	ConfMan.registerDefault("gm_device", "null");
+	ConfMan.registerDefault("opl2lpt_parport", "null");
 
 	ConfMan.registerDefault("cdrom", 0);
 
@@ -233,7 +246,7 @@ void registerDefaults() {
 	ConfMan.registerDefault("boot_param", 0);
 	ConfMan.registerDefault("dump_scripts", false);
 	ConfMan.registerDefault("save_slot", -1);
-	ConfMan.registerDefault("autosave_period", 5 * 60);	// By default, trigger autosave every 5 minutes
+	ConfMan.registerDefault("autosave_period", 5 * 60); // By default, trigger autosave every 5 minutes
 
 #if defined(ENABLE_SCUMM) || defined(ENABLE_SWORD2)
 	ConfMan.registerDefault("object_labels", true);
@@ -300,7 +313,7 @@ void registerDefaults() {
 
 // Use this for options which have an *optional* value
 #define DO_OPTION_OPT(shortCmd, longCmd, defaultVal) \
-	if (isLongCmd ? (!strcmp(s+2, longCmd) || !memcmp(s+2, longCmd"=", sizeof(longCmd"=") - 1)) : (tolower(s[1]) == shortCmd)) { \
+	if (isLongCmd ? (!strcmp(s + 2, longCmd) || !memcmp(s + 2, longCmd"=", sizeof(longCmd"=") - 1)) : (tolower(s[1]) == shortCmd)) { \
 		s += 2; \
 		if (isLongCmd) { \
 			s += sizeof(longCmd) - 1; \
@@ -329,7 +342,7 @@ void registerDefaults() {
 // Use this for boolean options; this distinguishes between "-x" and "-X",
 // resp. between "--some-option" and "--no-some-option".
 #define DO_OPTION_BOOL(shortCmd, longCmd) \
-	if (isLongCmd ? (!strcmp(s+2, longCmd) || !strcmp(s+2, "no-" longCmd)) : (tolower(s[1]) == shortCmd)) { \
+	if (isLongCmd ? (!strcmp(s + 2, longCmd) || !strcmp(s + 2, "no-" longCmd)) : (tolower(s[1]) == shortCmd)) { \
 		bool boolValue = (Common::isLower(s[1]) != 0); \
 		s += 2; \
 		if (isLongCmd) { \
@@ -342,12 +355,13 @@ void registerDefaults() {
 
 // Use this for options which never have a value, i.e. for 'commands', like "--help".
 #define DO_COMMAND(shortCmd, longCmd) \
-	if (isLongCmd ? (!strcmp(s+2, longCmd)) : (tolower(s[1]) == shortCmd)) { \
+	if (isLongCmd ? (!strcmp(s + 2, longCmd)) : (tolower(s[1]) == shortCmd)) { \
 		s += 2; \
 		if (isLongCmd) \
 			s += sizeof(longCmd) - 1; \
 		if (*s != '\0') goto unknownOption; \
-		return longCmd;
+		ensureFirstCommand(command, longCmd); \
+		command = longCmd;
 
 
 #define DO_LONG_OPTION_OPT(longCmd, d)  DO_OPTION_OPT(0, longCmd, d)
@@ -363,19 +377,21 @@ void registerDefaults() {
 
 // End an option handler
 #define END_COMMAND \
+		continue; \
 	}
 
 
 Common::String parseCommandLine(Common::StringMap &settings, int argc, const char * const *argv) {
 	const char *s, *s2;
+	Common::String command;
 
 	if (!argv)
-		return Common::String();
+		return command;
 
 	// argv[0] contains the name of the executable.
 	if (argv[0]) {
 		s = strrchr(argv[0], '/');
-		s_appName = s ? (s+1) : argv[0];
+		s_appName = s ? (s + 1) : argv[0];
 	}
 
 	// We store all command line settings into a string map.
@@ -443,12 +459,8 @@ Common::String parseCommandLine(Common::StringMap &settings, int argc, const cha
 			END_COMMAND
 #endif
 
-			DO_LONG_OPTION("list-saves")
-				// FIXME: Need to document this.
-				// TODO: Make the argument optional. If no argument is given, list all saved games
-				// for all configured targets.
-				return "list-saves";
-			END_OPTION
+			DO_LONG_COMMAND("list-saves")
+			END_COMMAND
 
 			DO_OPTION('c', "config")
 			END_OPTION
@@ -665,7 +677,7 @@ unknownOption:
 		}
 	}
 
-	return Common::String();
+	return command;
 }
 
 /** List all supported game IDs, i.e. all games which any loaded plugin supports. */
@@ -718,64 +730,96 @@ static void listTargets() {
 }
 
 /** List all saves states for the given target. */
-static Common::Error listSaves(const char *target) {
+static Common::Error listSaves(const Common::String &target) {
 	Common::Error result = Common::kNoError;
+
+	// If no target is specified, list save games for all known targets
+	Common::Array<Common::String> targets;
+	if (!target.empty())
+		targets.push_back(target);
+	else {
+		const Common::ConfigManager::DomainMap &domains = ConfMan.getGameDomains();
+		Common::ConfigManager::DomainMap::const_iterator iter;
+
+		targets.reserve(domains.size());
+		for (iter = domains.begin(); iter != domains.end(); ++iter)
+			targets.push_back(iter->_key);
+	}
 
 	// FIXME HACK
 	g_system->initBackend();
 
-	// Grab the "target" domain, if any
-	const Common::ConfigManager::Domain *domain = ConfMan.getDomain(target);
-
-	// Set up the game domain as newly active domain, so
-	// target specific savepath will be checked
 	Common::String oldDomain = ConfMan.getActiveDomainName();
-	ConfMan.setActiveDomain(target);
 
-	// Grab the gameid from the domain resp. use the target as gameid
-	Common::String gameid;
-	if (domain)
-		gameid = domain->getVal("gameid");
-	if (gameid.empty())
-		gameid = target;
-	gameid.toLowercase();	// Normalize it to lower case
+	bool atLeastOneFound = false;
+	for (Common::Array<Common::String>::const_iterator i = targets.begin(), end = targets.end(); i != end; ++i) {
+		// Grab the "target" domain, if any
+		const Common::ConfigManager::Domain *domain = ConfMan.getDomain(*i);
 
-	// Find the plugin that will handle the specified gameid
-	const Plugin *plugin = nullptr;
-	GameDescriptor game = EngineMan.findGame(gameid, &plugin);
+		// Set up the game domain as newly active domain, so
+		// target specific savepath will be checked
+		ConfMan.setActiveDomain(*i);
 
-	if (!plugin) {
-		return Common::Error(Common::kEnginePluginNotFound,
-						Common::String::format("target '%s', gameid '%s", target, gameid.c_str()));
-	}
+		// Grab the gameid from the domain resp. use the target as gameid
+		Common::String gameid;
+		if (domain)
+			gameid = domain->getVal("gameid");
+		if (gameid.empty())
+			gameid = *i;
+		gameid.toLowercase(); // Normalize it to lower case
 
-	const MetaEngine &metaEngine = plugin->get<MetaEngine>();
+		// Find the plugin that will handle the specified gameid
+		const Plugin *plugin = nullptr;
+		GameDescriptor game = EngineMan.findGame(gameid, &plugin);
 
-	if (!metaEngine.hasFeature(MetaEngine::kSupportsListSaves)) {
-		// TODO: Include more info about the target (desc, engine name, ...) ???
-		return Common::Error(Common::kEnginePluginNotSupportSaves,
-						Common::String::format("target '%s', gameid '%s", target, gameid.c_str()));
-	} else {
+		if (!plugin) {
+			// If the target was specified, treat this as an error, and otherwise skip it.
+			if (!target.empty())
+				return Common::Error(Common::kEnginePluginNotFound,
+				                     Common::String::format("target '%s', gameid '%s", i->c_str(), gameid.c_str()));
+			printf("Plugin could not be loaded for target '%s', gameid '%s", i->c_str(), gameid.c_str());
+			continue;
+		}
+
+		const MetaEngine &metaEngine = plugin->get<MetaEngine>();
+
+		if (!metaEngine.hasFeature(MetaEngine::kSupportsListSaves)) {
+			// If the target was specified, treat this as an error, and otherwise skip it.
+			if (!target.empty())
+				// TODO: Include more info about the target (desc, engine name, ...) ???
+				return Common::Error(Common::kEnginePluginNotSupportSaves,
+				                     Common::String::format("target '%s', gameid '%s", i->c_str(), gameid.c_str()));
+			continue;
+		}
+
 		// Query the plugin for a list of saved games
-		SaveStateList saveList = metaEngine.listSaves(target);
+		SaveStateList saveList = metaEngine.listSaves(i->c_str());
 
 		if (saveList.size() > 0) {
 			// TODO: Include more info about the target (desc, engine name, ...) ???
-			printf("Save states for target '%s' (gameid '%s'):\n", target, gameid.c_str());
+			if (atLeastOneFound)
+				printf("\n");
+			printf("Save states for target '%s' (gameid '%s'):\n", i->c_str(), gameid.c_str());
 			printf("  Slot Description                                           \n"
-				   "  ---- ------------------------------------------------------\n");
+					   "  ---- ------------------------------------------------------\n");
 
 			for (SaveStateList::const_iterator x = saveList.begin(); x != saveList.end(); ++x) {
 				printf("  %-4d %s\n", x->getSaveSlot(), x->getDescription().c_str());
 				// TODO: Could also iterate over the full hashmap, printing all key-value pairs
 			}
+			atLeastOneFound = true;
 		} else {
-			printf("There are no save states for target '%s' (gameid '%s'):\n", target, gameid.c_str());
+			// If the target was specified, indicate no save games were found for it. Otherwise just skip it.
+			if (!target.empty())
+				printf("There are no save states for target '%s' (gameid '%s'):\n", i->c_str(), gameid.c_str());
 		}
 	}
 
 	// Revert to the old active domain
 	ConfMan.setActiveDomain(oldDomain);
+
+	if (!atLeastOneFound && target.empty())
+		printf("No save states could be found.\n");
 
 	return result;
 }
@@ -813,7 +857,7 @@ static void listAudioDevices() {
 static GameList getGameList(const Common::FSNode &dir) {
 	Common::FSList files;
 
-	//Collect all files from directory
+	// Collect all files from directory
 	if (!dir.getChildren(files, Common::FSNode::kListAll)) {
 		printf("Path %s does not exist or is not a directory.\n", dir.getPath().c_str());
 		return GameList();
@@ -883,10 +927,10 @@ static Common::String detectGames(const Common::String &path, const Common::Stri
 	if (candidates.empty()) {
 		printf("WARNING: ScummVM could not find any game in %s\n", dir.getPath().c_str());
 		if (noPath) {
-			printf("WARNING: Consider using --path=<path> *before* --add or --detect to specify a directory\n");
+			printf("WARNING: Consider using --path=<path> to specify a directory\n");
 		}
 		if (!recursive) {
-			printf("WARNING: Consider using --recursive *before* --add or --detect to search inside subdirectories\n");
+			printf("WARNING: Consider using --recursive to search inside subdirectories\n");
 		}
 		return Common::String();
 	}
@@ -1035,7 +1079,7 @@ void upgradeTargets() {
 		if (gameid.empty()) {
 			gameid = name;
 		}
-		gameid.toLowercase();	// TODO: Is this paranoia? Maybe we should just assume all lowercase, always?
+		gameid.toLowercase(); // TODO: Is this paranoia? Maybe we should just assume all lowercase, always?
 
 		Common::FSNode dir(path);
 		Common::FSList files;
@@ -1149,7 +1193,7 @@ bool processSettings(Common::String &command, Common::StringMap &settings, Commo
 		listGames();
 		return true;
 	} else if (command == "list-saves") {
-		err = listSaves(settings["list-saves"].c_str());
+		err = listSaves(settings["game"]);
 		return true;
 	} else if (command == "list-themes") {
 		listThemes();

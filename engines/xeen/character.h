@@ -44,10 +44,6 @@ enum Award {
 	LAKESIDE_GUILD_MEMBER = 85, NECROPOLIS_GUILD_MEMBER = 86, OLYMPUS_GUILD_MEMBER = 87
 };
 
-enum BonusFlags {
-	ITEMFLAG_BONUS_MASK = 0xBF, ITEMFLAG_CURSED = 0x40, ITEMFLAG_BROKEN = 0x80
-};
-
 enum Sex { MALE = 0, FEMALE = 1, YES_PLEASE = 2 };
 
 enum Race { HUMAN = 0, ELF = 1, DWARF = 2, GNOME = 3, HALF_ORC = 4 };
@@ -55,7 +51,11 @@ enum Race { HUMAN = 0, ELF = 1, DWARF = 2, GNOME = 3, HALF_ORC = 4 };
 enum CharacterClass {
 	CLASS_KNIGHT = 0, CLASS_PALADIN = 1, CLASS_ARCHER = 2, CLASS_CLERIC = 3,
 	CLASS_SORCERER = 4, CLASS_ROBBER = 5, CLASS_NINJA = 6, CLASS_BARBARIAN = 7,
-	CLASS_DRUID = 8, CLASS_RANGER = 9, TOTAL_CLASSES = 10, CLASS_12 = 12, CLASS_15 = 15, CLASS_16 = 16
+	CLASS_DRUID = 8, CLASS_RANGER = 9, TOTAL_CLASSES = 10
+};
+
+enum HatesClass {
+	HATES_DWARF = 12, HATES_PARTY = 15, HATES_NOBODY = 16
 };
 
 enum Attribute {
@@ -164,6 +164,16 @@ public:
 	 * Constructor
 	 */
 	Character(const Character &src);
+
+	/**
+	 * Equality operator
+	 */
+	bool operator==(const Character &src) const { return src._rosterId == _rosterId; }
+
+	/**
+	 * Inequality operator
+	 */
+	bool operator!=(const Character &src) const { return src._rosterId != _rosterId; }
 
 	/**
 	 * Clears the data for a character
@@ -344,6 +354,14 @@ public:
 	 * Clears the character of any currently set conditions
 	 */
 	void clearConditions();
+};
+
+class CharacterArray : public Common::Array<Character> {
+public:
+	/**
+	 * Returns the index of a given character in the array
+	 */
+	int indexOf(const Character &c);
 };
 
 } // End of namespace Xeen

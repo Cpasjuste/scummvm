@@ -41,6 +41,7 @@
 #include "sludge/objtypes.h"
 #include "sludge/people.h"
 #include "sludge/region.h"
+#include "sludge/savedata.h"
 #include "sludge/statusba.h"
 #include "sludge/sprites.h"
 #include "sludge/sprbanks.h"
@@ -48,14 +49,11 @@
 #include "sludge/sludge.h"
 #include "sludge/sludger.h"
 #include "sludge/speech.h"
-#include "sludge/transition.h"
 #include "sludge/variable.h"
 #include "sludge/version.h"
 #include "sludge/zbuffer.h"
 
 namespace Sludge {
-
-extern int dialogValue;
 
 int numBIFNames = 0;
 Common::String *allBIFNames;
@@ -67,9 +65,6 @@ int selectedLanguage = 0;
 
 int gameVersion;
 FILETIME fileTime;
-bool captureAllKeys = false;
-
-byte brightnessLevel = 255;
 
 extern LoadedFunction *saverFunc;
 
@@ -79,13 +74,10 @@ Variable *globalVars;
 
 int numGlobals = 0;
 
-extern SpritePalette pastePalette;
 extern Variable *launchResult;
-extern int lastFramesPerSecond, thumbWidth, thumbHeight;
+extern int lastFramesPerSecond;
 
 extern bool allowAnyFilename;
-extern byte fadeMode;
-extern uint16 saveEncoding;
 
 const char *sludgeText[] = { "?????", "RETURN", "BRANCH", "BR_ZERO",
 		"SET_GLOBAL", "SET_LOCAL", "LOAD_GLOBAL", "LOAD_LOCAL", "PLUS", "MINUS",
@@ -149,12 +141,11 @@ void initSludge() {
 	g_sludge->_languageMan->init();
 	g_sludge->_gfxMan->init();
 	g_sludge->_resMan->init();
-	initPeople();
-	initFloor();
+	g_sludge->_peopleMan->init();
+	g_sludge->_floorMan->init();
 	g_sludge->_objMan->init();
 	g_sludge->_speechMan->init();
 	initStatusBar();
-	resetRandW();
 	g_sludge->_evtMan->init();
 	g_sludge->_txtMan->init();
 	g_sludge->_cursorMan->init();
@@ -164,27 +155,24 @@ void initSludge() {
 		g_sludge->_soundMan->initSoundStuff();
 	}
 
+	CustomSaveHelper::_saveEncoding = false;
+
 	// global variables
 	numGlobals = 0;
 	launchResult = nullptr;
 
 	lastFramesPerSecond = -1;
-	thumbWidth = thumbHeight = 0;
 	allowAnyFilename = true;
-	captureAllKeys = false;
 	noStack = nullptr;
 	numBIFNames = numUserFunc = 0;
 	allUserFunc = allBIFNames = nullptr;
-	brightnessLevel = 255;
-	fadeMode = 2;
-	saveEncoding = false;
 }
 
 void killSludge() {
 	killAllFunctions();
-	killAllPeople();
-	killAllRegions();
-	setFloorNull();
+	g_sludge->_peopleMan->kill();
+	g_sludge->_regionMan->kill();
+	g_sludge->_floorMan->kill();
 	g_sludge->_speechMan->kill();
 	g_sludge->_languageMan->kill();
 	g_sludge->_gfxMan->kill();
@@ -196,7 +184,6 @@ void killSludge() {
 	g_sludge->_cursorMan->kill();
 
 	// global variables
-	pastePalette.reset();
 	numBIFNames = numUserFunc = 0;
 	delete []allUserFunc;
 	delete []allBIFNames;
@@ -334,7 +321,7 @@ void displayBase() {
 	g_sludge->_gfxMan->clear(); // Clear screen
 	g_sludge->_gfxMan->drawBackDrop();// Draw Backdrop
 	g_sludge->_gfxMan->drawZBuffer(g_sludge->_gfxMan->getCamX(), g_sludge->_gfxMan->getCamY(), false);
-	drawPeople();// Then add any moving characters...
+	g_sludge->_peopleMan->drawPeople();// Then add any moving characters...
 	g_sludge->_gfxMan->displaySpriteLayers();
 }
 
@@ -344,7 +331,6 @@ void sludgeDisplay() {
 	drawStatusBar();
 	g_sludge->_cursorMan->displayCursor();
 	g_sludge->_gfxMan->display();
-	if (brightnessLevel < 255) fixBrightness();// This is for transitionLevel special effects
 }
 
 void pauseFunction(LoadedFunction *fun) {
@@ -616,8 +602,6 @@ bool continueFunction(LoadedFunction *fun) {
 			break;
 
 		case SLU_UNREG:
-			if (dialogValue != 1)
-				fatal(ERROR_HACKER);
 			break;
 
 		case SLU_LOAD_STRING:

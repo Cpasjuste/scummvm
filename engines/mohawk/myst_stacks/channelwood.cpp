@@ -37,7 +37,13 @@ namespace Mohawk {
 namespace MystStacks {
 
 Channelwood::Channelwood(MohawkEngine_Myst *vm) :
-		MystScriptParser(vm), _state(vm->_gameState->_channelwood) {
+		MystScriptParser(vm),
+		_state(vm->_gameState->_channelwood),
+		_valveVar(0),
+		_siriusDrawerState(0),
+		_doorOpened(0),
+		_leverPulled(false),
+		_leverAction(nullptr) {
 	setupOpcodes();
 }
 
@@ -181,7 +187,7 @@ uint16 Channelwood::getVar(uint16 var) {
 		}
 	case 102: // Sirrus's Desk Drawer / Red Page State
 		if (_siriusDrawerState) {
-			if(!(_globals.redPagesInBook & 16) && (_globals.heldPage != 11))
+			if(!(_globals.redPagesInBook & 16) && (_globals.heldPage != kRedChannelwoodPage))
 				return 2; // Drawer Open, Red Page Present
 			else
 				return 1; // Drawer Open, Red Page Taken
@@ -189,7 +195,7 @@ uint16 Channelwood::getVar(uint16 var) {
 			return 0; // Drawer Closed
 		}
 	case 103: // Blue Page Present
-		return !(_globals.bluePagesInBook & 16) && (_globals.heldPage != 5);
+		return !(_globals.bluePagesInBook & 16) && (_globals.heldPage != kBlueChannelwoodPage);
 	default:
 		return MystScriptParser::getVar(var);
 	}
@@ -208,18 +214,18 @@ void Channelwood::toggleVar(uint16 var) {
 		break;
 	case 102: // Red page
 		if (!(_globals.redPagesInBook & 16)) {
-			if (_globals.heldPage == 11)
-				_globals.heldPage = 0;
+			if (_globals.heldPage == kRedChannelwoodPage)
+				_globals.heldPage = kNoPage;
 			else
-				_globals.heldPage = 11;
+				_globals.heldPage = kRedChannelwoodPage;
 		}
 		break;
 	case 103: // Blue page
 		if (!(_globals.bluePagesInBook & 16)) {
-			if (_globals.heldPage == 5)
-				_globals.heldPage = 0;
+			if (_globals.heldPage == kBlueChannelwoodPage)
+				_globals.heldPage = kNoPage;
 			else
-				_globals.heldPage = 5;
+				_globals.heldPage = kBlueChannelwoodPage;
 		}
 		break;
 	default:
@@ -329,6 +335,7 @@ void Channelwood::o_pipeExtend(uint16 var, const ArgumentsArray &args) {
 void Channelwood::o_drawImageChangeCardAndVolume(uint16 var, const ArgumentsArray &args) {
 	uint16 imageId = args[0];
 	uint16 cardId = args[1];
+	uint16 volume = args.size() == 3 ? args[2] : 0;
 
 	debugC(kDebugScript, "\timageId: %d", imageId);
 	debugC(kDebugScript, "\tcardId: %d", cardId);
@@ -338,8 +345,7 @@ void Channelwood::o_drawImageChangeCardAndVolume(uint16 var, const ArgumentsArra
 
 	_vm->changeToCard(cardId, kTransitionPartToLeft);
 
-	if (args.size() == 3) {
-		uint16 volume = args[2];
+	if (volume) {
 		_vm->_sound->changeBackgroundVolume(volume);
 	}
 }

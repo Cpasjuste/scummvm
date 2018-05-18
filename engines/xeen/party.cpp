@@ -78,6 +78,21 @@ Treasure::Treasure() {
 	_categories[3] = &_misc[0];
 }
 
+void Treasure::clear() {
+	for (int idx = 0; idx < MAX_TREASURE_ITEMS; ++idx) {
+		_weapons[idx].clear();
+		_armor[idx].clear();
+		_accessories[idx].clear();
+		_misc[idx].clear();
+	}
+}
+
+void Treasure::reset() {
+	clear();
+	_hasItems = false;
+	_gold = _gems = 0;
+}
+
 /*------------------------------------------------------------------------*/
 
 const int BLACKSMITH_DATA1[4][4] = {
@@ -112,9 +127,7 @@ void BlacksmithWares::regenerate() {
 				ItemCategory itemCat = tempChar.makeItem(idx2 + 1, 0, 0);
 				if (catCount[itemCat] < 8) {
 					XeenItem &item = (*this)[itemCat][0][slotNum][catCount[itemCat]];
-					item._id = tempChar._weapons[0]._id;
-					item._material = tempChar._weapons[0]._material;
-					item._bonusFlags = tempChar._weapons[0]._bonusFlags;
+					item = tempChar._items[itemCat][0];
 
 					++catCount[itemCat];
 				}
@@ -131,9 +144,7 @@ void BlacksmithWares::regenerate() {
 				ItemCategory itemCat = tempChar.makeItem(idx2 + (slotNum >= 2 ? 3 : 1), 0, 0);
 				if (catCount[itemCat] < 8) {
 					XeenItem &item = (*this)[itemCat][1][slotNum][catCount[itemCat]];
-					item._id = tempChar._misc[0]._id;
-					item._material = tempChar._misc[0]._material;
-					item._bonusFlags = tempChar._misc[0]._bonusFlags;
+					item = tempChar._items[itemCat][0];
 
 					++catCount[itemCat];
 				}
@@ -207,9 +218,9 @@ Party::Party(XeenEngine *vm) {
 	_holyBonus = 0;
 	_heroism = 0;
 	_difficulty = ADVENTURER;
-	_cloudsEnd = false;
-	_darkSideEnd = false;
-	_worldEnd = false;
+	_cloudsCompleted = false;
+	_darkSideCompleted = false;
+	_worldCompleted = false;
 	_ctr24 = 0;
 	_day = 0;
 	_year = 0;
@@ -234,8 +245,7 @@ Party::Party(XeenEngine *vm) {
 	Common::fill(&_gameFlags[0][0], &_gameFlags[0][256], false);
 	Common::fill(&_gameFlags[1][0], &_gameFlags[1][256], false);
 	Common::fill(&_worldFlags[0], &_worldFlags[128], false);
-	Common::fill(&_questFlags[0][0], &_questFlags[0][30], false);
-	Common::fill(&_questFlags[1][0], &_questFlags[1][30], false);
+	Common::fill(&_questFlags[0], &_questFlags[60], false);
 	Common::fill(&_questItems[0], &_questItems[85], 0);
 
 	for (int i = 0; i < TOTAL_CHARACTERS; ++i)
@@ -294,9 +304,9 @@ void Party::synchronize(Common::Serializer &s) {
 
 	_blacksmithWares.synchronize(s, 0);
 
-	s.syncAsUint16LE(_cloudsEnd);
-	s.syncAsUint16LE(_darkSideEnd);
-	s.syncAsUint16LE(_worldEnd);
+	s.syncAsUint16LE(_cloudsCompleted);
+	s.syncAsUint16LE(_darkSideCompleted);
+	s.syncAsUint16LE(_worldCompleted);
 	s.syncAsUint16LE(_ctr24);
 	s.syncAsUint16LE(_day);
 	s.syncAsUint16LE(_year);
@@ -320,8 +330,7 @@ void Party::synchronize(Common::Serializer &s) {
 	File::syncBitFlags(s, &_gameFlags[0][0], &_gameFlags[0][256]);
 	File::syncBitFlags(s, &_gameFlags[1][0], &_gameFlags[1][256]);
 	File::syncBitFlags(s, &_worldFlags[0], &_worldFlags[128]);
-	File::syncBitFlags(s, &_questFlags[0][0], &_questFlags[0][30]);
-	File::syncBitFlags(s, &_questFlags[1][0], &_questFlags[1][30]);
+	File::syncBitFlags(s, &_questFlags[0], &_questFlags[60]);
 
 	for (int i = 0; i < 85; ++i)
 		s.syncAsByte(_questItems[i]);
@@ -455,8 +464,12 @@ void Party::changeTime(int numMinutes) {
 				}
 			}
 
-			player._conditions[WEAK] = player._conditions[DRUNK];
-			player._conditions[DRUNK] = 0;
+			// WORKAROUND: Original incorrectly reset weakness (due to lack of sleep) even when party
+			// wasn't drunk. We now have any resetting drunkness add to, rather than replace, weakness
+			if (player._conditions[WEAK] != -1) {
+				player._conditions[WEAK] += player._conditions[DRUNK];
+				player._conditions[DRUNK] = 0;
+			}
 
 			if (player._conditions[DEPRESSED]) {
 				player._conditions[DEPRESSED] = (player._conditions[DEPRESSED] + 1) % 4;
@@ -513,7 +526,7 @@ void Party::addTime(int numMinutes) {
 		_newDay = true;
 
 	if (_newDay && _minutes >= 300) {
-		if (_vm->_mode != MODE_RECORD_EVENTS && _vm->_mode != MODE_17) {
+		if (_vm->_mode != MODE_SCRIPT_IN_PROGRESS && _vm->_mode != MODE_INTERACTIVE7) {
 			resetTemps();
 			if (_rested || _vm->_mode == MODE_SLEEPING) {
 				_rested = false;
@@ -684,11 +697,8 @@ void Party::giveTreasure() {
 	if (!_treasure._hasItems && !_treasure._gold && !_treasure._gems)
 		return;
 
-	bool monstersPresent = false;
-	for (int idx = 0; idx < 26 && !monstersPresent; ++idx)
-		monstersPresent = combat._attackMonsters[idx] != -1;
-
-	if (_vm->_mode != MODE_RECORD_EVENTS && monstersPresent)
+	bool monstersPresent = combat.areMonstersPresent();
+	if (_vm->_mode != MODE_SCRIPT_IN_PROGRESS && monstersPresent)
 		return;
 
 	combat.clearShooting();
@@ -713,18 +723,13 @@ void Party::giveTreasure() {
 	for (int categoryNum = 0; categoryNum < NUM_ITEM_CATEGORIES; ++categoryNum) {
 		for (int itemNum = 0; itemNum < MAX_TREASURE_ITEMS; ++itemNum) {
 			if (arePacksFull()) {
-				if (_treasure._weapons[itemNum]._id == 34) {
-					// Important item, so clear a slot for it
+				if (_treasure._weapons[itemNum]._id >= XEEN_SLAYER_SWORD) {
+					// Xeen Slayer Sword, so clear a slot for it
 					_activeParty[0]._weapons[INV_ITEMS_TOTAL - 1].clear();
 				} else {
 					// Otherwise, clear all the remaining treasure items,
 					// since all the party's packs are full
-					for (int idx = 0; idx < MAX_TREASURE_ITEMS; ++idx) {
-						_treasure._weapons[idx].clear();
-						_treasure._armor[idx].clear();
-						_treasure._accessories[idx].clear();
-						_treasure._armor[idx].clear();
-					}
+					_treasure.clear();
 				}
 			}
 
@@ -778,7 +783,7 @@ void Party::giveTreasure() {
 	events.clearEvents();
 
 	if (_vm->_mode != MODE_COMBAT)
-		_vm->_mode = MODE_1;
+		_vm->_mode = MODE_INTERACTIVE;
 
 	w.close();
 	_gold += _treasure._gold;
@@ -787,13 +792,7 @@ void Party::giveTreasure() {
 	_treasure._gems = 0;
 
 	_treasure._hasItems = false;
-	for (int idx = 0; idx < MAX_TREASURE_ITEMS; ++idx) {
-		_treasure._weapons[idx].clear();
-		_treasure._armor[idx].clear();
-		_treasure._accessories[idx].clear();
-		_treasure._armor[idx].clear();
-	}
-
+	_treasure.clear();
 	combat._combatTarget = 1;
 }
 
@@ -801,10 +800,10 @@ bool Party::arePacksFull() const {
 	uint total = 0;
 	for (uint idx = 0; idx < _activeParty.size(); ++idx) {
 		const Character &c = _activeParty[idx];
-		total += (c._weapons[INV_ITEMS_TOTAL - 1]._id != 0 ? 1 : 0)
-			+ (c._armor[INV_ITEMS_TOTAL - 1]._id != 0 ? 1 : 0)
-			+ (c._accessories[INV_ITEMS_TOTAL - 1]._id != 0 ? 1 : 0)
-			+ (c._misc[INV_ITEMS_TOTAL - 1]._id != 0 ? 1 : 0);
+		total += (c._weapons[INV_ITEMS_TOTAL - 1].empty() ? 0 : 1)
+			+ (c._armor[INV_ITEMS_TOTAL - 1].empty() ? 0 : 1)
+			+ (c._accessories[INV_ITEMS_TOTAL - 1].empty() ? 0 : 1)
+			+ (c._misc[INV_ITEMS_TOTAL - 1].empty() ? 0 : 1);
 	}
 
 	return total == (_activeParty.size() * NUM_ITEM_CATEGORIES);
@@ -827,8 +826,17 @@ void Party::giveTreasureToCharacter(Character &c, ItemCategory category, int ite
 	w.update();
 	events.ipause(5);
 
- 	const char *itemName = XeenItem::getItemName(category, treasureItem._id);
-	w.writeString(Common::String::format(Res.X_FOUND_Y, c._name.c_str(), itemName));
+	int index = (category == CATEGORY_MISC) ? treasureItem._material : treasureItem._id;
+	const char *itemName = XeenItem::getItemName(category, index);
+
+	if (index >= (_vm->getGameID() == GType_Swords ? 88 : 82)) {
+		// Quest item, give an extra '*' prefix
+		Common::String format = Common::String::format("\f04 * \fd%s", itemName);
+		w.writeString(Common::String::format(Res.X_FOUND_Y, c._name.c_str(), format.c_str()));
+	} else {
+		w.writeString(Common::String::format(Res.X_FOUND_Y, c._name.c_str(), itemName));
+	}
+
 	w.update();
 	c._items[category].sort();
 	events.ipause(8);
@@ -891,7 +899,7 @@ bool Party::giveTake(int takeMode, uint takeVal, int giveMode, uint giveVal, int
 		ps._tempAge -= takeVal;
 		break;
 	case 13:
-		ps._skills[THIEVERY] = 0;
+		ps._skills[takeVal] = 0;
 		break;
 	case 15:
 		ps.setAward(takeVal, false);
@@ -918,45 +926,53 @@ bool Party::giveTake(int takeMode, uint takeVal, int giveMode, uint giveVal, int
 		break;
 	}
 	case 20:
-		_gameFlags[files._ccNum][takeVal] = false;
+		assert(takeVal < 256);
+		_gameFlags[_vm->getGameID() == GType_Swords ? 0 : files._ccNum][takeVal] = false;
 		break;
 	case 21: {
-		bool found = false;
-		for (int idx = 0; idx < 9; ++idx) {
-			if (takeVal < 35) {
-				if (ps._weapons[idx]._id == takeVal) {
-					ps._weapons[idx].clear();
-					ps._weapons.sort();
-					found = true;
-					break;
+		const uint WEAPONS_END = _vm->getGameID() != GType_Swords ? 35 : 41;
+		const uint ARMOR_END = _vm->getGameID() != GType_Swords ? 49 : 55;
+		const uint ACCESSORIES_END = _vm->getGameID() != GType_Swords ? 60 : 66;
+		const uint MISC_END = _vm->getGameID() != GType_Swords ? 82 : 88;
+
+		if (takeVal >= MISC_END) {
+			_questItems[takeVal - MISC_END]--;
+		} else {
+			bool found = false;
+			for (int idx = 0; idx < 9; ++idx) {
+				if (takeVal < WEAPONS_END) {
+					if (ps._weapons[idx]._id == takeVal) {
+						ps._weapons[idx].clear();
+						ps._weapons.sort();
+						found = true;
+						break;
+					}
+				} else if (takeVal < ARMOR_END) {
+					if (ps._armor[idx]._id == (takeVal - WEAPONS_END)) {
+						ps._armor[idx].clear();
+						ps._armor.sort();
+						found = true;
+						break;
+					}
+				} else if (takeVal < ACCESSORIES_END) {
+					if (ps._accessories[idx]._id == (takeVal - ARMOR_END)) {
+						ps._accessories[idx].clear();
+						ps._accessories.sort();
+						found = true;
+						break;
+					}
+				} else {
+					if (ps._misc[idx]._material == (int)(takeVal - ACCESSORIES_END)) {
+						ps._misc[idx].clear();
+						ps._misc.sort();
+						found = true;
+						break;
+					}
 				}
-			} else if (takeVal < 49) {
-				if (ps._armor[idx]._id == (takeVal - 35)) {
-					ps._armor[idx].clear();
-					ps._armor.sort();
-					found = true;
-					break;
-				}
-			} else if (takeVal < 60) {
-				if (ps._accessories[idx]._id == (takeVal - 49)) {
-					ps._accessories[idx].clear();
-					ps._accessories.sort();
-					found = true;
-					break;
-				}
-			} else if (takeVal < 82) {
-				if (ps._misc[idx]._material == ((int)takeVal - 60)) {
-					ps._misc[idx].clear();
-					ps._misc.sort();
-					found = true;
-					break;
-				}
-			} else {
-				_questItems[takeVal - 82]--;
 			}
+			if (!found)
+				return true;
 		}
-		if (!found)
-			return true;
 		break;
 	}
 	case 25:
@@ -1095,7 +1111,7 @@ bool Party::giveTake(int takeMode, uint takeVal, int giveMode, uint giveVal, int
 		_worldFlags[takeVal] = false;
 		break;
 	case 104:
-		_questFlags[files._ccNum][takeVal] = false;
+		_questFlags[(_vm->getGameID() == GType_Swords ? 0 : files._ccNum * 30) + takeVal] = false;
 		break;
 	case 107:
 		_characterFlags[ps._rosterId][takeVal] = false;
@@ -1161,51 +1177,59 @@ bool Party::giveTake(int takeMode, uint takeVal, int giveMode, uint giveVal, int
 			ps._currentHp = 0;
 		break;
 	case 19: {
+		// Give spell to character
 		SpellsCategory category = ps.getSpellsCategory();
-		assert(category != SPELLCAT_INVALID);
 
-		for (int idx = 0; idx < SPELLS_PER_CLASS; ++idx) {
-			if (Res.SPELLS_ALLOWED[category][idx] == (int)giveVal) {
-				ps._spells[idx] = true;
-				intf.spellFX(&ps);
-				break;
+		if (category != SPELLCAT_INVALID) {
+			for (int idx = 0; idx < SPELLS_PER_CLASS; ++idx) {
+				if (Res.SPELLS_ALLOWED[category][idx] == (int)giveVal) {
+					ps._spells[idx] = true;
+					intf.spellFX(&ps);
+					break;
+				}
 			}
 		}
 		break;
 	}
 	case 20:
-		_gameFlags[files._ccNum][giveVal] = true;
+		assert(giveVal < 256);
+		_gameFlags[_vm->getGameID() == GType_Swords ? 0 : files._ccNum][giveVal] = true;
 		break;
 	case 21: {
+		const uint WEAPONS_END = _vm->getGameID() != GType_Swords ? 35 : 41;
+		const uint ARMOR_END = _vm->getGameID() != GType_Swords ? 49 : 55;
+		const uint ACCESSORIES_END = _vm->getGameID() != GType_Swords ? 60 : 66;
+		const uint MISC_END = _vm->getGameID() != GType_Swords ? 82 : 88;
+
 		int idx;
-		if (giveVal >= 82) {
-			_questItems[giveVal - 82]++;
+		if (giveVal >= MISC_END) {
+			_questItems[giveVal - MISC_END]++;
 		}
-		if (giveVal < 35 || giveVal >= 82) {
-			for (idx = 0; idx < 10 && _treasure._weapons[idx]._id; ++idx);
-			if (idx < 10) {
+		if (giveVal < WEAPONS_END || giveVal >= MISC_END) {
+			for (idx = 0; idx < MAX_TREASURE_ITEMS && !_treasure._weapons[idx].empty(); ++idx) {}
+			if (idx < MAX_TREASURE_ITEMS) {
 				_treasure._weapons[idx]._id = giveVal;
 				_treasure._hasItems = true;
 				return false;
 			}
-		} else if (giveVal < 49) {
-			for (idx = 0; idx < 10 && _treasure._armor[idx]._id; ++idx);
-			if (idx < 10) {
-				_treasure._armor[idx]._id = giveVal - 35;
+		} else if (giveVal < ARMOR_END) {
+			for (idx = 0; idx < MAX_TREASURE_ITEMS && !_treasure._armor[idx].empty(); ++idx) {}
+			if (idx < MAX_TREASURE_ITEMS) {
+				_treasure._armor[idx]._id = giveVal - WEAPONS_END;
 				_treasure._hasItems = true;
 				return false;
 			}
-		} else if (giveVal < 60) {
-			for (idx = 0; idx < 10 && _treasure._accessories[idx]._id; ++idx);
-			if (idx < 10) {
-				_treasure._accessories[idx]._id = giveVal - 49;
+		} else if (giveVal < ACCESSORIES_END) {
+			for (idx = 0; idx < MAX_TREASURE_ITEMS && !_treasure._accessories[idx].empty(); ++idx) {}
+			if (idx < MAX_TREASURE_ITEMS) {
+				_treasure._accessories[idx]._id = giveVal - ARMOR_END;
 				_treasure._hasItems = true;
 				return false;
 			}
 		} else {
-			for (idx = 0; idx < 10 && _treasure._misc[idx]._material; ++idx);
-			if (idx < 10) {
-				_treasure._accessories[idx]._material = giveVal - 60;
+			for (idx = 0; idx < MAX_TREASURE_ITEMS && _treasure._misc[idx]._material; ++idx) {}
+			if (idx < MAX_TREASURE_ITEMS) {
+				_treasure._accessories[idx]._material = giveVal - ACCESSORIES_END;
 				_treasure._hasItems = true;
 				return false;
 			}
@@ -1337,7 +1361,7 @@ bool Party::giveTake(int takeMode, uint takeVal, int giveMode, uint giveVal, int
 		Character &tempChar = _itemsCharacter;
 		int idx = -1;
 		if (scripts._itemType != 0) {
-			for (idx = 0; idx < 10 && _treasure._misc[idx]._material; ++idx);
+			for (idx = 0; idx < 10 && _treasure._misc[idx]._material; ++idx) {}
 			if (idx == 10)
 				return true;
 		}
@@ -1348,14 +1372,14 @@ bool Party::giveTake(int takeMode, uint takeVal, int giveMode, uint giveVal, int
 		XeenItem *trItems = _treasure[itemCat];
 
 		// Check for a free treasure slot
-		for (idx = 0; idx < 10 && trItems[idx]._id; ++idx);
+		for (idx = 0; idx < 10 && trItems[idx]._id; ++idx) {}
 		if (idx == 10)
 			return true;
 
 		// Found a free slot, so copy the created item into it
 		trItems[idx]._material = srcItem._material;
 		trItems[idx]._id = srcItem._id;
-		trItems[idx]._bonusFlags = srcItem._bonusFlags;
+		trItems[idx]._state = srcItem._state;
 		_treasure._hasItems = true;
 		break;
 	}
@@ -1417,16 +1441,16 @@ bool Party::giveTake(int takeMode, uint takeVal, int giveMode, uint giveVal, int
 		_gold += _vm->getRandomNumber(1, giveVal);
 		break;
 	case 103:
-		assert(takeVal < 128);
-		_worldFlags[takeVal] = true;
+		assert(giveVal < (uint)(_vm->getGameID() == GType_Swords ? 49 : 128));
+		_worldFlags[giveVal] = true;
 		break;
 	case 104:
-		assert(giveVal < 30);
-		_questFlags[files._ccNum][giveVal] = true;
+		assert(giveVal < (uint)(_vm->getGameID() == GType_Swords ? 60 : 30));
+		_questFlags[(_vm->getGameID() == GType_Swords ? 0 : files._ccNum * 30) + giveVal] = true;
 		break;
 	case 107:
-		assert(takeVal < 24);
-		_characterFlags[ps._rosterId][takeVal] = true;
+		assert(giveVal < 24);
+		_characterFlags[ps._rosterId][giveVal] = true;
 		break;
 	default:
 		break;
@@ -1442,10 +1466,11 @@ bool Party::giveExt(int mode1, uint val1, int mode2, uint val2, int mode3, uint 
 	Map &map = *g_vm->_map;
 	Scripts &scripts = *g_vm->_scripts;
 	Sound &sound = *g_vm->_sound;
-	Character &c = _itemsCharacter;
 
-	if (intf._objNumber && !scripts._animCounter) {
-		MazeObject &obj = map._mobData._objects[intf._objNumber - 1];
+	// WORKAROUND: Ali Baba's chest in Dark Side requires the character in the first slot to have Lockpicking.
+	// This is obviously a mistake, since the chest is meant to be opened via a password
+	if (intf._objNumber != -1 && !scripts._animCounter && !(files._ccNum && _mazeId == 63 && intf._objNumber == 15)) {
+		MazeObject &obj = map._mobData._objects[intf._objNumber];
 		switch (obj._spriteId) {
 		case 15:
 			if (!files._ccNum)
@@ -1454,7 +1479,8 @@ bool Party::giveExt(int mode1, uint val1, int mode2, uint val2, int mode3, uint 
 
 		case 16:
 		case 58:
-		case 73:
+		case 73: {
+			Character &c = _activeParty[charId];
 			obj._frame = 1;
 
 			if (obj._position.x != 20) {
@@ -1485,6 +1511,11 @@ bool Party::giveExt(int mode1, uint val1, int mode2, uint val2, int mode3, uint 
 					return true;
 				}
 			}
+			break;
+		}
+
+		default:
+			break;
 		}
 	}
 
@@ -1502,7 +1533,7 @@ bool Party::giveExt(int mode1, uint val1, int mode2, uint val2, int mode3, uint 
 			break;
 
 		case 66:
-			c.clear();
+			_itemsCharacter.clear();
 
 			if (giveTake(0, 0, mode, val, charId))
 				return true;

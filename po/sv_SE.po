@@ -7,9 +7,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.5.0svn\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2018-03-12 11:46+0100\n"
-"PO-Revision-Date: 2017-12-01 10:54+0000\n"
-"Last-Translator: hampusf <hampus.flink@gmail.com>\n"
+"POT-Creation-Date: 2018-05-17 20:49+0200\n"
+"PO-Revision-Date: 2018-04-14 20:40+0000\n"
+"Last-Translator: Adrian Frühwirth <bonki@scummvm.org>\n"
 "Language-Team: Swedish <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/sv/>\n"
 "Language: sv_SE\n"
@@ -170,7 +170,7 @@ msgstr ""
 #: engines/sword1/control.cpp:887 engines/sword1/logic.cpp:1633
 #: engines/sword2/animation.cpp:425 engines/sword2/animation.cpp:445
 #: engines/sword2/animation.cpp:461 engines/sword2/animation.cpp:471
-#: engines/zvision/file/save_manager.cpp:224
+#: engines/zvision/file/save_manager.cpp:230
 msgid "OK"
 msgstr "OK"
 
@@ -186,7 +186,7 @@ msgstr ""
 #: gui/downloaddialog.cpp:252
 #, c-format
 msgid "Downloaded %s %s / %s %s"
-msgstr "Laddar ner %s %s / %s %s"
+msgstr "Laddade ner %s %s / %s %s"
 
 #: gui/downloaddialog.cpp:259
 #, c-format
@@ -239,7 +239,7 @@ msgid ""
 "English"
 msgstr ""
 "Spelets språk. Den här inställningen omvandlar inte din spanska spelversion "
-"till en engelsk"
+"till en svensk"
 
 #: gui/editgamedialog.cpp:152 gui/editgamedialog.cpp:166 gui/options.cpp:995
 #: gui/options.cpp:1008 gui/options.cpp:1573 audio/null.cpp:41
@@ -464,7 +464,7 @@ msgstr "Rum:"
 
 #: gui/fluidsynth-dialog.cpp:80
 msgid "Damp:"
-msgstr "Dämpa:"
+msgstr "Dämpning:"
 
 #: gui/fluidsynth-dialog.cpp:87
 msgid "Width:"
@@ -542,7 +542,8 @@ msgstr ""
 "Vill du verkligen återställa alla FluidSynth-inställningar till deras "
 "ursprungliga värden?"
 
-#: gui/gui-manager.cpp:119 backends/keymapper/remap-dialog.cpp:53
+#: gui/gui-manager.cpp:119 engines/unknown-game-dialog.cpp:73
+#: engines/unknown-game-dialog.cpp:85 backends/keymapper/remap-dialog.cpp:53
 #: engines/scumm/help.cpp:126 engines/scumm/help.cpp:141
 #: engines/scumm/help.cpp:166 engines/scumm/help.cpp:192
 #: engines/scumm/help.cpp:210
@@ -915,7 +916,7 @@ msgstr "Korrektion av bildförhållande"
 
 #: gui/options.cpp:1024
 msgid "Correct aspect ratio for 320x200 games"
-msgstr "Korrigera bildförhållandet för 320 x 200-spel"
+msgstr "Korrigera bildförhållandet för 320x200-spel"
 
 #: gui/options.cpp:1032
 msgid "Preferred Device:"
@@ -1557,7 +1558,7 @@ msgstr "Du kommer att föras till ScummVM:s sida"
 
 #: gui/storagewizarddialog.cpp:79
 msgid "you should allow it to access your storage."
-msgstr "där du borde kunna komma åt ditt lager."
+msgstr "där du borde tillåta åtkomst till ditt lager."
 
 #: gui/storagewizarddialog.cpp:112
 msgid "Another Storage is active. Do you want to interrupt it?"
@@ -1597,28 +1598,28 @@ msgstr ""
 msgid "Select a Theme"
 msgstr "Välj ett tema"
 
-#: gui/ThemeEngine.cpp:258
+#: gui/ThemeEngine.cpp:256
 msgid "Disabled GFX"
 msgstr "Inaktiverad GFX"
 
-#: gui/ThemeEngine.cpp:258
+#: gui/ThemeEngine.cpp:256
 msgctxt "lowres"
 msgid "Disabled GFX"
 msgstr "Inaktiverad GFX"
 
-#: gui/ThemeEngine.cpp:259
+#: gui/ThemeEngine.cpp:257
 msgid "Standard Renderer"
 msgstr "Standard rendering"
 
-#: gui/ThemeEngine.cpp:259 engines/scumm/dialogs.cpp:660
+#: gui/ThemeEngine.cpp:257 engines/scumm/dialogs.cpp:660
 msgid "Standard"
 msgstr "Standard"
 
-#: gui/ThemeEngine.cpp:261
+#: gui/ThemeEngine.cpp:259
 msgid "Antialiased Renderer"
 msgstr "Antialiserad rendering"
 
-#: gui/ThemeEngine.cpp:261
+#: gui/ThemeEngine.cpp:259
 msgid "Antialiased"
 msgstr "Antialiserad"
 
@@ -1644,7 +1645,7 @@ msgstr ""
 msgid "Proceed"
 msgstr "Fortsätt"
 
-#: gui/widget.cpp:379 gui/widget.cpp:381 gui/widget.cpp:387 gui/widget.cpp:389
+#: gui/widget.cpp:356 gui/widget.cpp:358 gui/widget.cpp:364 gui/widget.cpp:366
 msgid "Clear value"
 msgstr "Töm sökfältet"
 
@@ -1787,7 +1788,7 @@ msgstr "Varje månad"
 msgid "<Bad value>"
 msgstr "<Dåligt värde>"
 
-#: engines/advancedDetector.cpp:330
+#: engines/advancedDetector.cpp:331
 #, c-format
 msgid ""
 "The game in '%s' seems to be an unknown %s engine game variant.\n"
@@ -1800,7 +1801,7 @@ msgstr ""
 "Rapportera informationen nedan till ScummVM-teamet på %s tillsammans med "
 "namnet på spelet du försökte lägga till och spelets version, språk, etc.:"
 
-#: engines/advancedDetector.cpp:338
+#: engines/advancedDetector.cpp:343
 msgid "Matched game IDs:"
 msgstr "Matchade spel-ID:"
 
@@ -1839,8 +1840,8 @@ msgstr "Åte~r~vänd till launcher"
 
 #: engines/dialogs.cpp:116 engines/agi/saveload.cpp:761
 #: engines/avalanche/parser.cpp:1900 engines/cge/events.cpp:72
-#: engines/cge2/events.cpp:65 engines/cine/various.cpp:348
-#: engines/cruise/menu.cpp:212 engines/dm/loadsave.cpp:196
+#: engines/cge2/events.cpp:64 engines/cine/various.cpp:348
+#: engines/cruise/menu.cpp:212 engines/dm/loadsave.cpp:199
 #: engines/drascula/saveload.cpp:383 engines/dreamweb/saveload.cpp:262
 #: engines/gnap/menu.cpp:464 engines/hugo/file.cpp:298
 #: engines/mads/nebular/dialogs_nebular.cpp:350 engines/mohawk/dialogs.cpp:106
@@ -1859,9 +1860,9 @@ msgstr "Spara spelet:"
 #: backends/platform/wince/CEActionsSmartphone.cpp:45
 #: backends/platform/wince/CEActionsSmartphone.cpp:231
 #: engines/agi/saveload.cpp:761 engines/avalanche/parser.cpp:1900
-#: engines/cge/events.cpp:72 engines/cge2/events.cpp:65
+#: engines/cge/events.cpp:72 engines/cge2/events.cpp:64
 #: engines/cine/various.cpp:348 engines/cruise/menu.cpp:212
-#: engines/dm/loadsave.cpp:196 engines/drascula/saveload.cpp:383
+#: engines/dm/loadsave.cpp:199 engines/drascula/saveload.cpp:383
 #: engines/dreamweb/saveload.cpp:262 engines/gnap/menu.cpp:464
 #: engines/hugo/file.cpp:298 engines/mads/nebular/dialogs_nebular.cpp:350
 #: engines/mohawk/dialogs.cpp:106 engines/mohawk/riven.cpp:545
@@ -1979,21 +1980,57 @@ msgstr ""
 msgid "Start anyway"
 msgstr "Starta ändå"
 
+#: engines/unknown-game-dialog.cpp:48
+msgid ""
+"Use the button below to copy the required game information into your "
+"clipboard."
+msgstr ""
+
+#: engines/unknown-game-dialog.cpp:55
+msgid "You can also directly report your game to the Bug Tracker!"
+msgstr ""
+
+#: engines/unknown-game-dialog.cpp:74 engines/unknown-game-dialog.cpp:90
+msgid "Copy to clipboard"
+msgstr ""
+
+#: engines/unknown-game-dialog.cpp:75 engines/unknown-game-dialog.cpp:104
+#, fuzzy
+msgid "Report game"
+msgstr "Ladda sparfil:"
+
+#: engines/unknown-game-dialog.cpp:144
+msgid ""
+"All necessary information about your game has been copied into the clipboard"
+msgstr ""
+
+#: engines/unknown-game-dialog.cpp:146
+msgid "Copying the game information to the clipboard has failed!"
+msgstr ""
+
 #: audio/adlib.cpp:2290
 msgid "AdLib Emulator"
 msgstr "AdLib-emulator"
 
-#: audio/fmopl.cpp:62
+#: audio/fmopl.cpp:71
 msgid "MAME OPL emulator"
 msgstr "MAME OPL-emulator"
 
-#: audio/fmopl.cpp:64
+#: audio/fmopl.cpp:73
 msgid "DOSBox OPL emulator"
 msgstr "DOSBox OPL-emulator"
 
-#: audio/fmopl.cpp:67
+#: audio/fmopl.cpp:76
+msgid "Nuked OPL emulator"
+msgstr "Nuked OPL-emulator"
+
+#: audio/fmopl.cpp:79
 msgid "ALSA Direct FM"
 msgstr "ALSA Direct FM"
+
+#: audio/fmopl.cpp:82
+msgid "OPL2LPT"
+msgstr "OPL2LPT"
 
 #: audio/mididrv.cpp:209
 #, c-format
@@ -2101,7 +2138,9 @@ msgstr ""
 msgid ""
 "Download complete.\n"
 "Failed to download %u files."
-msgstr "Nedladdningen är färdig. Kunde inte ladda ner %u filer."
+msgstr ""
+"Nedladdningen är färdig.\n"
+"Kunde inte ladda ner %u filer."
 
 #: backends/cloud/storage.cpp:330
 msgid "Download complete."
@@ -2239,12 +2278,12 @@ msgstr "Korrektion av bildförhållande av"
 #: backends/graphics/openglsdl/openglsdl-graphics.cpp:747
 #: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2477
 msgid "Filtering enabled"
-msgstr "Filtrering aktiverat"
+msgstr "Filtrering aktiverad"
 
 #: backends/graphics/openglsdl/openglsdl-graphics.cpp:749
 #: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2479
 msgid "Filtering disabled"
-msgstr "Filtrering är inaktiverat"
+msgstr "Filtrering inaktiverad"
 
 #: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:55
 #: backends/graphics/wincesdl/wincesdl-graphics.cpp:88
@@ -2364,7 +2403,7 @@ msgstr "Hög ljudkvalitet (långsammare) (omstart)"
 
 #: backends/platform/ds/arm9/source/dsoptions.cpp:122
 msgid "Disable power off"
-msgstr "Inaktivera strömsparning"
+msgstr "Inaktivera strömsparläge"
 
 #: backends/platform/ios7/ios7_osys_events.cpp:309
 #: backends/platform/ios7/ios7_osys_events.cpp:519
@@ -2559,7 +2598,7 @@ msgstr "Lodrät underskanning:"
 
 #: backends/platform/wii/options.cpp:71
 msgid "Input"
-msgstr "Ingång"
+msgstr "Inmatning"
 
 #: backends/platform/wii/options.cpp:74
 msgid "GC Pad sensitivity:"
@@ -2599,7 +2638,7 @@ msgstr "Server:"
 
 #: backends/platform/wii/options.cpp:110
 msgid "Share:"
-msgstr "Delad:"
+msgstr "Utdelning:"
 
 #: backends/platform/wii/options.cpp:118
 msgid "Password:"
@@ -2786,7 +2825,7 @@ msgstr "Sök efter uppdateringar..."
 #: engines/access/resources.cpp:44 engines/drascula/drascula.cpp:966
 #: engines/hugo/hugo.cpp:437 engines/lure/lure.cpp:64
 #: engines/mortevielle/mortevielle.cpp:306 engines/sky/compact.cpp:131
-#: engines/supernova/supernova.cpp:290 engines/teenagent/resources.cpp:97
+#: engines/supernova/supernova.cpp:175 engines/teenagent/resources.cpp:97
 #: engines/tony/tony.cpp:198 engines/toon/toon.cpp:4918
 #, c-format
 msgid "Unable to locate the '%s' engine data file."
@@ -2794,7 +2833,7 @@ msgstr "Kunde inte hitta spelmotorns datafil '%s'."
 
 #: engines/access/resources.cpp:52 engines/drascula/drascula.cpp:980
 #: engines/hugo/hugo.cpp:448 engines/lure/lure.cpp:73
-#: engines/mortevielle/mortevielle.cpp:315 engines/supernova/supernova.cpp:300
+#: engines/mortevielle/mortevielle.cpp:315 engines/supernova/supernova.cpp:185
 #: engines/tony/tony.cpp:210 engines/toon/toon.cpp:4930
 #, c-format
 msgid "The '%s' engine data file is corrupt."
@@ -2840,6 +2879,7 @@ msgstr "Använd originalskärmar för spara/ladda"
 #: engines/drascula/detection.cpp:332 engines/dreamweb/detection.cpp:49
 #: engines/neverhood/detection.cpp:178 engines/sci/detection.cpp:453
 #: engines/sherlock/detection.cpp:72 engines/toltecs/detection.cpp:201
+#: engines/zvision/detection_tables.h:52
 msgid "Use the original save/load screens instead of the ScummVM ones"
 msgstr ""
 "Använd originalskärmarna för ladda och spara istället för ScummVM:s egna"
@@ -2854,7 +2894,7 @@ msgid ""
 "behavior"
 msgstr ""
 "Använd en alternativ färgkarta typisk för alla Amiga-spel. Det här är det "
-"mala beteendet"
+"gamla beteendet"
 
 #: engines/agi/detection.cpp:167
 msgid "Mouse support"
@@ -2888,9 +2928,9 @@ msgstr ""
 "istället för inmatning i realtid."
 
 #: engines/agi/saveload.cpp:774 engines/avalanche/parser.cpp:1888
-#: engines/cge/events.cpp:83 engines/cge2/events.cpp:76
+#: engines/cge/events.cpp:83 engines/cge2/events.cpp:75
 #: engines/cine/various.cpp:359 engines/dm/dm.cpp:276
-#: engines/dm/loadsave.cpp:184 engines/drascula/saveload.cpp:396
+#: engines/dm/loadsave.cpp:187 engines/drascula/saveload.cpp:396
 #: engines/dreamweb/saveload.cpp:170 engines/gnap/menu.cpp:473
 #: engines/hugo/file.cpp:400 engines/mads/nebular/dialogs_nebular.cpp:377
 #: engines/neverhood/menumodule.cpp:893
@@ -2902,9 +2942,9 @@ msgid "Restore game:"
 msgstr "Ladda sparfil:"
 
 #: engines/agi/saveload.cpp:774 engines/avalanche/parser.cpp:1888
-#: engines/cge/events.cpp:83 engines/cge2/events.cpp:76
+#: engines/cge/events.cpp:83 engines/cge2/events.cpp:75
 #: engines/cine/various.cpp:359 engines/dm/dm.cpp:276
-#: engines/dm/loadsave.cpp:184 engines/drascula/saveload.cpp:396
+#: engines/dm/loadsave.cpp:187 engines/drascula/saveload.cpp:396
 #: engines/dreamweb/saveload.cpp:170 engines/gnap/menu.cpp:473
 #: engines/hugo/file.cpp:400 engines/mads/nebular/dialogs_nebular.cpp:377
 #: engines/neverhood/menumodule.cpp:893
@@ -2915,7 +2955,7 @@ msgstr "Ladda sparfil:"
 msgid "Restore"
 msgstr "Ladda"
 
-#: engines/agos/saveload.cpp:159 engines/scumm/scumm.cpp:2441
+#: engines/agos/saveload.cpp:159 engines/scumm/scumm.cpp:2444
 #, c-format
 msgid ""
 "Failed to load saved game from file:\n"
@@ -2937,7 +2977,7 @@ msgstr ""
 "\n"
 "%s"
 
-#: engines/agos/saveload.cpp:202 engines/scumm/scumm.cpp:2452
+#: engines/agos/saveload.cpp:202 engines/scumm/scumm.cpp:2455
 #, c-format
 msgid ""
 "Successfully saved game in file:\n"
@@ -2953,11 +2993,11 @@ msgstr ""
 msgid "Cutscene file '%s' not found!"
 msgstr "Filmfilen '%s' hittades ej!"
 
-#: engines/cge/detection.cpp:105 engines/cge2/detection.cpp:101
+#: engines/cge/detection.cpp:105 engines/cge2/detection.cpp:111
 msgid "Color Blind Mode"
 msgstr "Färgblint läge"
 
-#: engines/cge/detection.cpp:106 engines/cge2/detection.cpp:102
+#: engines/cge/detection.cpp:106 engines/cge2/detection.cpp:112
 msgid "Enable Color Blind Mode by default"
 msgstr "Aktivera färgblint läge som standard"
 
@@ -3038,7 +3078,7 @@ msgstr "Skipp-stöd"
 
 #: engines/kyra/detection.cpp:74
 msgid "Allow text and cutscenes to be skipped"
-msgstr "Tillåter skippning av text och filmscener"
+msgstr "Tillåt skippning av text och filmscener"
 
 #. I18N: Helium mode makes people sound like they've inhaled Helium.
 #: engines/kyra/detection.cpp:84
@@ -3053,7 +3093,7 @@ msgstr "Aktivera heliumläge"
 #. changing from one screen to another.
 #: engines/kyra/detection.cpp:99
 msgid "Smooth scrolling"
-msgstr "Mjuk rullning"
+msgstr "Mjuk skärmrullning"
 
 #: engines/kyra/detection.cpp:100
 msgid "Enable smooth scrolling when walking"
@@ -3253,16 +3293,16 @@ msgstr "Animerat spelgränssnitt"
 msgid "Naughty game mode"
 msgstr "\"Busigt\" spelläge"
 
-#: engines/mohawk/detection.cpp:169
+#: engines/mohawk/detection.cpp:162
 msgid "Play the Myst fly by movie"
 msgstr "Spela flygvideon i Myst"
 
-#: engines/mohawk/detection.cpp:170
+#: engines/mohawk/detection.cpp:163
 msgid "The Myst fly by movie was not played by the original engine."
 msgstr "Flygvideon i Myst visades inte i originalspelet."
 
 #. I18N: Option for fast scene switching
-#: engines/mohawk/dialogs.cpp:183 engines/mohawk/dialogs.cpp:269
+#: engines/mohawk/dialogs.cpp:183 engines/mohawk/dialogs.cpp:272
 msgid "~Z~ip Mode Activated"
 msgstr "~Z~ipläge aktiverat"
 
@@ -3283,27 +3323,27 @@ msgstr "~V~isa karta"
 msgid "Main Men~u~"
 msgstr "Huvud~m~eny"
 
-#: engines/mohawk/dialogs.cpp:270
+#: engines/mohawk/dialogs.cpp:273
 msgid "~W~ater Effect Enabled"
 msgstr "~V~atteneffekt aktiverad"
 
-#: engines/mohawk/dialogs.cpp:272
+#: engines/mohawk/dialogs.cpp:275
 msgid "Transitions:"
 msgstr "Övergångar:"
 
-#: engines/mohawk/dialogs.cpp:274
+#: engines/mohawk/dialogs.cpp:277
 msgid "Disabled"
 msgstr "Inaktiverad"
 
-#: engines/mohawk/dialogs.cpp:275
+#: engines/mohawk/dialogs.cpp:278
 msgid "Fastest"
 msgstr "Snabbast"
 
-#: engines/mohawk/dialogs.cpp:276
+#: engines/mohawk/dialogs.cpp:279
 msgid "Normal"
 msgstr "Normal"
 
-#: engines/mohawk/dialogs.cpp:277
+#: engines/mohawk/dialogs.cpp:280
 msgid "Best"
 msgstr "Bästa"
 
@@ -3526,7 +3566,7 @@ msgid ""
 "Use an IBM Music Feature card or a Yamaha FB-01 FM synth module for MIDI "
 "output"
 msgstr ""
-"Använd ett IMB Music Feature-kort eller en Yamaha FB-01 FM synthmodul för "
+"Använd ett IBM Music Feature-kort eller en Yamaha FB-01 FM synthmodul för "
 "MIDI-uppspelning"
 
 #: engines/sci/detection.cpp:473
@@ -3700,11 +3740,11 @@ msgstr ""
 "skäl.\n"
 "Den fullständiga versionen går att köpa på iTunes Store."
 
-#: engines/scumm/detection.cpp:1347
+#: engines/scumm/detection.cpp:1355
 msgid "Show Object Line"
 msgstr "Visa objektrad"
 
-#: engines/scumm/detection.cpp:1348
+#: engines/scumm/detection.cpp:1356
 msgid "Show the names of objects at the bottom of the screen"
 msgstr "Visa namnen på objekt på botten av skärmen"
 
@@ -3753,7 +3793,7 @@ msgstr "Du måste ange ett namn"
 
 #: engines/scumm/dialogs.cpp:192
 msgid "The game was NOT saved (disk full?)"
-msgstr "Spelet sprades EJ (skivan full?)"
+msgstr "Spelet sparades EJ (skivan full?)"
 
 #: engines/scumm/dialogs.cpp:193
 msgid "The game was NOT loaded"
@@ -3928,7 +3968,7 @@ msgstr "Musrestriktion av/på"
 
 #: engines/scumm/help.cpp:101
 msgid "Switch between graphics filters"
-msgstr "Växla grafikfilter"
+msgstr "Växla mellan grafikfilter"
 
 #: engines/scumm/help.cpp:102
 msgid "Increase / Decrease scale factor"
@@ -4190,7 +4230,7 @@ msgstr "Comm"
 
 #: engines/scumm/help.cpp:247
 msgid "Save / Load / Options"
-msgstr "Spara / Ladda / Inst"
+msgstr "Spara / Ladda / Inställningar"
 
 #: engines/scumm/help.cpp:256
 msgid "Other game controls:"
@@ -4382,7 +4422,7 @@ msgstr ""
 "Stöd för Native MIDI kräver Roland-uppdateringen från LucasArts,\n"
 "men %s saknas. Använder AdLib istället."
 
-#: engines/scumm/scumm.cpp:2738
+#: engines/scumm/scumm.cpp:2740
 msgid ""
 "Usually, Maniac Mansion would start now. But for that to work, the game "
 "files for Maniac Mansion have to be in the 'Maniac' directory inside the "
@@ -4466,18 +4506,17 @@ msgstr "Diskettintro"
 msgid "Use the floppy version's intro (CD version only)"
 msgstr "Använd diskettversionens intro (endast CD-version)"
 
-#: engines/supernova/supernova.cpp:308
-#, fuzzy, c-format
+#: engines/supernova/supernova.cpp:193
+#, c-format
 msgid ""
 "Incorrect version of the '%s' engine data file found. Expected %d but got %d."
 msgstr ""
-"Felaktig version av datafilen '%s' hittades. Version %d.%d krävs, hittade %d."
-"%d."
+"Felaktig version av datafilen '%s' hittades. Version %d krävs, hittade %d."
 
-#: engines/supernova/supernova.cpp:335
-#, fuzzy, c-format
+#: engines/supernova/supernova.cpp:220
+#, c-format
 msgid "Unable to locate the text for %s language in '%s' engine data file."
-msgstr "Kunde inte hitta spelmotorns datafil '%s'."
+msgstr "Kunde inte hitta språk %s i spelmotorns datafil '%s'."
 
 #: engines/sword1/animation.cpp:524
 #, c-format
@@ -4592,30 +4631,46 @@ msgstr "Sparade speldata #%d snabbladdades"
 msgid "Could not quick load the saved game #%d"
 msgstr "Det gick inte att snabbladda sparat spel #%d"
 
-#: engines/wintermute/detection.cpp:58
+#: engines/wintermute/detection.cpp:59
 msgid "Show FPS-counter"
 msgstr "Visa FPS-räknare"
 
-#: engines/wintermute/detection.cpp:59
+#: engines/wintermute/detection.cpp:60
 msgid "Show the current number of frames per second in the upper left corner"
 msgstr ""
 "Visar det aktuella antalet bildrutor per sekund i det övre vänstra hörnet"
 
-#: engines/wintermute/detection.cpp:68
+#: engines/wintermute/detection.cpp:69
 msgid "Sprite bilinear filtering (SLOW)"
 msgstr "Bilinjär filtrering av rörliga figurer (LÅNGSAM)"
 
-#: engines/wintermute/detection.cpp:69
+#: engines/wintermute/detection.cpp:70
 msgid "Apply bilinear filtering to individual sprites"
 msgstr "Tillämpa bilinjär filtrering på enskilda rörliga figurer"
 
-#: engines/zvision/detection_tables.h:52
-msgid "Use the original save/load screens instead of the ScummVM interface"
-msgstr "Använd originalskärmarna för spara/ladda istället för ScummVM:s"
+#: engines/xeen/detection.cpp:89
+msgid "Show item costs in standard inventory mode"
+msgstr "Visa kostnader för föremål i standardläge för inventariet"
+
+#: engines/xeen/detection.cpp:90
+msgid ""
+"Shows item costs in standard inventory mode, allowing the value of items to "
+"be compared"
+msgstr ""
+"Visar kostnader för föremål i standardläge för inventariet i syfte att "
+"möjliggöra jämförbarhet mellan olika föremål"
+
+#: engines/xeen/detection.cpp:99
+msgid "More durable armor"
+msgstr ""
+
+#: engines/xeen/detection.cpp:100
+msgid "Armor won't break until character is at -80HP, rather than merely -10HP"
+msgstr ""
 
 #: engines/zvision/detection_tables.h:61
 msgid "Double FPS"
-msgstr "Dubbel FPS"
+msgstr "Dubbla FPS"
 
 #: engines/zvision/detection_tables.h:62
 msgid "Increase framerate from 30 to 60 FPS"
@@ -4645,7 +4700,7 @@ msgstr "Använd högupplöst MPEG-video"
 msgid "Use MPEG video from the DVD version instead of lower resolution AVI"
 msgstr "Använd MPEG-video från DVD-versionen istället för lågupplöst AVI"
 
-#: engines/zvision/file/save_manager.cpp:220
+#: engines/zvision/file/save_manager.cpp:226
 #, c-format
 msgid ""
 "This saved game uses version %u, but this engine only supports up to version "
@@ -4654,6 +4709,9 @@ msgstr ""
 "Den här sparfilen använder version %u, men spelmotorn har bara stöd för upp "
 "till version %d. Det krävs en uppdaterad version av spelmotorn för att "
 "använda den här sparfilen."
+
+#~ msgid "Use the original save/load screens instead of the ScummVM interface"
+#~ msgstr "Använd originalskärmarna för spara/ladda istället för ScummVM:s"
 
 #~ msgid "(You can always enable it in the options dialog on the Misc tab)"
 #~ msgstr ""

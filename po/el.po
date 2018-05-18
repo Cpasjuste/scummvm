@@ -6,9 +6,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.10.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2018-03-12 11:46+0100\n"
-"PO-Revision-Date: 2017-04-28 11:12+0000\n"
-"Last-Translator: Arius <alidop@pathfinder.gr>\n"
+"POT-Creation-Date: 2018-05-17 20:49+0200\n"
+"PO-Revision-Date: 2018-04-18 10:19+0000\n"
+"Last-Translator: Adrian Fruehwirth <bonki@scummvm.org>\n"
 "Language-Team: Greek <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/el/>\n"
 "Language: el\n"
@@ -168,7 +168,7 @@ msgstr ""
 #: engines/sword1/control.cpp:887 engines/sword1/logic.cpp:1633
 #: engines/sword2/animation.cpp:425 engines/sword2/animation.cpp:445
 #: engines/sword2/animation.cpp:461 engines/sword2/animation.cpp:471
-#: engines/zvision/file/save_manager.cpp:224
+#: engines/zvision/file/save_manager.cpp:230
 msgid "OK"
 msgstr "OK"
 
@@ -545,7 +545,8 @@ msgstr ""
 "Θέλετε πραγματικά να επαναφέρετε όλες τις ρυθμίσεις του FluidSynth στις "
 "προκαθορισμένες τους τιμές;"
 
-#: gui/gui-manager.cpp:119 backends/keymapper/remap-dialog.cpp:53
+#: gui/gui-manager.cpp:119 engines/unknown-game-dialog.cpp:73
+#: engines/unknown-game-dialog.cpp:85 backends/keymapper/remap-dialog.cpp:53
 #: engines/scumm/help.cpp:126 engines/scumm/help.cpp:141
 #: engines/scumm/help.cpp:166 engines/scumm/help.cpp:192
 #: engines/scumm/help.cpp:210
@@ -1621,28 +1622,28 @@ msgstr ""
 msgid "Select a Theme"
 msgstr "Επιλέξτε θέμα"
 
-#: gui/ThemeEngine.cpp:258
+#: gui/ThemeEngine.cpp:256
 msgid "Disabled GFX"
 msgstr "Απενεργοποιημένα γραφικά"
 
-#: gui/ThemeEngine.cpp:258
+#: gui/ThemeEngine.cpp:256
 msgctxt "lowres"
 msgid "Disabled GFX"
 msgstr "Απενεργ. γραφικά"
 
-#: gui/ThemeEngine.cpp:259
+#: gui/ThemeEngine.cpp:257
 msgid "Standard Renderer"
 msgstr "Κανονική Απεικόνιση"
 
-#: gui/ThemeEngine.cpp:259 engines/scumm/dialogs.cpp:660
+#: gui/ThemeEngine.cpp:257 engines/scumm/dialogs.cpp:660
 msgid "Standard"
 msgstr "Κανονικό"
 
-#: gui/ThemeEngine.cpp:261
+#: gui/ThemeEngine.cpp:259
 msgid "Antialiased Renderer"
 msgstr "Εξομαλυμένη Απόδοση"
 
-#: gui/ThemeEngine.cpp:261
+#: gui/ThemeEngine.cpp:259
 msgid "Antialiased"
 msgstr "Εξομαλυμένη"
 
@@ -1668,7 +1669,7 @@ msgstr ""
 msgid "Proceed"
 msgstr "Προχώρα"
 
-#: gui/widget.cpp:379 gui/widget.cpp:381 gui/widget.cpp:387 gui/widget.cpp:389
+#: gui/widget.cpp:356 gui/widget.cpp:358 gui/widget.cpp:364 gui/widget.cpp:366
 msgid "Clear value"
 msgstr "Σβήσιμο τιμής"
 
@@ -1813,7 +1814,7 @@ msgstr "Μηνιαία"
 msgid "<Bad value>"
 msgstr "<Εσφαλμένη τιμή>"
 
-#: engines/advancedDetector.cpp:330
+#: engines/advancedDetector.cpp:331
 #, fuzzy, c-format
 msgid ""
 "The game in '%s' seems to be an unknown %s engine game variant.\n"
@@ -1827,7 +1828,7 @@ msgstr ""
 "του παιχνιδιού που προσπαθήσατε να προσθέσετε και την έκδοση, τη γλώσσα του, "
 "κλπ.:"
 
-#: engines/advancedDetector.cpp:338
+#: engines/advancedDetector.cpp:343
 msgid "Matched game IDs:"
 msgstr ""
 
@@ -1866,8 +1867,8 @@ msgstr "Επισ~τ~ρ. στον Οδηγητή"
 
 #: engines/dialogs.cpp:116 engines/agi/saveload.cpp:761
 #: engines/avalanche/parser.cpp:1900 engines/cge/events.cpp:72
-#: engines/cge2/events.cpp:65 engines/cine/various.cpp:348
-#: engines/cruise/menu.cpp:212 engines/dm/loadsave.cpp:196
+#: engines/cge2/events.cpp:64 engines/cine/various.cpp:348
+#: engines/cruise/menu.cpp:212 engines/dm/loadsave.cpp:199
 #: engines/drascula/saveload.cpp:383 engines/dreamweb/saveload.cpp:262
 #: engines/gnap/menu.cpp:464 engines/hugo/file.cpp:298
 #: engines/mads/nebular/dialogs_nebular.cpp:350 engines/mohawk/dialogs.cpp:106
@@ -1886,9 +1887,9 @@ msgstr "Αποθήκευση παιχνιδιού:"
 #: backends/platform/wince/CEActionsSmartphone.cpp:45
 #: backends/platform/wince/CEActionsSmartphone.cpp:231
 #: engines/agi/saveload.cpp:761 engines/avalanche/parser.cpp:1900
-#: engines/cge/events.cpp:72 engines/cge2/events.cpp:65
+#: engines/cge/events.cpp:72 engines/cge2/events.cpp:64
 #: engines/cine/various.cpp:348 engines/cruise/menu.cpp:212
-#: engines/dm/loadsave.cpp:196 engines/drascula/saveload.cpp:383
+#: engines/dm/loadsave.cpp:199 engines/drascula/saveload.cpp:383
 #: engines/dreamweb/saveload.cpp:262 engines/gnap/menu.cpp:464
 #: engines/hugo/file.cpp:298 engines/mads/nebular/dialogs_nebular.cpp:350
 #: engines/mohawk/dialogs.cpp:106 engines/mohawk/riven.cpp:545
@@ -2010,21 +2011,57 @@ msgstr ""
 msgid "Start anyway"
 msgstr "Εκκίνηση ούτως ή άλλως"
 
+#: engines/unknown-game-dialog.cpp:48
+msgid ""
+"Use the button below to copy the required game information into your "
+"clipboard."
+msgstr ""
+
+#: engines/unknown-game-dialog.cpp:55
+msgid "You can also directly report your game to the Bug Tracker!"
+msgstr ""
+
+#: engines/unknown-game-dialog.cpp:74 engines/unknown-game-dialog.cpp:90
+msgid "Copy to clipboard"
+msgstr ""
+
+#: engines/unknown-game-dialog.cpp:75 engines/unknown-game-dialog.cpp:104
+#, fuzzy
+msgid "Report game"
+msgstr "Επαναφορά παιχνιδιού:"
+
+#: engines/unknown-game-dialog.cpp:144
+msgid ""
+"All necessary information about your game has been copied into the clipboard"
+msgstr ""
+
+#: engines/unknown-game-dialog.cpp:146
+msgid "Copying the game information to the clipboard has failed!"
+msgstr ""
+
 #: audio/adlib.cpp:2290
 msgid "AdLib Emulator"
 msgstr "Εξομοιωτής Adlib"
 
-#: audio/fmopl.cpp:62
+#: audio/fmopl.cpp:71
 msgid "MAME OPL emulator"
 msgstr "Εξομοιωτής MAME OPL"
 
-#: audio/fmopl.cpp:64
+#: audio/fmopl.cpp:73
 msgid "DOSBox OPL emulator"
 msgstr "Εξομοιωτής DOSBox OPL"
 
-#: audio/fmopl.cpp:67
+#: audio/fmopl.cpp:76
+msgid "Nuked OPL emulator"
+msgstr "Εξομοιωτής Nuked OPL"
+
+#: audio/fmopl.cpp:79
 msgid "ALSA Direct FM"
 msgstr "ALSA Direct FM"
+
+#: audio/fmopl.cpp:82
+msgid "OPL2LPT"
+msgstr "OPL2LPT"
 
 #: audio/mididrv.cpp:209
 #, c-format
@@ -2820,7 +2857,7 @@ msgstr "Έλεγχος Ενημερώσεων..."
 #: engines/access/resources.cpp:44 engines/drascula/drascula.cpp:966
 #: engines/hugo/hugo.cpp:437 engines/lure/lure.cpp:64
 #: engines/mortevielle/mortevielle.cpp:306 engines/sky/compact.cpp:131
-#: engines/supernova/supernova.cpp:290 engines/teenagent/resources.cpp:97
+#: engines/supernova/supernova.cpp:175 engines/teenagent/resources.cpp:97
 #: engines/tony/tony.cpp:198 engines/toon/toon.cpp:4918
 #, c-format
 msgid "Unable to locate the '%s' engine data file."
@@ -2828,7 +2865,7 @@ msgstr "Δεν ήταν δυνατή η εύρεση του αρχείου παιχνιδιού '%s'."
 
 #: engines/access/resources.cpp:52 engines/drascula/drascula.cpp:980
 #: engines/hugo/hugo.cpp:448 engines/lure/lure.cpp:73
-#: engines/mortevielle/mortevielle.cpp:315 engines/supernova/supernova.cpp:300
+#: engines/mortevielle/mortevielle.cpp:315 engines/supernova/supernova.cpp:185
 #: engines/tony/tony.cpp:210 engines/toon/toon.cpp:4930
 #, c-format
 msgid "The '%s' engine data file is corrupt."
@@ -2874,6 +2911,7 @@ msgstr "Χρήση αρχικών οθονών αποθήκευσης/φόρτωσης"
 #: engines/drascula/detection.cpp:332 engines/dreamweb/detection.cpp:49
 #: engines/neverhood/detection.cpp:178 engines/sci/detection.cpp:453
 #: engines/sherlock/detection.cpp:72 engines/toltecs/detection.cpp:201
+#: engines/zvision/detection_tables.h:52
 msgid "Use the original save/load screens instead of the ScummVM ones"
 msgstr ""
 "Χρήση των αρχικών οθονών αποθήκευσης/φόρτωσης αντί για αυτές του ScummVM"
@@ -2924,9 +2962,9 @@ msgstr ""
 "SCI) αντί της γραμμής εντολών πραγματικού χρόνου."
 
 #: engines/agi/saveload.cpp:774 engines/avalanche/parser.cpp:1888
-#: engines/cge/events.cpp:83 engines/cge2/events.cpp:76
+#: engines/cge/events.cpp:83 engines/cge2/events.cpp:75
 #: engines/cine/various.cpp:359 engines/dm/dm.cpp:276
-#: engines/dm/loadsave.cpp:184 engines/drascula/saveload.cpp:396
+#: engines/dm/loadsave.cpp:187 engines/drascula/saveload.cpp:396
 #: engines/dreamweb/saveload.cpp:170 engines/gnap/menu.cpp:473
 #: engines/hugo/file.cpp:400 engines/mads/nebular/dialogs_nebular.cpp:377
 #: engines/neverhood/menumodule.cpp:893
@@ -2938,9 +2976,9 @@ msgid "Restore game:"
 msgstr "Επαναφορά παιχνιδιού:"
 
 #: engines/agi/saveload.cpp:774 engines/avalanche/parser.cpp:1888
-#: engines/cge/events.cpp:83 engines/cge2/events.cpp:76
+#: engines/cge/events.cpp:83 engines/cge2/events.cpp:75
 #: engines/cine/various.cpp:359 engines/dm/dm.cpp:276
-#: engines/dm/loadsave.cpp:184 engines/drascula/saveload.cpp:396
+#: engines/dm/loadsave.cpp:187 engines/drascula/saveload.cpp:396
 #: engines/dreamweb/saveload.cpp:170 engines/gnap/menu.cpp:473
 #: engines/hugo/file.cpp:400 engines/mads/nebular/dialogs_nebular.cpp:377
 #: engines/neverhood/menumodule.cpp:893
@@ -2951,7 +2989,7 @@ msgstr "Επαναφορά παιχνιδιού:"
 msgid "Restore"
 msgstr "Επαναφορά"
 
-#: engines/agos/saveload.cpp:159 engines/scumm/scumm.cpp:2441
+#: engines/agos/saveload.cpp:159 engines/scumm/scumm.cpp:2444
 #, c-format
 msgid ""
 "Failed to load saved game from file:\n"
@@ -2973,7 +3011,7 @@ msgstr ""
 "\n"
 "%s"
 
-#: engines/agos/saveload.cpp:202 engines/scumm/scumm.cpp:2452
+#: engines/agos/saveload.cpp:202 engines/scumm/scumm.cpp:2455
 #, c-format
 msgid ""
 "Successfully saved game in file:\n"
@@ -2989,11 +3027,11 @@ msgstr ""
 msgid "Cutscene file '%s' not found!"
 msgstr "Δεν βρέθηκε το αρχείο ενδιάμεσης σκηνής (cutscene) '%s' !"
 
-#: engines/cge/detection.cpp:105 engines/cge2/detection.cpp:101
+#: engines/cge/detection.cpp:105 engines/cge2/detection.cpp:111
 msgid "Color Blind Mode"
 msgstr "Λειτουργία για Άτομα με Αχρωματοψία"
 
-#: engines/cge/detection.cpp:106 engines/cge2/detection.cpp:102
+#: engines/cge/detection.cpp:106 engines/cge2/detection.cpp:112
 msgid "Enable Color Blind Mode by default"
 msgstr "Ενεργοποίηση λειτουργίας για Άτομα με Αχρωματοψία εξ'ορισμού"
 
@@ -3292,18 +3330,18 @@ msgstr "Κινούμενη διεπαφή παιχνιδιού"
 msgid "Naughty game mode"
 msgstr "Λειτουργία παιχνιδιού για άτακτους"
 
-#: engines/mohawk/detection.cpp:169
+#: engines/mohawk/detection.cpp:162
 msgid "Play the Myst fly by movie"
 msgstr "Αναπαραγωγή της ταινίας εναέριας επισκόπησης του Myst"
 
-#: engines/mohawk/detection.cpp:170
+#: engines/mohawk/detection.cpp:163
 msgid "The Myst fly by movie was not played by the original engine."
 msgstr ""
 "Η ταινία εναέριας επισκόπησης του Myst δεν αναπαράχθηκε από την πρωτότυπη "
 "μηχανή."
 
 #. I18N: Option for fast scene switching
-#: engines/mohawk/dialogs.cpp:183 engines/mohawk/dialogs.cpp:269
+#: engines/mohawk/dialogs.cpp:183 engines/mohawk/dialogs.cpp:272
 msgid "~Z~ip Mode Activated"
 msgstr "Λειτουργία ~Z~ip Ενεργοποιημένη"
 
@@ -3324,30 +3362,30 @@ msgstr "Εμφάνιση ~Χ~άρτη"
 msgid "Main Men~u~"
 msgstr "Κεντρικό Μενο~ύ~"
 
-#: engines/mohawk/dialogs.cpp:270
+#: engines/mohawk/dialogs.cpp:273
 msgid "~W~ater Effect Enabled"
 msgstr "Εφέ ~Ν~ερού Ενεργοποιημένο"
 
-#: engines/mohawk/dialogs.cpp:272
+#: engines/mohawk/dialogs.cpp:275
 #, fuzzy
 msgid "Transitions:"
 msgstr "~Μ~εταβάσεις Ενεργοποιημένες"
 
-#: engines/mohawk/dialogs.cpp:274
+#: engines/mohawk/dialogs.cpp:277
 #, fuzzy
 msgid "Disabled"
 msgstr "Απενεργοποιημένα γραφικά"
 
-#: engines/mohawk/dialogs.cpp:275
+#: engines/mohawk/dialogs.cpp:278
 #, fuzzy
 msgid "Fastest"
 msgstr "Επικόλληση"
 
-#: engines/mohawk/dialogs.cpp:276
+#: engines/mohawk/dialogs.cpp:279
 msgid "Normal"
 msgstr ""
 
-#: engines/mohawk/dialogs.cpp:277
+#: engines/mohawk/dialogs.cpp:280
 msgid "Best"
 msgstr ""
 
@@ -3726,11 +3764,11 @@ msgstr ""
 "αποφυγή πειρατείας.\n"
 "Η πλήρης έκδοση είναι διαθέσιμη για αγορά από το Κατάστημα iTunes."
 
-#: engines/scumm/detection.cpp:1347
+#: engines/scumm/detection.cpp:1355
 msgid "Show Object Line"
 msgstr "Προβολή Γραμμής Αντικειμένων"
 
-#: engines/scumm/detection.cpp:1348
+#: engines/scumm/detection.cpp:1356
 msgid "Show the names of objects at the bottom of the screen"
 msgstr "Παρουσίαση των ονομάτων των αντικειμένων στο κάτω μέρος της οθόνης"
 
@@ -4408,7 +4446,7 @@ msgstr ""
 "Η υποστήριξη native MIDI απαιτεί την Αναβάθμιση Roland από τη LucasArts,\n"
 "αλλά το %s λείπει. Γίνεται χρήση AdLib αντ 'αυτού."
 
-#: engines/scumm/scumm.cpp:2738
+#: engines/scumm/scumm.cpp:2740
 msgid ""
 "Usually, Maniac Mansion would start now. But for that to work, the game "
 "files for Maniac Mansion have to be in the 'Maniac' directory inside the "
@@ -4491,7 +4529,7 @@ msgstr "Εισαγωγή έκδοσης δισκέτας"
 msgid "Use the floppy version's intro (CD version only)"
 msgstr "Χρήση της εισαγωγής από την έκδοση δισκέτας (έκδοση CD μόνο)"
 
-#: engines/supernova/supernova.cpp:308
+#: engines/supernova/supernova.cpp:193
 #, fuzzy, c-format
 msgid ""
 "Incorrect version of the '%s' engine data file found. Expected %d but got %d."
@@ -4499,7 +4537,7 @@ msgstr ""
 "Βρέθηκε λανθασμένη έκδοση του '%s' αρχείου παιχνιδιού. Αναμενόμενη %d.%d "
 "αλλά βρέθηκε η %d.%d."
 
-#: engines/supernova/supernova.cpp:335
+#: engines/supernova/supernova.cpp:220
 #, fuzzy, c-format
 msgid "Unable to locate the text for %s language in '%s' engine data file."
 msgstr "Δεν ήταν δυνατή η εύρεση του αρχείου παιχνιδιού '%s'."
@@ -4626,28 +4664,41 @@ msgstr "Το αποθηκευμένη παιχνίδι #%d φορτώθηκε γρήγορα"
 msgid "Could not quick load the saved game #%d"
 msgstr "Δεν ήταν δυνατή η γρήγορη φόρτωση του αποθηκευμένου παιχνιδιού #%d"
 
-#: engines/wintermute/detection.cpp:58
+#: engines/wintermute/detection.cpp:59
 msgid "Show FPS-counter"
 msgstr "Προβολή μετρητή FPS"
 
-#: engines/wintermute/detection.cpp:59
+#: engines/wintermute/detection.cpp:60
 msgid "Show the current number of frames per second in the upper left corner"
 msgstr ""
 "Εμφάνιση του τρέχοντος αριθμού καρέ ανά δευτερόλεπτο στην επάνω αριστερή "
 "γωνία"
 
-#: engines/wintermute/detection.cpp:68
+#: engines/wintermute/detection.cpp:69
 msgid "Sprite bilinear filtering (SLOW)"
 msgstr "Διγραμμικό φιλτράρισμα στοιχείων (ΑΡΓΟ)"
 
-#: engines/wintermute/detection.cpp:69
+#: engines/wintermute/detection.cpp:70
 msgid "Apply bilinear filtering to individual sprites"
 msgstr "Εφαρμογή διγραμμικού φιλτραρίσματος σε μεμονωμένα στοιχεία"
 
-#: engines/zvision/detection_tables.h:52
-msgid "Use the original save/load screens instead of the ScummVM interface"
+#: engines/xeen/detection.cpp:89
+msgid "Show item costs in standard inventory mode"
 msgstr ""
-"Χρησιμοποιήστε τις αρχικές οθόνες αποθήκευσης/φόρτωσης αντί αυτών του ScummVM"
+
+#: engines/xeen/detection.cpp:90
+msgid ""
+"Shows item costs in standard inventory mode, allowing the value of items to "
+"be compared"
+msgstr ""
+
+#: engines/xeen/detection.cpp:99
+msgid "More durable armor"
+msgstr ""
+
+#: engines/xeen/detection.cpp:100
+msgid "Armor won't break until character is at -80HP, rather than merely -10HP"
+msgstr ""
 
 #: engines/zvision/detection_tables.h:61
 msgid "Double FPS"
@@ -4682,7 +4733,7 @@ msgid "Use MPEG video from the DVD version instead of lower resolution AVI"
 msgstr ""
 "Χρήση βίντεο MPEG από την έκδοση DVD αντί για το χαμηλότερης ανάλυσης AVI"
 
-#: engines/zvision/file/save_manager.cpp:220
+#: engines/zvision/file/save_manager.cpp:226
 #, c-format
 msgid ""
 "This saved game uses version %u, but this engine only supports up to version "
@@ -4691,6 +4742,11 @@ msgstr ""
 "Αυτό το αποθηκευμένο παιχνίδι χρησιμοποιεί έκδοση%u, αλλά η μηχανή αυτή "
 "υποστηρίζει μόνο μέχρι την έκδοση%d. Θα χρειαστείτε μια ενημερωμένη έκδοση "
 "της μηχανής για να χρησιμοποιήσετε αυτό το αποθηκευμένο παιχνίδι."
+
+#~ msgid "Use the original save/load screens instead of the ScummVM interface"
+#~ msgstr ""
+#~ "Χρησιμοποιήστε τις αρχικές οθόνες αποθήκευσης/φόρτωσης αντί αυτών του "
+#~ "ScummVM"
 
 #~ msgid "(You can always enable it in the options dialog on the Misc tab)"
 #~ msgstr ""

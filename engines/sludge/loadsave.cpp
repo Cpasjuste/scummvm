@@ -37,6 +37,7 @@
 #include "sludge/objtypes.h"
 #include "sludge/people.h"
 #include "sludge/region.h"
+#include "sludge/savedata.h"
 #include "sludge/sludge.h"
 #include "sludge/sludger.h"
 #include "sludge/sound.h"
@@ -58,13 +59,8 @@ extern LoadedFunction *allRunningFunctions;         // In sludger.cpp
 extern const char *typeName[];                      // In variable.cpp
 extern int numGlobals;                              // In sludger.cpp
 extern Variable *globalVars;                        // In sludger.cpp
-extern Floor *currentFloor;                          // In floor.cpp
 extern FILETIME fileTime;                           // In sludger.cpp
-extern byte brightnessLevel;               // "    "   "
-extern byte fadeMode;                      // In transition.cpp
-extern bool captureAllKeys;
 extern bool allowAnyFilename;
-extern uint16 saveEncoding;                 // in savedata.cpp
 
 //----------------------------------------------------------------------
 // Globals (so we know what's saved already and what's a reference
@@ -215,11 +211,11 @@ bool saveVariable(Variable *from, Common::WriteStream *stream) {
 			return saveStackRef(from->varData.theStack, stream);
 
 		case SVT_COSTUME:
-			saveCostume(from->varData.costumeHandler, stream);
+			from->varData.costumeHandler->save(stream);
 			return false;
 
 		case SVT_ANIM:
-			saveAnim(from->varData.animHandler, stream);
+			from->varData.animHandler->save(stream);
 			return false;
 
 		case SVT_NULL:
@@ -254,14 +250,14 @@ bool loadVariable(Variable *to, Common::SeekableReadStream *stream) {
 			to->varData.costumeHandler = new Persona;
 			if (!checkNew(to->varData.costumeHandler))
 				return false;
-			loadCostume(to->varData.costumeHandler, stream);
+			to->varData.costumeHandler->load(stream);
 			return true;
 
 		case SVT_ANIM:
-			to->varData.animHandler = new PersonaAnimation ;
+			to->varData.animHandler = new PersonaAnimation;
 			if (!checkNew(to->varData.animHandler))
 				return false;
-			loadAnim(to->varData.animHandler, stream);
+			to->varData.animHandler->load(stream);
 			return true;
 
 		default:
@@ -359,23 +355,18 @@ bool saveGame(const Common::String &fname) {
 	// DON'T ADD ANYTHING NEW BEFORE THIS POINT!
 
 	fp->writeByte(allowAnyFilename);
-	fp->writeByte(captureAllKeys);
+	fp->writeByte(false); // deprecated captureAllKeys
 	fp->writeByte(true);
 	g_sludge->_txtMan->saveFont(fp);
 
 	// Save backdrop
-	fp->writeUint16BE(g_sludge->_gfxMan->getCamX());
-	fp->writeUint16BE(g_sludge->_gfxMan->getCamY());
-	fp->writeFloatLE(g_sludge->_gfxMan->getCamZoom());
-
-	fp->writeByte(brightnessLevel);
-	g_sludge->_gfxMan->saveHSI(fp);
+	g_sludge->_gfxMan->saveBackdrop(fp);
 
 	// Save event handlers
 	g_sludge->_evtMan->saveHandlers(fp);
 
 	// Save regions
-	saveRegions(fp);
+	g_sludge->_regionMan->saveRegions(fp);
 
 	g_sludge->_cursorMan->saveCursor(fp);
 
@@ -398,25 +389,18 @@ bool saveGame(const Common::String &fname) {
 		saveVariable(&globalVars[a], fp);
 	}
 
-	savePeople(fp);
+	g_sludge->_peopleMan->savePeople(fp);
 
-	if (currentFloor->numPolygons) {
-		fp->writeByte(1);
-		fp->writeUint16BE(currentFloor->originalNum);
-	} else {
-		fp->writeByte(0);
-	}
+	g_sludge->_floorMan->save(fp);
 
 	g_sludge->_gfxMan->saveZBuffer(fp);
 	g_sludge->_gfxMan->saveLightMap(fp);
-
-	fp->writeByte(fadeMode);
 
 	g_sludge->_speechMan->save(fp);
 	saveStatusBars(fp);
 	g_sludge->_soundMan->saveSounds(fp);
 
-	fp->writeUint16BE(saveEncoding);
+	fp->writeUint16BE(CustomSaveHelper::_saveEncoding);
 
 	blur_saveSettings(fp);
 
@@ -498,28 +482,18 @@ bool loadGame(const Common::String &fname) {
 	if (ssgVersion >= VERSION(1, 4)) {
 		allowAnyFilename = fp->readByte();
 	}
-	captureAllKeys = fp->readByte();
-	fp->readByte();  // updateDisplay (part of movie playing)
+	fp->readByte(); // deprecated captureAllKeys
+	fp->readByte(); // updateDisplay (part of movie playing)
 
 	g_sludge->_txtMan->loadFont(ssgVersion, fp);
 
-	killAllPeople();
-	killAllRegions();
+	g_sludge->_regionMan->kill();
 
-	int camerX = fp->readUint16BE();
-	int camerY = fp->readUint16BE();
-	float camerZ;
-	if (ssgVersion >= VERSION(2, 0)) {
-		camerZ = fp->readFloatLE();
-	} else {
-		camerZ = 1.0;
-	}
+	g_sludge->_gfxMan->loadBackdrop(ssgVersion, fp);
 
-	brightnessLevel = fp->readByte();
-
-	g_sludge->_gfxMan->loadHSI(fp, 0, 0, true);
 	g_sludge->_evtMan->loadHandlers(fp);
-	loadRegions(fp);
+
+	g_sludge->_regionMan->loadRegions(fp);
 
 	if (!g_sludge->_cursorMan->loadCursor(fp)) {
 		return false;
@@ -541,13 +515,11 @@ bool loadGame(const Common::String &fname) {
 		loadVariable(&globalVars[a], fp);
 	}
 
-	loadPeople(fp);
+	g_sludge->_peopleMan->loadPeople(fp);
 
-	if (fp->readByte()) {
-		if (!setFloor(fp->readUint16BE()))
-			return false;
-	} else
-		setFloorNull();
+	if (!g_sludge->_floorMan->load(fp)) {
+		return false;
+	}
 
 	if (!g_sludge->_gfxMan->loadZBuffer(fp))
 		return false;
@@ -556,12 +528,11 @@ bool loadGame(const Common::String &fname) {
 		return false;
 	}
 
-	fadeMode = fp->readByte();
 	g_sludge->_speechMan->load(fp);
 	loadStatusBars(fp);
 	g_sludge->_soundMan->loadSounds(fp);
 
-	saveEncoding = fp->readUint16BE();
+	CustomSaveHelper::_saveEncoding = fp->readUint16BE();
 
 	if (ssgVersion >= VERSION(1, 6)) {
 		if (ssgVersion < VERSION(2, 0)) {
@@ -599,8 +570,6 @@ bool loadGame(const Common::String &fname) {
 	}
 
 	delete fp;
-
-	g_sludge->_gfxMan->setCamera(camerX, camerY, camerZ);
 
 	clearStackLib();
 	return true;

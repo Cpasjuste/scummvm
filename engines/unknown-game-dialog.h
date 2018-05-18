@@ -20,29 +20,18 @@
  *
  */
 
-#ifndef XEEN_WORLDOFXEEN_RESOURCES_H
-#define XEEN_WORLDOFXEEN_RESOURCES_H
+#include "gui/dialog.h"
 
-#include "xeen/resources.h"
-
-namespace Xeen {
-namespace WorldOfXeen {
-
-#ifdef Res
-#undef Res
-#endif
-#define Res (*(WorldOfXeenResources *)g_resources)
-
-class WorldOfXeenResources : public Resources {
+class UnknownGameDialog : public GUI::Dialog {
 public:
-	static const char *const CLOUDS_INTRO1;
-	static const char *const DARKSIDE_ENDING1;
-	static const char *const DARKSIDE_ENDING2;
-	static const char *const PHAROAH_ENDING_TEXT1;
-	static const char *const PHAROAH_ENDING_TEXT2;
+	UnknownGameDialog(const Common::String &reportData, const Common::String &reportTranslated, const Common::String &bugtrackerAffectedEngine);
+	void handleCommand(GUI::CommandSender *sender, uint32 cmd, uint32 data);
+	virtual Common::String generateBugtrackerURL();
+	virtual void reflowLayout();
+
+private:
+	Common::String _reportData;
+	Common::String _reportTranslated;
+	Common::String _bugtrackerGameData;
+	Common::String _bugtrackerAffectedEngine;
 };
-
-} // End of namespace WorldOfXeen
-} // End of namespace Xeen
-
-#endif	/* XEEN_RESOURCES_H */

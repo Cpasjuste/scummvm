@@ -480,6 +480,7 @@ Common::SeekableReadStream *SaveArchive::createReadStreamForMember(uint16 id) co
 }
 
 void SaveArchive::load(Common::SeekableReadStream &stream) {
+	_newData.clear();
 	loadIndex(stream);
 
 	delete[] _data;
@@ -487,8 +488,10 @@ void SaveArchive::load(Common::SeekableReadStream &stream) {
 	_data = new byte[_dataSize];
 	stream.seek(0);
 	stream.read(_data, _dataSize);
+}
 
-	// Load in the character stats and active party
+void SaveArchive::loadParty() {
+	// Load in the character roster and active party
 	Common::SeekableReadStream *chr = createReadStreamForMember("maze.chr");
 	Common::Serializer sChr(chr, nullptr);
 	_party->_roster.synchronize(sChr);
@@ -503,6 +506,7 @@ void SaveArchive::load(Common::SeekableReadStream &stream) {
 void SaveArchive::reset(CCArchive *src) {
 	Common::MemoryWriteStreamDynamic saveFile(DisposeAfterUse::YES);
 	File fIn;
+	_newData.clear();
 
 	g_vm->_files->setGameCc(g_vm->getGameID() == GType_DarkSide ? 1 : 0);
 	const int RESOURCES[6] = { 0x2A0C, 0x2A1C, 0x2A2C, 0x2A3C, 0x284C, 0x2A5C };

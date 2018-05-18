@@ -42,9 +42,13 @@ namespace Xeen {
 class XeenEngine;
 
 enum MonsterType {
-	MONSTER_0 = 0, MONSTER_ANIMAL = 1, MONSTER_INSECT = 2,
+	MONSTER_MONSTERS = 0, MONSTER_ANIMAL = 1, MONSTER_INSECT = 2,
 	MONSTER_HUMANOID = 3, MONSTER_UNDEAD = 4, MONSTER_GOLEM = 5,
 	MONSTER_DRAGON = 6
+};
+
+enum MapId {
+	XEEN_CASTLE1 = 75, XEEN_CASTLE4 = 78
 };
 
 class MonsterStruct {
@@ -165,16 +169,16 @@ enum SurfaceType {
 
 union MazeWallLayers {
 	struct MazeWallIndoors {
-		int _wallNorth : 4;
-		int _wallEast : 4;
-		int _wallSouth : 4;
-		int _wallWest : 4;
+		uint _wallNorth : 4;
+		uint _wallEast : 4;
+		uint _wallSouth : 4;
+		uint _wallWest : 4;
 	} _indoors;
 	struct MazeWallOutdoors {
-		SurfaceType _surfaceId : 4;
-		int _iMiddle : 4;
-		int _iTop : 4;
-		int _iOverlay : 4;
+		uint _surfaceId : 4;		// SurfaceType, but needs to be unsigned
+		uint _iMiddle : 4;
+		uint _iTop : 4;
+		uint _iOverlay : 4;
 	} _outdoors;
 	uint16 _data;
 };
@@ -403,13 +407,12 @@ private:
 	int _sidePictures;
 	int _sideObjects;
 	int _sideMonsters;
-	int _sideMusic;
 	int _mazeDataIndex;
 
 	/**
 	 * Load the events for a new map
 	 */
-	void loadEvents(int mapId);
+	void loadEvents(int mapId, int ccNum);
 
 	/**
 	 * Save the events for a map
@@ -516,6 +519,13 @@ public:
 	 * position to the relative position on the new map
 	 */
 	void getNewMaze();
+
+	/**
+	 * Return the name of a specified maze
+	 * @param mapId		Map Id
+	 * @param ccNum		Cc file number. If -1, uses the current C
+	 */
+	static Common::String getMazeName(int mapId, int ccNum = -1);
 };
 
 } // End of namespace Xeen

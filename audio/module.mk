@@ -60,9 +60,21 @@ MODULE_OBJS := \
 	softsynth/sid.o \
 	softsynth/wave6581.o
 
+ifndef DISABLE_NUKED_OPL
+MODULE_OBJS += \
+	softsynth/opl/nuked.o
+endif
+
+
+
 ifdef USE_ALSA
 MODULE_OBJS += \
 	alsa_opl.o
+endif
+
+ifdef ENABLE_OPL2LPT
+MODULE_OBJS += \
+	opl2lpt.o
 endif
 
 ifndef USE_ARM_SOUND_ASM

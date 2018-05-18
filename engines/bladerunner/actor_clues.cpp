@@ -21,6 +21,8 @@
  */
 
 #include "bladerunner/actor_clues.h"
+#include "bladerunner/actor.h"
+#include "bladerunner/script/ai_script.h"
 
 #include "bladerunner/bladerunner.h"
 #include "bladerunner/game_info.h"
@@ -86,6 +88,147 @@ bool ActorClues::isAcquired(int clueId) const {
 #else
 	return _clues[clueIndex].flags & 0x01;
 #endif
+}
+
+int ActorClues::getWeight(int clueId) const {
+	int clueIndex = findClueIndex(clueId);
+	if (clueIndex == -1) {
+		return 0;
+	}
+	return _clues[clueIndex].weight;
+}
+
+int ActorClues::getModifier(int actorId, int otherActorId, int clueId) {
+	Actor *actor = _vm->_actors[actorId];
+	int modifier1, modifier2, modifier3, modifier4;
+
+	int friendliness = actor->getFriendlinessToOther(otherActorId);
+	int clueWeight = actor->_clues->getWeight(clueId);
+
+	if (actor->_clues->isFlag2(clueId)) {
+		modifier1 = 100 - actor->getHonesty() - friendliness;
+	} else {
+		modifier1 = 0;
+	}
+	modifier2 = 0;
+	modifier3 = _vm->_aiScripts->callGetFriendlinessModifierIfGetsClue(otherActorId, actorId, clueId);
+
+	for (int i = 0; i < _vm->_gameInfo->getActorCount(); i++) {
+		if (i != actorId && i != otherActorId) {
+			modifier2 += (friendliness - 50) * _vm->_aiScripts->callGetFriendlinessModifierIfGetsClue(i, otherActorId, clueId) / 100;
+		}
+	}
+	modifier4 = _vm->_rnd.getRandomNumberRng(0, (100 - actor->getIntelligence()) / 10);
+
+	if (_vm->_rnd.getRandomNumberRng(0, 1) == 1) {
+		modifier4 = -modifier4;
+	}
+
+	return modifier1 + modifier2 + modifier3 + modifier4 + clueWeight;
+}
+
+static int cluesCompare(const void *p1, const void *p2) {
+	const ActorClues::CluesUS *clue1 = (const ActorClues::CluesUS *)p1;
+	const ActorClues::CluesUS *clue2 = (const ActorClues::CluesUS *)p2;
+
+	if (clue1->modifier > clue2->modifier)
+		return -1;
+
+	return (clue1->modifier < clue2->modifier);
+}
+
+void ActorClues::acquireCluesByRelations(int actorId, int otherActorId) {
+	CluesUS clues1[kClueCount], clues2[kClueCount];
+
+	int count1 = findAcquirableCluesFromActor(actorId, otherActorId, clues1, kClueCount);
+	int count2 = findAcquirableCluesFromActor(otherActorId, actorId, clues2, kClueCount);
+
+	if (count1 || count2) {
+		for (int i = 0; i < count1; i++) {
+			clues1[i].modifier = getModifier(actorId, otherActorId, clues1[i].clueId);
+		}
+		qsort(clues1, count1, sizeof(CluesUS), cluesCompare);
+
+		for (int i = 0; i < count2; i++) {
+			clues2[i].modifier = getModifier(otherActorId, actorId, clues2[i].clueId);
+		}
+		qsort(clues2, count2, sizeof(CluesUS), cluesCompare);
+
+		Actor *actor = _vm->_actors[actorId];
+		Actor *otherActor = _vm->_actors[otherActorId];
+
+		int avgParameters = (otherActor->getHonesty() + otherActor->getIntelligence() + actor->getFriendlinessToOther(otherActorId)) / 3;
+		int clue1count = avgParameters * count1 / 100;
+
+		if (avgParameters >= 50 && !clue1count && count1 == 1) {
+			clue1count = 1;
+		}
+
+		avgParameters = (actor->getHonesty() + actor->getIntelligence() + otherActor->getFriendlinessToOther(actorId)) / 3;
+		int clue2count = avgParameters * count2 / 100;
+
+		if (avgParameters >= 50 && !clue2count && count2 == 1) {
+			clue2count = 1;
+		}
+
+		for (int i = 0; i < clue2count; i++) {
+			bool flag = false;
+			if (otherActor->_clues->isFlag2(clues2[i].clueId)) {
+				avgParameters = (2 * otherActor->getFriendlinessToOther(actorId) + otherActor->getHonesty()) / 3;
+
+				if (avgParameters > 70) {
+					avgParameters = 100;
+				} else if (avgParameters < 30) {
+					avgParameters = 0;
+				}
+				if (_vm->_rnd.getRandomNumberRng(1, 100) <= avgParameters) {
+					flag = true;
+				}
+			}
+
+			actor->_clues->acquire(clues2[i].clueId, flag, otherActorId);
+		}
+
+		for (int i = 0; i < clue1count; i++) {
+			bool flag = false;
+			if (actor->_clues->isFlag2(clues1[i].clueId)) {
+				avgParameters = (2 * actor->getFriendlinessToOther(otherActorId) + actor->getHonesty()) / 3;
+
+				if (avgParameters > 70) {
+					avgParameters = 100;
+				} else if (avgParameters < 30) {
+					avgParameters = 0;
+				}
+				if (_vm->_rnd.getRandomNumberRng(1, 100) <= avgParameters) {
+					flag = true;
+				}
+			}
+
+			otherActor->_clues->acquire(clues1[i].clueId, flag, actorId);
+		}
+	}
+}
+
+int ActorClues::findAcquirableCluesFromActor(int actorId, int targetActorId, CluesUS *list, int size) {
+	Actor *actor = _vm->_actors[actorId];
+	Actor *otherActor = _vm->_actors[targetActorId];
+	int count = 0;
+	int cluesCount = actor->_clues->getCount();
+
+	for (int i = 0; i < cluesCount; i++) 	{
+		int clueId = actor->_clues->getClueIdByIndex(i);
+
+		if (actor->_clues->isAcquired(clueId)
+				&& otherActor->_clues->getWeight(clueId) > 0
+				&& !otherActor->_clues->isAcquired(clueId)) {
+			list[count].clueId = clueId;
+			list[count].modifier = 0;
+
+			count++;
+		}
+	}
+
+	return count;
 }
 
 int ActorClues::getFromActorId(int clueId) const {
@@ -165,6 +308,10 @@ int ActorClues::getField1(int clueId) const {
 
 int ActorClues::getCount() const {
 	return _count;
+}
+
+int ActorClues::getClueIdByIndex(int index) const {
+	return _clues[index].clueId;
 }
 
 void ActorClues::removeAll() {

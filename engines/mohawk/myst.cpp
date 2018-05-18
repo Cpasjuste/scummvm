@@ -54,7 +54,8 @@
 
 namespace Mohawk {
 
-MohawkEngine_Myst::MohawkEngine_Myst(OSystem *syst, const MohawkGameDescription *gamedesc) : MohawkEngine(syst, gamedesc) {
+MohawkEngine_Myst::MohawkEngine_Myst(OSystem *syst, const MohawkGameDescription *gamedesc) :
+		MohawkEngine(syst, gamedesc) {
 	DebugMan.addDebugChannel(kDebugVariable, "Variable", "Track Variable Accesses");
 	DebugMan.addDebugChannel(kDebugSaveLoad, "SaveLoad", "Track Save/Load Function");
 	DebugMan.addDebugChannel(kDebugView, "View", "Track Card File (VIEW) Parsing");
@@ -69,6 +70,7 @@ MohawkEngine_Myst::MohawkEngine_Myst(OSystem *syst, const MohawkGameDescription 
 	_currentCursor = 0;
 	_mainCursor = kDefaultMystCursor;
 	_showResourceRects = false;
+	_curStack = 0;
 	_curCard = 0;
 
 	_hoverResource = nullptr;
@@ -82,13 +84,20 @@ MohawkEngine_Myst::MohawkEngine_Myst(OSystem *syst, const MohawkGameDescription 
 	_scriptParser = nullptr;
 	_gameState = nullptr;
 	_optionsDialog = nullptr;
+	_rnd = nullptr;
 
 	_prevStack = nullptr;
 
 	_mouseClicked = false;
 	_mouseMoved = false;
 	_escapePressed = false;
-	_interactive = true;
+	_waitingOnBlockingOperation = false;
+	_runExitScript = true;
+
+	_needsPageDrop = false;
+	_needsShowCredits = false;
+	_needsShowDemoMenu = false;
+	_needsShowMap = false;
 }
 
 MohawkEngine_Myst::~MohawkEngine_Myst() {
@@ -253,8 +262,38 @@ void MohawkEngine_Myst::playMovieBlocking(const Common::String &name, MystStack 
 	waitUntilMovieEnds(video);
 }
 
-void MohawkEngine_Myst::playFlybyMovie(const Common::String &name) {
-	Common::String filename = wrapMovieFilename(name, kMasterpieceOnly);
+void MohawkEngine_Myst::playFlybyMovie(uint16 stack, uint16 card) {
+	// Play Flyby Entry Movie on Masterpiece Edition.
+	const char *flyby = nullptr;
+
+	switch (stack) {
+		case kSeleniticStack:
+			flyby = "selenitic flyby";
+			break;
+		case kStoneshipStack:
+			flyby = "stoneship flyby";
+			break;
+			// Myst Flyby Movie not used in Original Masterpiece Edition Engine
+			// We play it when first arriving on Myst, and if the user has chosen so.
+		case kMystStack:
+			if (ConfMan.getBool("playmystflyby"))
+				flyby = "myst flyby";
+			break;
+		case kMechanicalStack:
+			flyby = "mech age flyby";
+			break;
+		case kChannelwoodStack:
+			flyby = "channelwood flyby";
+			break;
+		default:
+			break;
+	}
+
+	if (!flyby) {
+		return;
+	}
+
+	Common::String filename = wrapMovieFilename(flyby, kMasterpieceOnly);
 	VideoEntryPtr video = _video->playMovie(filename, Audio::Mixer::kSFXSoundType);
 	if (!video) {
 		error("Failed to open the '%s' movie", filename.c_str());
@@ -271,7 +310,7 @@ void MohawkEngine_Myst::waitUntilMovieEnds(const VideoEntryPtr &video) {
 	if (!video)
 		return;
 
-	_interactive = false;
+	_waitingOnBlockingOperation = true;
 
 	// Sanity check
 	if (video->isLooping())
@@ -289,17 +328,17 @@ void MohawkEngine_Myst::waitUntilMovieEnds(const VideoEntryPtr &video) {
 
 	// Ensure it's removed
 	_video->removeEntry(video);
-	_interactive = true;
+	_waitingOnBlockingOperation = false;
 }
 
 void MohawkEngine_Myst::playSoundBlocking(uint16 id) {
-	_interactive = false;
+	_waitingOnBlockingOperation = true;
 	_sound->playEffect(id);
 
 	while (_sound->isEffectPlaying() && !shouldQuit()) {
 		doFrame();
 	}
-	_interactive = true;
+	_waitingOnBlockingOperation = false;
 }
 
 Common::Error MohawkEngine_Myst::run() {
@@ -340,9 +379,6 @@ Common::Error MohawkEngine_Myst::run() {
 		_mhk.push_back(mhk);
 	}
 
-	// Test Load Function...
-	loadHelp(10000);
-
 	while (!shouldQuit()) {
 		doFrame();
 	}
@@ -353,10 +389,10 @@ Common::Error MohawkEngine_Myst::run() {
 void MohawkEngine_Myst::doFrame() {
 	// Update any background videos
 	_video->updateMovies();
-	if (!_scriptParser->isScriptRunning() && _interactive) {
-		_interactive = false;
+	if (isInteractive()) {
+		_waitingOnBlockingOperation = true;
 		_scriptParser->runPersistentScripts();
-		_interactive = true;
+		_waitingOnBlockingOperation = false;
 	}
 
 	Common::Event event;
@@ -410,9 +446,16 @@ void MohawkEngine_Myst::doFrame() {
 						}
 
 						if (_needsShowCredits) {
-							_cursor->hideCursor();
-							changeToStack(kCreditsStack, 10000, 0, 0);
-							_needsShowCredits = false;
+							if (isInteractive()) {
+								_cursor->hideCursor();
+								changeToStack(kCreditsStack, 10000, 0, 0);
+								_needsShowCredits = false;
+							} else {
+								// Showing the credits in the middle of a script is not possible
+								// because it unloads the previous age, removing data needed by the
+								// rest of the script. Instead we just quit without showing the credits.
+								quitGame();
+							}
 						}
 						break;
 					case Common::KEYCODE_ESCAPE:
@@ -436,7 +479,7 @@ void MohawkEngine_Myst::doFrame() {
 		}
 	}
 
-	if (!_scriptParser->isScriptRunning() && _interactive) {
+	if (isInteractive()) {
 		updateActiveResource();
 		checkCurrentResource();
 	}
@@ -448,7 +491,7 @@ void MohawkEngine_Myst::doFrame() {
 }
 
 bool MohawkEngine_Myst::wait(uint32 duration, bool skippable) {
-	_interactive = false;
+	_waitingOnBlockingOperation = true;
 	uint32 end = getTotalPlayTime() + duration;
 
 	do {
@@ -460,7 +503,7 @@ bool MohawkEngine_Myst::wait(uint32 duration, bool skippable) {
 		}
 	} while (getTotalPlayTime() < end && !shouldQuit());
 
-	_interactive = true;
+	_waitingOnBlockingOperation = false;
 	return false;
 }
 
@@ -480,20 +523,27 @@ void MohawkEngine_Myst::pauseEngineIntern(bool pause) {
 void MohawkEngine_Myst::changeToStack(uint16 stack, uint16 card, uint16 linkSrcSound, uint16 linkDstSound) {
 	debug(2, "changeToStack(%d)", stack);
 
-	_curStack = stack;
-
 	// Fill screen with black and empty cursor
 	_cursor->setCursor(0);
 	_currentCursor = 0;
+
+	_sound->stopEffect();
+	_video->stopVideos();
+
+	// In Myst ME, play a fullscreen flyby movie, except when loading saves.
+	// Also play a flyby when first linking to Myst.
+	if (getFeatures() & GF_ME
+			&& (_curStack != kIntroStack || (stack == kMystStack && card == 4134))) {
+		playFlybyMovie(stack, card);
+	}
+
+	_sound->stopBackground();
 
 	if (getFeatures() & GF_ME)
 		_system->fillScreen(_system->getScreenFormat().RGBToColor(0, 0, 0));
 	else
 		_gfx->clearScreenPalette();
 
-	_sound->stopEffect();
-	_sound->stopBackground();
-	_video->stopVideos();
 	if (linkSrcSound)
 		playSoundBlocking(linkSrcSound);
 
@@ -503,20 +553,22 @@ void MohawkEngine_Myst::changeToStack(uint16 stack, uint16 card, uint16 linkSrcS
 	delete _prevStack;
 	_prevStack = _scriptParser;
 
+	_curStack = stack;
+
 	switch (_curStack) {
 	case kChannelwoodStack:
-		_gameState->_globals.currentAge = 4;
+		_gameState->_globals.currentAge = kChannelwood;
 		_scriptParser = new MystStacks::Channelwood(this);
 		break;
 	case kCreditsStack:
 		_scriptParser = new MystStacks::Credits(this);
 		break;
 	case kDemoStack:
-		_gameState->_globals.currentAge = 0;
+		_gameState->_globals.currentAge = kSelenitic;
 		_scriptParser = new MystStacks::Demo(this);
 		break;
 	case kDniStack:
-		_gameState->_globals.currentAge = 6;
+		_gameState->_globals.currentAge = kDni;
 		_scriptParser = new MystStacks::Dni(this);
 		break;
 	case kIntroStack:
@@ -526,26 +578,26 @@ void MohawkEngine_Myst::changeToStack(uint16 stack, uint16 card, uint16 linkSrcS
 		_scriptParser = new MystStacks::MakingOf(this);
 		break;
 	case kMechanicalStack:
-		_gameState->_globals.currentAge = 3;
+		_gameState->_globals.currentAge = kMechanical;
 		_scriptParser = new MystStacks::Mechanical(this);
 		break;
 	case kMystStack:
-		_gameState->_globals.currentAge = 2;
+		_gameState->_globals.currentAge = kMystLibrary;
 		_scriptParser = new MystStacks::Myst(this);
 		break;
 	case kDemoPreviewStack:
 		_scriptParser = new MystStacks::Preview(this);
 		break;
 	case kSeleniticStack:
-		_gameState->_globals.currentAge = 0;
+		_gameState->_globals.currentAge = kSelenitic;
 		_scriptParser = new MystStacks::Selenitic(this);
 		break;
 	case kDemoSlidesStack:
-		_gameState->_globals.currentAge = 1;
+		_gameState->_globals.currentAge = kStoneship;
 		_scriptParser = new MystStacks::Slides(this);
 		break;
 	case kStoneshipStack:
-		_gameState->_globals.currentAge = 1;
+		_gameState->_globals.currentAge = kStoneship;
 		_scriptParser = new MystStacks::Stoneship(this);
 		break;
 	default:
@@ -569,38 +621,6 @@ void MohawkEngine_Myst::changeToStack(uint16 stack, uint16 card, uint16 linkSrcS
 	// Clear the resource cache and the image cache
 	_cache.clear();
 	_gfx->clearCache();
-
-	if (getFeatures() & GF_ME) {
-		// Play Flyby Entry Movie on Masterpiece Edition.
-		const char *flyby = nullptr;
-
-		switch (_curStack) {
-		case kSeleniticStack:
-			flyby = "selenitic flyby";
-			break;
-		case kStoneshipStack:
-			flyby = "stoneship flyby";
-			break;
-		// Myst Flyby Movie not used in Original Masterpiece Edition Engine
-		// We play it when first arriving on Myst, and if the user has chosen so.
-		case kMystStack:
-			if (ConfMan.getBool("playmystflyby") && card == 4134)
-				flyby = "myst flyby";
-			break;
-		case kMechanicalStack:
-			flyby = "mech age flyby";
-			break;
-		case kChannelwoodStack:
-			flyby = "channelwood flyby";
-			break;
-		default:
-			break;
-		}
-
-		if (flyby) {
-			playFlybyMovie(flyby);
-		}
-	}
 
 	changeToCard(card, kTransitionCopy);
 
@@ -677,7 +697,7 @@ void MohawkEngine_Myst::changeToCard(uint16 card, TransitionType transition) {
 
 	// The demo resets the cursor at each card change except when in the library
 	if (getFeatures() & GF_DEMO
-			&& _gameState->_globals.currentAge != 2) {
+			&& _gameState->_globals.currentAge != kMystLibrary) {
 		_cursor->setDefaultCursor();
 	}
 
@@ -724,7 +744,7 @@ void MohawkEngine_Myst::checkCurrentResource() {
 	}
 
 	for (uint16 i = 0; i < _resources.size(); i++) {
-		if (_resources[i]->contains(mouse) && _resources[i]->type == kMystAreaHover
+		if (_resources[i]->contains(mouse) && _resources[i]->hasType(kMystAreaHover)
 			&& _hoverResource != _resources[i]) {
 			_hoverResource = static_cast<MystAreaHover *>(_resources[i]);
 			_hoverResource->handleMouseEnter();
@@ -955,50 +975,6 @@ void MohawkEngine_Myst::runExitScript() {
 	_scriptParser->runScript(script);
 }
 
-void MohawkEngine_Myst::loadHelp(uint16 id) {
-	// The original version did not have the help system
-	if (!(getFeatures() & GF_ME))
-		return;
-
-	// TODO: Help File contains 5 cards i.e. VIEW, RLST, etc.
-	//       in addition to HELP resources.
-	//       These are Ids 9930 to 9934
-	//       Need to deal with loading and displaying these..
-	//       Current engine structure only supports display of
-	//       card from primary stack MHK
-
-	debugC(kDebugHelp, "Loading Help System Data");
-
-	Common::SeekableReadStream *helpStream = getResource(ID_HELP, id);
-
-	uint16 count = helpStream->readUint16LE();
-	uint16 *u0 = new uint16[count];
-	Common::String helpText;
-
-	debugC(kDebugHelp, "\tcount: %d", count);
-
-	for (uint16 i = 0; i < count; i++) {
-		u0[i] = helpStream->readUint16LE();
-		debugC(kDebugHelp, "\tu0[%d]: %d", i, u0[i]);
-	}
-
-	// TODO: Previous values i.e. u0[0] to u0[count - 2]
-	// appear to be resource ids in the help.dat file..
-	if (u0[count - 1] != count)
-		warning("loadHelp(): last u0 value is not equal to count");
-
-	do {
-		helpText += helpStream->readByte();
-	} while (helpText.lastChar() != 0);
-	helpText.deleteLastChar();
-
-	debugC(kDebugHelp, "\thelpText: \"%s\"", helpText.c_str());
-
-	delete[] u0;
-
-	delete helpStream;
-}
-
 void MohawkEngine_Myst::loadCursorHints() {
 	_cursorHints.clear();
 
@@ -1059,7 +1035,7 @@ void MohawkEngine_Myst::checkCursorHints() {
 
 	// Check all the cursor hints to see if we're in a hotspot that contains a hint.
 	for (uint16 i = 0; i < _cursorHints.size(); i++)
-		if (_resources[_cursorHints[i].id] == _activeResource && _activeResource->isEnabled()) {
+		if (_activeResource && _resources[_cursorHints[i].id] == _activeResource && _activeResource->isEnabled()) {
 			if (_cursorHints[i].cursor == -1) {
 				uint16 var_value = _scriptParser->getVar(_cursorHints[i].variableHint.var);
 
@@ -1107,7 +1083,7 @@ void MohawkEngine_Myst::redrawResource(MystAreaImageSwitch *resource, bool updat
 
 void MohawkEngine_Myst::redrawArea(uint16 var, bool update) {
 	for (uint16 i = 0; i < _resources.size(); i++)
-		if (_resources[i]->type == kMystAreaImageSwitch && _resources[i]->getImageSwitchVar() == var)
+		if (_resources[i]->hasType(kMystAreaImageSwitch) && _resources[i]->getImageSwitchVar() == var)
 			redrawResource(static_cast<MystAreaImageSwitch *>(_resources[i]), update);
 }
 
@@ -1120,35 +1096,33 @@ MystArea *MohawkEngine_Myst::loadResource(Common::SeekableReadStream *rlstStream
 
 	switch (type) {
 	case kMystAreaAction:
-		resource =  new MystAreaAction(this, rlstStream, parent);
+		resource =  new MystAreaAction(this, type, rlstStream, parent);
 		break;
 	case kMystAreaVideo:
-		resource =  new MystAreaVideo(this, rlstStream, parent);
+		resource =  new MystAreaVideo(this, type, rlstStream, parent);
 		break;
 	case kMystAreaActionSwitch:
-		resource =  new MystAreaActionSwitch(this, rlstStream, parent);
+		resource =  new MystAreaActionSwitch(this, type, rlstStream, parent);
 		break;
 	case kMystAreaImageSwitch:
-		resource =  new MystAreaImageSwitch(this, rlstStream, parent);
+		resource =  new MystAreaImageSwitch(this, type, rlstStream, parent);
 		break;
 	case kMystAreaSlider:
-		resource =  new MystAreaSlider(this, rlstStream, parent);
+		resource =  new MystAreaSlider(this, type, rlstStream, parent);
 		break;
 	case kMystAreaDrag:
-		resource =  new MystAreaDrag(this, rlstStream, parent);
+		resource =  new MystAreaDrag(this, type, rlstStream, parent);
 		break;
 	case kMystVideoInfo:
-		resource =  new MystVideoInfo(this, rlstStream, parent);
+		resource =  new MystVideoInfo(this, type, rlstStream, parent);
 		break;
 	case kMystAreaHover:
-		resource =  new MystAreaHover(this, rlstStream, parent);
+		resource =  new MystAreaHover(this, type, rlstStream, parent);
 		break;
 	default:
-		resource = new MystArea(this, rlstStream, parent);
+		resource = new MystArea(this, type, rlstStream, parent);
 		break;
 	}
-
-	resource->type = type;
 
 	return resource;
 }
@@ -1191,8 +1165,12 @@ bool MohawkEngine_Myst::hasGameSaveSupport() const {
 	return !(getFeatures() & GF_DEMO) && getGameType() != GType_MAKINGOF;
 }
 
+bool MohawkEngine_Myst::isInteractive() {
+	return !_scriptParser->isScriptRunning() && !_waitingOnBlockingOperation;
+}
+
 bool MohawkEngine_Myst::canLoadGameStateCurrently() {
-	if (_scriptParser->isScriptRunning() || !_interactive) {
+	if (!isInteractive()) {
 		return false;
 	}
 
@@ -1229,8 +1207,8 @@ bool MohawkEngine_Myst::canSaveGameStateCurrently() {
 }
 
 void MohawkEngine_Myst::dropPage() {
-	uint16 page = _gameState->_globals.heldPage;
-	bool whitePage = page == 13;
+	HeldPage page = _gameState->_globals.heldPage;
+	bool whitePage = page == kWhitePage;
 	bool bluePage = page - 1 < 6;
 	bool redPage = page - 7 < 6;
 
@@ -1238,25 +1216,25 @@ void MohawkEngine_Myst::dropPage() {
 	_sound->playEffect(800);
 
 	// Drop page
-	_gameState->_globals.heldPage = 0;
+	_gameState->_globals.heldPage = kNoPage;
 
 	// Redraw page area
-	if (whitePage && _gameState->_globals.currentAge == 2) {
+	if (whitePage && _gameState->_globals.currentAge == kMystLibrary) {
 		_scriptParser->toggleVar(41);
 		redrawArea(41);
 	} else if (bluePage) {
-		if (page == 6) {
-			if (_gameState->_globals.currentAge == 2)
+		if (page == kBlueFirePlacePage) {
+			if (_gameState->_globals.currentAge == kMystLibrary)
 				redrawArea(24);
 		} else {
 			redrawArea(103);
 		}
 	} else if (redPage) {
-		if (page == 12) {
-			if (_gameState->_globals.currentAge == 2)
+		if (page == kRedFirePlacePage) {
+			if (_gameState->_globals.currentAge == kMystLibrary)
 				redrawArea(25);
-		} else if (page == 10) {
-			if (_gameState->_globals.currentAge == 1)
+		} else if (page == kRedStoneshipPage) {
+			if (_gameState->_globals.currentAge == kStoneship)
 				redrawArea(35);
 		} else {
 			redrawArea(102);
@@ -1277,9 +1255,9 @@ MystSoundBlock MohawkEngine_Myst::readSoundBlock(Common::ReadStream *stream) con
 		debugC(kDebugView, "\tSound: %d", soundBlock.sound);
 		soundBlock.soundVolume = stream->readUint16LE();
 		debugC(kDebugView, "\tVolume: %d", soundBlock.soundVolume);
-	} else if (soundBlock.sound == kMystSoundActionContinue)
+	} else if (soundBlock.sound == kMystSoundActionContinue) {
 		debugC(kDebugView, "Continue current sound");
-	else if (soundBlock.sound == kMystSoundActionChangeVolume) {
+	} else if (soundBlock.sound == kMystSoundActionChangeVolume) {
 		debugC(kDebugView, "Continue current sound, change volume");
 		soundBlock.soundVolume = stream->readUint16LE();
 		debugC(kDebugView, "\tVolume: %d", soundBlock.soundVolume);
@@ -1305,8 +1283,7 @@ MystSoundBlock MohawkEngine_Myst::readSoundBlock(Common::ReadStream *stream) con
 			soundBlock.soundList.push_back(sound);
 		}
 	} else {
-		debugC(kDebugView, "Unknown");
-		warning("Unknown sound control value '%d' in card '%d'", soundBlock.sound, _curCard);
+		error("Unknown sound control value '%d' in card '%d'", soundBlock.sound, _curCard);
 	}
 
 	return soundBlock;

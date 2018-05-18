@@ -176,7 +176,7 @@ protected:
 
 public:
 	MohawkEngine_Myst(OSystem *syst, const MohawkGameDescription *gamedesc);
-	virtual ~MohawkEngine_Myst();
+	~MohawkEngine_Myst() override;
 
 	Common::SeekableReadStream *getResource(uint32 tag, uint16 id) override;
 	Common::Array<uint16> getResourceIDList(uint32 type) const;
@@ -229,13 +229,20 @@ public:
 	VideoEntryPtr playMovie(const Common::String &name, MystStack stack);
 	VideoEntryPtr findVideo(const Common::String &name, MystStack stack);
 	void playMovieBlocking(const Common::String &name, MystStack stack, uint16 x, uint16 y);
-	void playFlybyMovie(const Common::String &name);
+	void playFlybyMovie(uint16 stack, uint16 card);
 	void waitUntilMovieEnds(const VideoEntryPtr &video);
 
 	void playSoundBlocking(uint16 id);
 
 	GUI::Debugger *getDebugger() override { return _console; }
 
+	/**
+	 * Is the game currently interactive
+	 *
+	 * When the game is interactive, the user can interact with the game world
+	 * and perform other operations such as loading saved games, ...
+	 */
+	bool isInteractive();
 	bool canLoadGameStateCurrently() override;
 	bool canSaveGameStateCurrently() override;
 	Common::Error loadGameState(int slot) override;
@@ -264,8 +271,6 @@ private:
 	void runInitScript();
 	void runExitScript();
 
-	void loadHelp(uint16 id);
-
 	void loadResources();
 	void drawResourceRects();
 	void checkCurrentResource();
@@ -286,7 +291,7 @@ private:
 	bool _mouseClicked;
 	bool _mouseMoved;
 	bool _escapePressed;
-	bool _interactive; // Is the game currently interactive
+	bool _waitingOnBlockingOperation;
 
 	Common::Array<MystCursorHint> _cursorHints;
 	void loadCursorHints();

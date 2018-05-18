@@ -31,9 +31,9 @@
 
 namespace Xeen {
 
-EventsManager::EventsManager(XeenEngine *vm) : _vm(vm), _playTime(0),
-		_frameCounter(0), _priorFrameCounterTime(0), _gameCounter(0),
-		_leftButton(false), _rightButton(false), _sprites("mouse.icn") {
+EventsManager::EventsManager(XeenEngine *vm) : _vm(vm), _playTime(0), _gameCounter(0),
+		_frameCounter(0), _priorFrameCounterTime(0), _priorScreenRefreshTime(0),
+		_mousePressed(false), _sprites("mouse.icn") {
 	Common::fill(&_gameCounters[0], &_gameCounters[6], 0);
 }
 
@@ -62,7 +62,15 @@ bool EventsManager::isCursorVisible() {
 
 void EventsManager::pollEvents() {
 	uint32 timer = g_system->getMillis();
+
+	if (timer >= (_priorScreenRefreshTime + SCREEN_UPDATE_TIME)) {
+		// Refresh the screen at a higher frame rate than the game's own frame rate
+		// to allow for more responsive mouse movement
+		_priorScreenRefreshTime = timer;
+		g_vm->_screen->update();
+	}
 	if (timer >= (_priorFrameCounterTime + GAME_FRAME_TIME)) {
+		// Time to build up next game frame
 		_priorFrameCounterTime = timer;
 		nextFrame();
 	}
@@ -80,24 +88,24 @@ void EventsManager::pollEvents() {
 				_vm->_debugger->attach();
 				_vm->_debugger->onFrame();
 			} else {
-				_keys.push(event.kbd);
+				addEvent(event.kbd);
 			}
 			break;
 		case Common::EVENT_MOUSEMOVE:
 			_mousePos = event.mouse;
 			break;
 		case Common::EVENT_LBUTTONDOWN:
-			_leftButton = true;
-			return;
-		case Common::EVENT_LBUTTONUP:
-			_leftButton = false;
+			_mousePressed = true;
+			addEvent(true, false);
 			return;
 		case Common::EVENT_RBUTTONDOWN:
-			_rightButton = true;
+			_mousePressed = true;
+			addEvent(false, true);
 			return;
+		case Common::EVENT_LBUTTONUP:
 		case Common::EVENT_RBUTTONUP:
-			_rightButton = false;
-			break;
+			_mousePressed = false;
+			return;
 		default:
  			break;
 		}
@@ -110,31 +118,38 @@ void EventsManager::pollEventsAndWait() {
 }
 
 void EventsManager::clearEvents() {
-	_keys.clear();
-	_leftButton = _rightButton = false;
-
+	_pendingEvents.clear();
+	_mousePressed = false;
 }
 
 void EventsManager::debounceMouse() {
-	while (_leftButton && !_vm->shouldExit()) {
+	while (_mousePressed && !_vm->shouldExit()) {
 		pollEventsAndWait();
 	}
 }
-bool EventsManager::getKey(Common::KeyState &key) {
-	if (_keys.empty()) {
+
+void EventsManager::addEvent(const Common::KeyState &keyState) {
+	if (_pendingEvents.size() < MAX_PENDING_EVENTS)
+		_pendingEvents.push(PendingEvent(keyState));
+}
+
+void EventsManager::addEvent(bool leftButton, bool rightButton) {
+	if (_pendingEvents.size() < MAX_PENDING_EVENTS)
+		_pendingEvents.push(PendingEvent(leftButton, rightButton));
+}
+
+
+bool EventsManager::getEvent(PendingEvent &pe) {
+	if (_pendingEvents.empty()) {
 		return false;
 	} else {
-		key = _keys.pop();
+		pe = _pendingEvents.pop();
 		return true;
 	}
 }
 
-bool EventsManager::isKeyPending() const {
-	return !_keys.empty();
-}
-
 bool EventsManager::isKeyMousePressed() {
-	bool result = _leftButton || _rightButton || isKeyPending();
+	bool result = isEventPending();
 	debounceMouse();
 	clearEvents();
 
@@ -144,7 +159,7 @@ bool EventsManager::isKeyMousePressed() {
 bool EventsManager::wait(uint numFrames, bool interruptable) {
 	while (!_vm->shouldExit() && timeElapsed() < numFrames) {
 		pollEventsAndWait();
-		if (interruptable && (_leftButton || _rightButton || isKeyPending()))
+		if (interruptable && isEventPending())
 			return true;
 	}
 
@@ -198,11 +213,6 @@ void EventsManager::nextFrame() {
 
 	// Update the screen
 	_vm->_screen->update();
-}
-
-/*------------------------------------------------------------------------*/
-
-GameEvent::GameEvent() {
 }
 
 } // End of namespace Xeen

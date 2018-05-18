@@ -19,14 +19,35 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  */
-#ifndef SLUDGE_TRANSITION_H
-#define SLUDGE_TRANSITION_H
 
-namespace Sludge {
+#ifndef XEEN_PATCHER_H
+#define XEEN_PATCHER_H
 
-void fixBrightness();
-void resetRandW();
+namespace Xeen {
 
-} // End of namespace Sludge
+class Patcher {
+private:
+	/**
+	 * Patches incorrect script lines
+	 */
+	void patchScripts();
 
-#endif
+	/**
+	 * Patches incorrect map objects
+	 */
+	void patchObjects();
+public:
+	/**
+	 * Constructor
+	 */
+	Patcher() {}
+
+	/**
+	 * Called after a map is loaded to patch any problems
+	 */
+	void patch();
+};
+
+} // End of namespace Xeen
+
+#endif	/* XEEN_PATCHER_H */

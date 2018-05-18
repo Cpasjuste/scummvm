@@ -53,6 +53,7 @@ enum PartyBank {
 #define MAX_PARTY_COUNT 8
 #define TOTAL_STATS 7
 #define TOTAL_QUEST_ITEMS 85
+#define TOTAL_QUEST_ITEMS_SWORDS 51
 #define TOTAL_QUEST_FLAGS 56
 #define MAX_TREASURE_ITEMS 10
 
@@ -81,6 +82,16 @@ public:
 	 * Returns a particular category's array
 	 */
 	XeenItem *operator[](int category) { return _categories[category]; }
+
+	/**
+	 * Clears the treasure list
+	 */
+	void clear();
+
+	/**
+	 * Completely reset the treasure data
+	 */
+	void reset();
 };
 
 /**
@@ -184,9 +195,9 @@ public:
 	int _heroism;
 	Difficulty _difficulty;
 	BlacksmithWares _blacksmithWares;
-	bool _cloudsEnd;
-	bool _darkSideEnd;
-	bool _worldEnd;
+	bool _cloudsCompleted;
+	bool _darkSideCompleted;
+	bool _worldCompleted;
 	int _ctr24;		// Unused counter
 	int _day;
 	uint _year;
@@ -209,13 +220,13 @@ public:
 	bool _rested;
 	bool _gameFlags[2][256];
 	bool _worldFlags[128];
-	bool _questFlags[2][30];
+	bool _questFlags[60];
 	int _questItems[TOTAL_QUEST_ITEMS];
 	bool _characterFlags[30][24];
 public:
 	// Other party related runtime data
 	Roster _roster;
-	Common::Array<Character> _activeParty;
+	CharacterArray _activeParty;
 	bool _newDay;
 	bool _isNight;
 	bool _stepped;

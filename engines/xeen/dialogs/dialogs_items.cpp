@@ -61,6 +61,8 @@ Character *ItemsDialog::execute(Character *c, ItemsMode mode) {
 		c = &_itemsCharacter;
 		party._blacksmithWares.blackData2CharData(_itemsCharacter);
 		setEquipmentIcons();
+	} else if (mode == ITEMMODE_ENCHANT) {
+		_oldCharacter = c;
 	}
 
 	events.setCursor(0);
@@ -326,7 +328,7 @@ Character *ItemsDialog::execute(Character *c, ItemsMode mode) {
 						InventoryItems &srcItems = c->_items[category];
 						XeenItem &srcItem = srcItems[itemIndex];
 
-						if (srcItem._bonusFlags & ITEMFLAG_CURSED)
+						if (srcItem._state._cursed)
 							ErrorScroll::show(_vm, Res.CANNOT_REMOVE_CURSED_ITEM);
 						else if (destItems.isFull())
 							ErrorScroll::show(_vm, Common::String::format(
@@ -373,9 +375,12 @@ Character *ItemsDialog::execute(Character *c, ItemsMode mode) {
 					Common::fill(&arr[0], &arr[40], 0);
 					arr[itemIndex] = 15;
 				}
-
-				redrawFlag = REDRAW_TEXT;
+			} else {
+				Common::fill(&arr[0], &arr[40], 0);
+				itemIndex = -1;
 			}
+
+			redrawFlag = REDRAW_TEXT;
 			break;
 
 		case Common::KEYCODE_a:
@@ -516,14 +521,16 @@ void ItemsDialog::loadButtons(ItemsMode mode, Character *&c, ItemCategory catego
 		addButton(Common::Rect(8, 83, 263, 91), Common::KEYCODE_8);
 		addButton(Common::Rect(8, 92, 263, 100), Common::KEYCODE_9);
 	} else {
+		bool flag = mode == ITEMMODE_BUY || mode == ITEMMODE_SELL || mode == ITEMMODE_IDENTIFY
+			|| mode == ITEMMODE_REPAIR;
 		addButton(Common::Rect(12, 109, 36, 129), Common::KEYCODE_w, &_iconSprites);
 		addButton(Common::Rect(46, 109, 70, 129), Common::KEYCODE_a, &_iconSprites);
 		addButton(Common::Rect(80, 109, 104, 129), Common::KEYCODE_c, &_iconSprites);
 		addButton(Common::Rect(114, 109, 138, 129), Common::KEYCODE_m, &_iconSprites);
-		addButton(Common::Rect(148, 109, 172, 129), Common::KEYCODE_e, &_iconSprites);
-		addButton(Common::Rect(182, 109, 206, 129), Common::KEYCODE_r, &_iconSprites);
-		addButton(Common::Rect(216, 109, 240, 129), Common::KEYCODE_d, &_iconSprites);
-		addButton(Common::Rect(250, 109, 274, 129), Common::KEYCODE_q, &_iconSprites);
+		addButton(Common::Rect(148, 109, 172, 129), flag ? Common::KEYCODE_b : Common::KEYCODE_e, &_iconSprites);
+		addButton(Common::Rect(182, 109, 206, 129), flag ? Common::KEYCODE_s : Common::KEYCODE_r, &_iconSprites);
+		addButton(Common::Rect(216, 109, 240, 129), flag ? Common::KEYCODE_i : Common::KEYCODE_d, &_iconSprites);
+		addButton(Common::Rect(250, 109, 274, 129), flag ? Common::KEYCODE_f : Common::KEYCODE_q, &_iconSprites);
 		addButton(Common::Rect(284, 109, 308, 129), Common::KEYCODE_ESCAPE, &_iconSprites);
 		addButton(Common::Rect(8, 20, 263, 28), Common::KEYCODE_1);
 		addButton(Common::Rect(8, 29, 263, 37), Common::KEYCODE_2);
@@ -535,18 +542,6 @@ void ItemsDialog::loadButtons(ItemsMode mode, Character *&c, ItemCategory catego
 		addButton(Common::Rect(8, 83, 263, 91), Common::KEYCODE_8);
 		addButton(Common::Rect(8, 92, 263, 100), Common::KEYCODE_9);
 		addPartyButtons(_vm);
-	}
-
-	if (mode == ITEMMODE_BUY) {
-		_buttons[4]._value = Common::KEYCODE_b;
-		_buttons[5]._value = Common::KEYCODE_s;
-		_buttons[6]._value = Common::KEYCODE_i;
-		_buttons[7]._value = Common::KEYCODE_f;
-	} else {
-		_buttons[4]._value = Common::KEYCODE_e;
-		_buttons[5]._value = Common::KEYCODE_r;
-		_buttons[6]._value = Common::KEYCODE_d;
-		_buttons[7]._value = Common::KEYCODE_q;
 	}
 
 	if (mode == ITEMMODE_CHAR_INFO && category == CATEGORY_MISC) {
@@ -730,6 +725,15 @@ int ItemsDialog::calcItemCost(Character *c, int itemIndex, ItemsMode mode,
 			if (!result)
 				result = 1;
 			break;
+
+		case ITEMMODE_3:
+		case ITEMMODE_RECHARGE:
+		case ITEMMODE_5:
+		case ITEMMODE_ENCHANT:
+			// Show number of charges
+			result = i._state._counter;
+			break;
+
 		default:
 			break;
 		}
@@ -793,10 +797,8 @@ int ItemsDialog::doItemOptions(Character &c, int actionIndex, int itemIndex, Ite
 					default:
 						if (combat._itemFlag) {
 							ErrorScroll::show(_vm, Res.USE_ITEM_IN_COMBAT);
-						} else if (i._id && (i._bonusFlags & ITEMFLAG_BONUS_MASK)
-								&& !(i._bonusFlags & (ITEMFLAG_BROKEN | ITEMFLAG_CURSED))) {
-							int charges = (i._bonusFlags & ITEMFLAG_BONUS_MASK) - 1;
-							i._bonusFlags = charges;
+						} else if (i._id && !i.isBad() && i._state._counter > 0) {
+							--i._state._counter;
 							_oldCharacter = &c;
 
 							windows[30].close();
@@ -804,7 +806,7 @@ int ItemsDialog::doItemOptions(Character &c, int actionIndex, int itemIndex, Ite
 							windows[24].close();
 							spells.castItemSpell(i._id);
 
-							if (!charges) {
+							if (!i._state._counter) {
 								// Ran out of charges, so make item disappear
 								c._items[category][itemIndex].clear();
 								c._items[category].sort();
@@ -867,10 +869,10 @@ int ItemsDialog::doItemOptions(Character &c, int actionIndex, int itemIndex, Ite
 			bool noNeed;
 			switch (category) {
 			case CATEGORY_WEAPON:
-				noNeed = (item._bonusFlags & ITEMFLAG_CURSED) || item._id == 34;
+				noNeed = (item._state._cursed) || item._id >= XEEN_SLAYER_SWORD;
 				break;
 			default:
-				noNeed = item._bonusFlags & ITEMFLAG_CURSED;
+				noNeed = item._state._cursed;
 				break;
 			}
 
@@ -895,17 +897,12 @@ int ItemsDialog::doItemOptions(Character &c, int actionIndex, int itemIndex, Ite
 		}
 
 		case ITEMMODE_RECHARGE:
-			if (category != CATEGORY_MISC || c._misc[itemIndex]._material > 9
-					|| c._misc[itemIndex]._id == 53 || c._misc[itemIndex]._id == 0) {
+			if (category != CATEGORY_MISC || item.empty() || item._material > 9 || item._id == 53) {
 				sound.playFX(21);
 				ErrorScroll::show(_vm, Common::String::format(Res.NOT_RECHARGABLE, Res.SPELL_FAILED));
 			} else {
-				int charges = MIN(63, _vm->getRandomNumber(1, 6) +
-					(c._misc[itemIndex]._bonusFlags & ITEMFLAG_BONUS_MASK));
+				item._state._counter = MIN(63, _vm->getRandomNumber(1, 6) + item._state._counter);
 				sound.playFX(20);
-
-				c._misc[itemIndex]._bonusFlags = (c._misc[itemIndex]._bonusFlags
-					& ~ITEMFLAG_BONUS_MASK) | charges;
 			}
 			return 2;
 
@@ -917,7 +914,7 @@ int ItemsDialog::doItemOptions(Character &c, int actionIndex, int itemIndex, Ite
 		}
 
 		case ITEMMODE_REPAIR:
-			if (!(item._bonusFlags & ITEMFLAG_BROKEN)) {
+			if (!item._state._broken) {
 				ErrorScroll::show(_vm, Res.ITEM_NOT_BROKEN);
 			} else {
 				int cost = calcItemCost(&c, itemIndex, mode, actionIndex, category);
@@ -927,7 +924,7 @@ int ItemsDialog::doItemOptions(Character &c, int actionIndex, int itemIndex, Ite
 					cost);
 
 				if (Confirm::show(_vm, msg) && party.subtract(CONS_GOLD, cost, WHERE_PARTY)) {
-					item._bonusFlags &= ~ITEMFLAG_BROKEN;
+					item._state._broken = false;
 				}
 			}
 			break;
@@ -982,11 +979,11 @@ void ItemsDialog::itemToGold(Character &c, int itemIndex, ItemCategory category,
 	Party &party = *_vm->_party;
 	Sound &sound = *_vm->_sound;
 
-	if (category == CATEGORY_WEAPON && item._id == 34) {
+	if (category == CATEGORY_WEAPON && item._id >= XEEN_SLAYER_SWORD) {
 		sound.playFX(21);
 		ErrorScroll::show(_vm, Common::String::format("\v012\t000\x03""c%s",
 			Res.SPELL_FAILED));
-	} else if (item._id != 0) {
+	} else if (!item.empty()) {
 		// There is a valid item present
 		// Calculate cost of item and add it to the party's total
 		int cost = calcItemCost(&c, itemIndex, mode, 1, category);
