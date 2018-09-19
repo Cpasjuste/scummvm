@@ -31,6 +31,8 @@
 #include "common/random.h"
 #include "common/rect.h"
 
+#include "graphics/surface.h"
+
 namespace Mohawk {
 
 struct MohawkGameDescription;
@@ -104,11 +106,13 @@ public:
 	bool hasFeature(EngineFeature f) const override;
 
 	void doFrame();
+	void processInput();
 
 private:
 	// Datafiles
 	MohawkArchive *_extrasFile; // We need a separate handle for the extra data
 	const char **listExpectedDatafiles() const;
+	void loadLanguageDatafile(char prefix, uint16 stackId);
 	bool checkDatafiles();
 
 	RivenConsole *_console;
@@ -119,6 +123,10 @@ private:
 	// Stack/Card-related functions and variables
 	RivenCard *_card;
 	RivenStack *_stack;
+
+	int _menuSavedCard;
+	int _menuSavedStack;
+	Common::ScopedPtr<Graphics::Surface, Graphics::SurfaceDeleter> _menuThumbnail;
 
 	bool _gameEnded;
 	uint32 _lastSaveTime;
@@ -149,12 +157,14 @@ public:
 	bool _activatedPLST;
 	bool _activatedSLST;
 	void delay(uint32 ms);
+	void runOptionsDialog();
 
 	// Save / Load
 	void runLoadDialog();
 	void runSaveDialog();
 	void tryAutoSaving();
 	void loadGameStateAndDisplayError(int slot);
+	Common::Error saveGameState(int slot, const Common::String &desc, bool autosave);
 	void saveGameStateAndDisplayError(int slot, const Common::String &desc);
 
 	/**
@@ -166,6 +176,13 @@ public:
 	 * End the game gracefully
 	 */
 	void setGameEnded();
+
+	// Main menu handling
+	void goToMainMenu();
+	void resumeFromMainMenu();
+	bool isInMainMenu() const;
+	bool isGameStarted() const;
+	void startNewGame();
 };
 
 } // End of namespace Mohawk

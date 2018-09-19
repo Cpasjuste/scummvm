@@ -1527,6 +1527,7 @@ arguments -- see the next section.
   -f, --fullscreen         Force full-screen mode
   -F, --no-fullscreen      Force windowed mode
   -g, --gfx-mode=MODE      Select graphics scaler (see also section 5.3)
+  --stretch-mode=MODE      Select stretch mode (center, integral, fit, stretch)
   --filtering              Force filtered graphics mode
   --no-filtering           Force unfiltered graphics mode
 
@@ -1718,6 +1719,7 @@ other games.
                              stretches the image to use 320x240 pixels
                              instead, or a multiple thereof
     Ctrl-Alt f             - Enable/disable graphics filtering
+    Ctrl-Alt s             - Cycle through scaling modes
     Alt-Enter              - Toggles full screen/windowed
     Alt-s                  - Make a screenshot (SDL backend only)
     Ctrl-F7                - Open virtual keyboard (if enabled)
@@ -2937,7 +2939,7 @@ debug messages (see <https://docs.microsoft.com/en-us/windows-hardware/drivers/d
 
    AmigaOS4:
       Please refer to:
-      <http://wiki.scummvm.org/index.php/AmigaOS4>
+      <http://wiki.scummvm.org/index.php/Compiling_ScummVM/AmigaOS4>
 
    Apple iPhone:
       Please refer to:

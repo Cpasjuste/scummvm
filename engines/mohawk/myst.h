@@ -75,7 +75,8 @@ enum MystStack {
 	kSeleniticStack,		// Selenitic Age
 	kDemoSlidesStack,		// Demo Slideshow
 	kDemoPreviewStack,		// Demo Myst Library Preview
-	kStoneshipStack			// Stoneship Age
+	kStoneshipStack,		// Stoneship Age
+	kMenuStack				// Main menu
 };
 
 // Transitions
@@ -167,10 +168,12 @@ public:
 	bool getCacheState() { return _cache.enabled; }
 
 	VideoEntryPtr playMovie(const Common::String &name, MystStack stack);
+	VideoEntryPtr playMovieFullscreen(const Common::String &name, MystStack stack);
 	VideoEntryPtr findVideo(const Common::String &name, MystStack stack);
 	void playMovieBlocking(const Common::String &name, MystStack stack, uint16 x, uint16 y);
-	void playFlybyMovie(MystStack stack, uint16 card);
+	void playFlybyMovie(MystStack stack);
 	void waitUntilMovieEnds(const VideoEntryPtr &video);
+	Common::String selectLocalizedMovieFilename(const Common::String &movieName);
 
 	void playSoundBlocking(uint16 id);
 
@@ -190,24 +193,34 @@ public:
 	void tryAutoSaving();
 	bool hasFeature(EngineFeature f) const override;
 
-private:
-	MystConsole *_console;
-	MystOptionsDialog *_optionsDialog;
-	ResourceCache _cache;
-
-	MystCardPtr _card;
-	uint32 _lastSaveTime;
-
-	bool hasGameSaveSupport() const;
-	void pauseEngineIntern(bool pause) override;
+	void resumeFromMainMenu();
 
 	void runLoadDialog();
 	void runSaveDialog();
 	void runOptionsDialog();
 
+private:
+	MystConsole *_console;
+	MystOptionsDialog *_optionsDialog;
+	ResourceCache _cache;
+
+	MystScriptParserPtr _prevStack;
+
+	MystCardPtr _card;
+	MystCardPtr _prevCard;
+	uint32 _lastSaveTime;
+
+	bool hasGameSaveSupport() const;
+	void pauseEngineIntern(bool pause) override;
+
+	void goToMainMenu();
+
 	void dropPage();
 
 	Common::String wrapMovieFilename(const Common::String &movieName, uint16 stack);
+
+	void loadStackArchives(MystStack stackId);
+	void loadArchive(const char *archiveName, const char *language, bool mandatory);
 
 	// Input
 	bool _mouseClicked;

@@ -2,8 +2,17 @@ For a more comprehensive changelog of the latest experimental code, see:
         https://github.com/scummvm/scummvm/commits/
 
 2.1.0 (2018-??-??)
+ New games:
+   - Might and Magic IV - Clouds of Xeen.
+   - Might and Magic V - Darkside of Xeen.
+   - Might and Magic - World of Xeen.
+   - Might and Magic - World of Xeen 2 CD Talkie.
+   - Might and Magic - Swords of Xeen.
+
  General:
    - Improved GUI rendering and overall GUI performance.
+   - Add stretch mode option to control how the display is stretch to the
+     window or screen area.
    - Fixed incorrect cursor movement when it's controlled using the keyboard.
    - Updated the Roland MT-32 emulation code to Munt 2.3.0.
 
@@ -12,9 +21,19 @@ For a more comprehensive changelog of the latest experimental code, see:
    - Fixed a bug that leads to enormous memory consumption in scene 22.
 
  MOHAWK:
-   - Fixed clicking through the books in the library in Myst 1.0.
-   - Fixed video playback if videos are skipped in Riven.
-   - Added support for keyboard shortcuts for loading and saving as documented in the game manual.
+   - Added a main menu for the 25th anniversary release of Myst ME.
+   - Repurposed the landing menu as a main menu for the 25th anniversary
+     release of Riven.
+   - Added autosave to slot 0 to Myst and Riven.
+   - Added keyboard shortcuts for loading and saving as documented in the game
+     manual to Myst and Riven.
+   - Fixed a crash caused by the observatory viewer random position going out
+     of bounds in Myst.
+   - Fixed a crash caused by Jungle Island flies going out of bounds in Riven.
+   - Fixed missing end credits for the Polish version in Riven.
+   - Improved usability for some puzzles in Myst and Riven.
+   - Fixed various crashes, graphics glitches, and sound imperfections in Myst
+     and Riven.
 
  SCI:
    - Fixed crash in Police Quest IV: Open Season.
@@ -30,14 +49,21 @@ For a more comprehensive changelog of the latest experimental code, see:
    - Fixed an issue in the wig maker room in the German version of SPY Fox 3: Operation Ozone
      which makes the game completable.
 
+ SKY:
+   - Added workaround for original game bug to improve intro and not cut off images which exist
+     as fullscreen (320x200px) in the game data files.
+
  Tinsel:
-   - Fix loading Discworld 1 savegames from the launcher where Rincewind had a held item
-   - Script patch for hang in Discworld 1 GRA using items on Temple big hammer
+   - Fix loading Discworld 1 savegames from the launcher where Rincewind had a held item.
+   - Script patch for hang in Discworld 1 GRA using items on Temple big hammer.
    - In Discworld 1, Held items being released that were never in the Luggage or Rincewind's inventory
-     will now be automatically dropped into the Luggage rather than being lost
+     will now be automatically dropped into the Luggage rather than being lost.
 
  Titanic:
-    - Fixed bug in entering floor numbers numerically that could crash the game
+    - Fixed bug in entering floor numbers numerically that could crash the game.
+    - Fixed parser not getting properly reset across sentences in a conversation.
+    - Fixed endless busy cursor on Titania closeup when brain slots are incorrectly inserted.
+	- Fixed loading saves in front of Barbot could cause him to go into an infinite animation loop.
 
  Tucker:
    - Fixed multiple graphic issues in Bud Tucker in Double Trouble.

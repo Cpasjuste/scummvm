@@ -42,6 +42,7 @@ enum Language {
 	EN_GRB,
 	EN_USA,
 	ET_EST,
+	FI_FIN,
 	FR_FRA,
 	DE_DEU,
 	GR_GRE,
@@ -55,8 +56,10 @@ enum Language {
 	PL_POL,
 	PT_BRA,
 	RU_RUS,
+	SK_SVK,
 	ES_ESP,
 	SE_SWE,
+	UA_UKR,
 
 	UNK_LANG = -1	// Use default language (i.e. none specified)
 };

@@ -25,6 +25,7 @@
 #include "mohawk/cursors.h"
 #include "mohawk/riven_graphics.h"
 #include "mohawk/riven_stack.h"
+#include "mohawk/riven_stacks/aspit.h"
 #include "mohawk/riven_video.h"
 
 #include "mohawk/resource.h"
@@ -81,6 +82,7 @@ void RivenCard::applyPatches(uint16 id) {
 	}
 
 	applyPropertiesPatch22118(globalId);
+	applyPropertiesPatchE2E(globalId);
 }
 
 void RivenCard::applyPropertiesPatch8EB7(uint32 globalId) {
@@ -388,6 +390,89 @@ void RivenCard::applyPropertiesPatch22118(uint32 globalId) {
 
 		debugC(kRivenDebugPatches, "Applied incorrect steam sounds (2/2) to card %x", globalId);
 	}
+}
+
+void RivenCard::applyPropertiesPatchE2E(uint32 globalId) {
+	if (!(_vm->getFeatures() & GF_25TH))
+		return;
+
+	// The main menu in the Myst 25th anniversary version is patched to include new items:
+	//   - Save game
+	if (globalId == 0xE2E) {
+		moveHotspot(   22, Common::Rect(470, 175, 602, 190)); // Setup
+		moveHotspot(   16, Common::Rect(470, 201, 602, 216)); // New game
+		addMenuHotspot(23, Common::Rect(470, 227, 602, 242), 3, RivenStacks::ASpit::kExternalRestoreGame, "xarestoregame");
+		addMenuHotspot(24, Common::Rect(470, 256, 602, 271), 4, RivenStacks::ASpit::kExternalSaveGame,    "xaSaveGame");
+		addMenuHotspot(25, Common::Rect(470, 283, 602, 300), 5, RivenStacks::ASpit::kExternalResume,      "xaResumeGame");
+		addMenuHotspot(26, Common::Rect(470, 309, 602, 326), 6, RivenStacks::ASpit::kExternalOptions,     "xaOptions");
+		addMenuHotspot(27, Common::Rect(470, 335, 602, 352), 7, RivenStacks::ASpit::kExternalQuit,        "xademoquit");
+		_vm->getStack()->registerName(kExternalCommandNames,    RivenStacks::ASpit::kExternalNewGame,     "xaNewGame");
+	}
+}
+
+void RivenCard::moveHotspot(uint16 blstId, const Common::Rect &position) {
+	RivenHotspot *hotspot = getHotspotByBlstId(blstId);
+	if (!hotspot) {
+		warning("Could not find hotspot with blstId %d", blstId);
+		return;
+	}
+
+	hotspot->setRect(position);
+}
+
+void RivenCard::addMenuHotspot(uint16 blstId, const Common::Rect &position, uint16 index,
+                               uint16 externalCommandNameId, const char *externalCommandName) {
+	RivenHotspot *existingHotspot = getHotspotByBlstId(blstId);
+	if (existingHotspot) {
+		moveHotspot(blstId, position);
+		return; // Don't add the hotspot if it already exists
+	}
+
+	// Add the external command id => name mapping if it is missing
+	int16 existingCommandNameId = _vm->getStack()->getIdFromName(kExternalCommandNames, externalCommandName);
+	if (existingCommandNameId < 0) {
+		_vm->getStack()->registerName(kExternalCommandNames, externalCommandNameId, externalCommandName);
+	} else {
+		externalCommandNameId = existingCommandNameId;
+	}
+
+	uint16 patchData[] = {
+			blstId,
+			0xFFFF,           // name
+			(uint16) position.left,
+			(uint16) position.top,
+			(uint16) position.right,
+			(uint16) position.bottom,
+			0,                // u0
+			kRivenMainCursor, // cursor
+			index,
+			0xFFFF,           // transition offset
+			0,                // flags
+			2,                // script count
+
+			kMouseDownScript,          // script type
+			1,                         // command count
+			kRivenCommandRunExternal,  // command type
+			2,                         // argument count
+			externalCommandNameId,
+			0,                         // external argument count
+
+			kMouseInsideScript,        // script type
+			1,                         // command count
+			kRivenCommandChangeCursor, // command type
+			1,                         // argument count
+			kRivenOpenHandCursor       // cursor
+		};
+
+	// Script data is expected to be in big endian
+	for (uint i = 0; i < ARRAYSIZE(patchData); i++) {
+			patchData[i] = TO_BE_16(patchData[i]);
+		}
+
+	// Add the new hotspot to the existing ones
+	Common::MemoryReadStream patchStream((const byte *)(patchData), ARRAYSIZE(patchData) * sizeof(uint16));
+	RivenHotspot *newHotspot = new RivenHotspot(_vm, &patchStream);
+	_hotspots.push_back(newHotspot);
 }
 
 void RivenCard::enter(bool unkMovies) {

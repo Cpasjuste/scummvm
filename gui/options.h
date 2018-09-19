@@ -106,6 +106,8 @@ protected:
 	void setVolumeSettingsState(bool enabled);
 	void setSubtitleSettingsState(bool enabled);
 
+	virtual void setupGraphicsTab();
+
 	bool loadMusicDeviceSetting(PopUpWidget *popup, Common::String setting, MusicType preferredType = MT_AUTO);
 	void saveMusicDeviceSetting(PopUpWidget *popup, Common::String setting);
 
@@ -138,6 +140,8 @@ private:
 	bool _enableGraphicSettings;
 	StaticTextWidget *_gfxPopUpDesc;
 	PopUpWidget *_gfxPopUp;
+	StaticTextWidget *_stretchPopUpDesc;
+	PopUpWidget *_stretchPopUp;
 	CheckboxWidget *_fullscreenCheckbox;
 	CheckboxWidget *_filteringCheckbox;
 	CheckboxWidget *_aspectCheckbox;

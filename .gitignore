@@ -3,6 +3,8 @@
 .*.swp
 .*.swo
 *.o
+*.dwo
+scummvm.dwp
 lib*.a
 .deps
 

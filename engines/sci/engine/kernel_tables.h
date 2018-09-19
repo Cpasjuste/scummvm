@@ -745,7 +745,7 @@ static SciKernelMapEntry s_kernelMap[] = {
 #ifdef ENABLE_SCI32
 	{ "LocalToGlobal", kLocalToGlobal32, SIG_SCI32, SIGFOR_ALL, "oo",                 NULL,            NULL },
 #endif
-	{ MAP_CALL(Lock),              SIG_EVERYWHERE,           "ii(i)",                 NULL,            NULL },
+	{ MAP_CALL(Lock),              SIG_EVERYWHERE,           "ii(i)",                 NULL,            kLock_workarounds },
 	{ MAP_CALL(MapKeyToDir),       SIG_EVERYWHERE,           "o",                     NULL,            NULL },
 	{ MAP_CALL(Memory),            SIG_EVERYWHERE,           "i(.*)",                 NULL,            kMemory_workarounds }, // subop
 	{ MAP_CALL(MemoryInfo),        SIG_EVERYWHERE,           "i",                     NULL,            NULL },
@@ -1010,7 +1010,7 @@ static SciKernelMapEntry s_kernelMap[] = {
 	{ MAP_DUMMY(Table),             SIG_EVERYWHERE,           "(.*)",                 NULL,            NULL },
 	{ MAP_DUMMY(LoadChunk),         SIG_EVERYWHERE,           "(.*)",                 NULL,            NULL },
 	{ MAP_DUMMY(Priority),          SIG_EVERYWHERE,           "(.*)",                 NULL,            NULL },
-	{ MAP_DUMMY(WinDLL),            SIG_EVERYWHERE,           "(.*)",                 NULL,            NULL },
+	{ MAP_CALL(WinDLL),             SIG_SINCE_SCI21MID, SIGFOR_ALL,  "ir(r)",         NULL,            NULL },
 	{ MAP_DUMMY(DeletePic),         SIG_EVERYWHERE,           "(.*)",                 NULL,            NULL },
 	{ MAP_DUMMY(GetSierraProfileString), SIG_EVERYWHERE,      "(.*)",                 NULL,            NULL },
 

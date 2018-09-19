@@ -27,6 +27,7 @@
 #include "mohawk/riven_scripts.h"
 #include "mohawk/riven_sound.h"
 #include "mohawk/riven_stack.h"
+#include "mohawk/riven_stacks/aspit.h"
 #include "mohawk/riven_video.h"
 #include "common/memstream.h"
 
@@ -361,6 +362,20 @@ void RivenScript::applyCardPatches(MohawkEngine_Riven *vm, uint32 cardGlobalId, 
 		}
 
 		debugC(kRivenDebugPatches, "Applied incorrect steam sounds (1/2) to card %x", cardGlobalId);
+	}
+
+	// Override the main menu new game script to call an external command.
+	// This way we can reset all the state when starting a new game while a game is already started.
+	if (cardGlobalId == 0xE2E && scriptType == kMouseDownScript && hotspotId == 16
+			&& (vm->getFeatures() & GF_25TH)) {
+		shouldApplyPatches = true;
+		_commands.clear();
+
+		RivenSimpleCommand::ArgumentArray arguments;
+		arguments.push_back(RivenStacks::ASpit::kExternalNewGame);
+		arguments.push_back(0);
+		_commands.push_back(RivenCommandPtr(new RivenSimpleCommand(vm, kRivenCommandRunExternal, arguments)));
+		debugC(kRivenDebugPatches, "Applied override new game script patch to card %x", cardGlobalId);
 	}
 
 	if (shouldApplyPatches) {
@@ -903,11 +918,13 @@ void RivenSwitchCommand::applyCardPatches(uint32 globalId, int scriptType, uint1
 	}
 }
 
-RivenStackChangeCommand::RivenStackChangeCommand(MohawkEngine_Riven *vm, uint16 stackId, uint32 globalCardId, bool byStackId) :
+RivenStackChangeCommand::RivenStackChangeCommand(MohawkEngine_Riven *vm, uint16 stackId, uint32 globalCardId,
+                                                 bool byStackId, bool byStackCardId) :
 		RivenCommand(vm),
 		_stackId(stackId),
 		_cardId(globalCardId),
-		_byStackId(byStackId) {
+		_byStackId(byStackId),
+		_byStackCardId(byStackCardId) {
 
 }
 
@@ -920,7 +937,7 @@ RivenStackChangeCommand *RivenStackChangeCommand::createFromStream(MohawkEngine_
 	uint16 stackId = stream->readUint16BE();
 	uint32 globalCardId = stream->readUint32BE();
 
-	return new RivenStackChangeCommand(vm, stackId, globalCardId, false);
+	return new RivenStackChangeCommand(vm, stackId, globalCardId, false, false);
 }
 
 void RivenStackChangeCommand::execute() {
@@ -939,7 +956,14 @@ void RivenStackChangeCommand::execute() {
 	}
 
 	_vm->changeToStack(stackID);
-	uint16 cardID = _vm->getStack()->getCardStackId(_cardId);
+
+	uint16 cardID;
+	if (_byStackCardId) {
+		cardID = _cardId;
+	} else {
+		cardID = _vm->getStack()->getCardStackId(_cardId);
+	}
+
 	_vm->changeToCard(cardID);
 }
 

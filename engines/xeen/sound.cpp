@@ -22,8 +22,10 @@
 
 #include "audio/decoders/raw.h"
 #include "audio/decoders/voc.h"
+#include "backends/audiocd/audiocd.h"
 #include "common/config-manager.h"
 #include "xeen/sound.h"
+#include "xeen/sound_driver_adlib.h"
 #include "xeen/xeen.h"
 
 namespace Xeen {
@@ -31,11 +33,15 @@ namespace Xeen {
 Sound::Sound(Audio::Mixer *mixer) : _mixer(mixer), _fxOn(true), _musicOn(true), _subtitles(false),
 		_songData(nullptr), _effectsData(nullptr), _musicSide(0), _musicPercent(100),
 		_musicVolume(0), _sfxVolume(0) {
-	_SoundDriver = new AdlibSoundDriver();
+	_SoundDriver = new SoundDriverAdlib();
+	if (g_vm->getIsCD())
+		g_system->getAudioCDManager()->open();
 }
 
 Sound::~Sound() {
 	stopAllAudio();
+	if (g_vm->getIsCD())
+		g_system->getAudioCDManager()->close();
 
 	delete _SoundDriver;
 	delete[] _effectsData;
