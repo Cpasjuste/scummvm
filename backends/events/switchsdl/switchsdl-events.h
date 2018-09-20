@@ -49,7 +49,7 @@ private:
 
 	typedef struct {
 		int id; // -1: no touch
-		Uint32 timeLastDown;
+		uint32 timeLastDown;
 		int lastX; // last known screen coordinates
 		int lastY; // last known screen coordinates
 		float lastDownX; // SDL touch coordinates when last pressed down

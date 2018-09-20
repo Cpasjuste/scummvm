@@ -25,11 +25,11 @@
 
 #include "backends/platform/sdl/sdl.h"
 
-class OSystem_SWITCH : public OSystem_SDL {
+class OSystem_Switch : public OSystem_SDL {
 public:
 	// Let the subclasses be able to change _baseConfigName in the constructor
-	OSystem_SWITCH(Common::String baseConfigName = "scummvm.ini");
-	virtual ~OSystem_SWITCH() {}
+	OSystem_Switch(Common::String baseConfigName = "scummvm.ini");
+	virtual ~OSystem_Switch() {}
 
 	virtual void init() override;
 	virtual void initBackend() override;

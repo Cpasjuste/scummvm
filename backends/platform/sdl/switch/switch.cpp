@@ -32,11 +32,11 @@
 #include "backends/fs/posix/posix-fs-factory.h"
 #include "backends/fs/posix/posix-fs.h"
 
-OSystem_SWITCH::OSystem_SWITCH(Common::String baseConfigName)
+OSystem_Switch::OSystem_Switch(Common::String baseConfigName)
 	: _baseConfigName(baseConfigName) {
 }
 
-void OSystem_SWITCH::init() {
+void OSystem_Switch::init() {
 	
 	// Initialze File System Factory
 	_fsFactory = new POSIXFilesystemFactory();
@@ -45,7 +45,7 @@ void OSystem_SWITCH::init() {
 	OSystem_SDL::init();
 }
 
-void OSystem_SWITCH::initBackend() {
+void OSystem_Switch::initBackend() {
 
 	ConfMan.registerDefault("joystick_num", 0);
 	ConfMan.registerDefault("fullscreen", true);
@@ -87,7 +87,7 @@ void OSystem_SWITCH::initBackend() {
 	OSystem_SDL::initBackend();
 }
 
-bool OSystem_SWITCH::hasFeature(Feature f) {
+bool OSystem_Switch::hasFeature(Feature f) {
 	
 	if (f == kFeatureDisplayLogFile)
 		return false;
@@ -97,15 +97,15 @@ bool OSystem_SWITCH::hasFeature(Feature f) {
 	return OSystem_SDL::hasFeature(f);
 }
 
-void OSystem_SWITCH::logMessage(LogMessageType::Type type, const char *message) {
+void OSystem_Switch::logMessage(LogMessageType::Type type, const char *message) {
 	printf("%s\n", message);
 }
 
-Common::String OSystem_SWITCH::getDefaultConfigFileName() {
+Common::String OSystem_Switch::getDefaultConfigFileName() {
 	return _baseConfigName;
 }
 
-Common::WriteStream *OSystem_SWITCH::createLogFile() {
+Common::WriteStream *OSystem_Switch::createLogFile() {
 	Common::FSNode file("scummvm.log");
 	return file.createWriteStream();
 }

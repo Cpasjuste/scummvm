@@ -22,7 +22,9 @@
 
 #include "common/scummsys.h"
 
-#if defined(SWITCH)
+#if defined(NINTENDO_SWITCH)
+
+#include <math.h>
 
 #include "backends/platform/sdl/switch/switch.h"
 #include "backends/events/switchsdl/switchsdl-events.h"
@@ -32,8 +34,6 @@
 #include "common/util.h"
 #include "common/events.h"
 #include "common/config-manager.h"
-
-#include "math.h"
 
 SwitchEventSource::SwitchEventSource() {
 	for (int port = 0; port < SCE_TOUCH_PORT_MAX_NUM; port++) {
@@ -154,7 +154,7 @@ void SwitchEventSource::preprocessFingerUp(SDL_Event *event) {
 					float maxRSquared = (float) (MAX_TAP_MOTION_DISTANCE * MAX_TAP_MOTION_DISTANCE);
 					if ((xrel * xrel + yrel * yrel) < maxRSquared) {
 						if (numFingersDown == 2 || numFingersDown == 1) {
-							Uint8 simulatedButton = 0;
+							uint8 simulatedButton = 0;
 							if (numFingersDown == 2) {
 								simulatedButton = SDL_BUTTON_RIGHT;
 								// need to raise the button later
@@ -180,7 +180,7 @@ void SwitchEventSource::preprocessFingerUp(SDL_Event *event) {
 				if (port == 0 && !ConfMan.getBool("touchpad_mouse_mode")) {
 					convertTouchXYToGameXY(event->tfinger.x, event->tfinger.y, &x, &y);
 				}
-				Uint8 simulatedButton = 0;
+				uint8 simulatedButton = 0;
 				if (_multiFingerDragging[port] == DRAG_THREE_FINGER)
 					simulatedButton = SDL_BUTTON_RIGHT;
 				else {
@@ -216,40 +216,32 @@ void SwitchEventSource::preprocessFingerMotion(SDL_Event *event) {
 
 		if (port == 0 && !ConfMan.getBool("touchpad_mouse_mode")) {
 			convertTouchXYToGameXY(event->tfinger.x, event->tfinger.y, &x, &y);
-		}	else {
+		} else {
 			// for relative mode, use the pointer speed setting
 			float speedFactor = 1.0;
 
 			switch (ConfMan.getInt("kbdmouse_speed")) {
-			// 0.25 keyboard pointer speed
 			case 0:
 				speedFactor = 0.25;
 				break;
-			// 0.5 speed
 			case 1:
 				speedFactor = 0.5;
 				break;
-			// 0.75 speed
 			case 2:
 				speedFactor = 0.75;
 				break;
-			// 1.0 speed
 			case 3:
 				speedFactor = 1.0;
 				break;
-			// 1.25 speed
 			case 4:
 				speedFactor = 1.25;
 				break;
-			// 1.5 speed
 			case 5:
 				speedFactor = 1.5;
 				break;
-			// 1.75 speed
 			case 6:
 				speedFactor = 1.75;
 				break;
-			// 2.0 speed
 			case 7:
 				speedFactor = 2.0;
 				break;
@@ -265,16 +257,8 @@ void SwitchEventSource::preprocessFingerMotion(SDL_Event *event) {
 			y = (_km.y / MULTIPLIER + (event->tfinger.dy * 1.25 * speedFactor * _km.y_max));
 		}
 
-		if (x > _km.x_max) {
-			x = _km.x_max;
-		} else if (x < 0) {
-			x = 0;
-		}
-		if (y > _km.y_max) {
-			y = _km.y_max;
-		} else if (y < 0) {
-			y = 0;
-		}
+		x = CLIP(x, 0, (int)_km.x_max);
+		y = CLIP(y, 0, (int)_km.y_max);
 
 		// update the current finger's coordinates so we can track it later
 		for (int i = 0; i < MAX_NUM_FINGERS; i++) {
@@ -304,7 +288,7 @@ void SwitchEventSource::preprocessFingerMotion(SDL_Event *event) {
 					if (port == 0 && !ConfMan.getBool("touchpad_mouse_mode")) {
 						for (int i = 0; i < MAX_NUM_FINGERS; i++) {
 							if (_finger[port][i].id == id) {
-								Uint32 earliestTime = _finger[port][i].timeLastDown;
+								uint32 earliestTime = _finger[port][i].timeLastDown;
 								for (int j = 0; j < MAX_NUM_FINGERS; j++) {
 									if (_finger[port][j].id >= 0 && (i != j) ) {
 										if (_finger[port][j].timeLastDown < earliestTime) {
@@ -318,7 +302,7 @@ void SwitchEventSource::preprocessFingerMotion(SDL_Event *event) {
 							}
 						}
 					}
-					Uint8 simulatedButton = 0;
+					uint8 simulatedButton = 0;
 					if (numFingersDownLong == 2) {
 						simulatedButton = SDL_BUTTON_LEFT;
 						_multiFingerDragging[port] = DRAG_TWO_FINGER;
@@ -377,19 +361,17 @@ void SwitchEventSource::convertTouchXYToGameXY(float touchX, float touchY, int *
 	float ratio = (float)screenW / (float)screenH;
 
 	if (aspectRatioCorrection && (windowH == 200 || windowH == 400)) {
-		ratio = 4.0 / 3.0;
+		ratio = 4.0f / 3.0f;
 	}
 
 	if (fullscreen || screenH >= dispH) {
 		h = dispH;
 		if (aspectRatioCorrection && (windowH == 200 || windowH == 400)) {
-			ratio = ratio * 1.1;
+			ratio = ratio * 1.1f;
 		}
 		w = h * ratio;
 	} else {
 		if (screenH <= dispH / 2 && screenW <= dispW / 2) {
-			// Use Vita hardware 2x scaling if the picture is really small
-			// this uses the current shader and filtering mode
 			h = screenH * 2;
 			w = screenW * 2;
 		} else {
@@ -398,8 +380,8 @@ void SwitchEventSource::convertTouchXYToGameXY(float touchX, float touchY, int *
 		}
 		if (aspectRatioCorrection && (windowH == 200 || windowH == 400)) {
 			// stretch the height only if it fits, otherwise make the width smaller
-			if (((float)w * (1.0 / ratio)) <= (float)dispH) {
-				h = w * (1.0 / ratio);
+			if (((float)w * (1.0f / ratio)) <= (float)dispH) {
+				h = w * (1.0f / ratio);
 			} else {
 				w = h * ratio;
 			}
@@ -412,30 +394,19 @@ void SwitchEventSource::convertTouchXYToGameXY(float touchX, float touchY, int *
 	sy = (float)h / (float)screenH;
 	sx = (float)w / (float)screenW;
 
-	// Find touch coordinates in terms of Vita screen pixels
+	// Find touch coordinates in terms of screen pixels
 	float dispTouchX = (touchX * (float)dispW);
 	float dispTouchY = (touchY * (float)dispH);
 
-	*gameX = (dispTouchX - x) / sx;
-	*gameY = (dispTouchY - y) / sy;
-
-	if (*gameX < 0) {
-		*gameX = 0;
-	} else if (*gameX > _km.x_max) {
-		*gameX = _km.x_max;
-	}
-	if (*gameY < 0) {
-		*gameY = 0;
-	} else if (*gameY > _km.y_max) {
-		*gameY = _km.y_max;
-	}
+	*gameX = CLIP((int)((dispTouchX - x) / sx), 0, (int)_km.x_max);
+	*gameY = CLIP((int)((dispTouchY - y) / sy), 0, (int)_km.y_max);
 }
 
 void SwitchEventSource::finishSimulatedMouseClicks() {
 	for (int port = 0; port < SCE_TOUCH_PORT_MAX_NUM; port++) {
 		for (int i = 0; i < 2; i++) {
 			if (_simulatedClickStartTime[port][i] != 0) {
-				Uint32 currentTime = SDL_GetTicks();
+				uint32 currentTime = SDL_GetTicks();
 				if (currentTime - _simulatedClickStartTime[port][i] >= SIMULATED_CLICK_DURATION) {
 					int simulatedButton;
 					if (i == 0) {

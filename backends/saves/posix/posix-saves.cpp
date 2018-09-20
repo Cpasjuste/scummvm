@@ -50,7 +50,8 @@ POSIXSaveFileManager::POSIXSaveFileManager() {
 	// Register default savepath.
 #if defined(SAMSUNGTV)
 	ConfMan.registerDefault("savepath", "/mtd_wiselink/scummvm savegames");
-#elif defined(SWITCH)
+#elif defined(NINTENDO_SWITCH)
+	Posix::assureDirectoryExists("./saves", nullptr);
 	ConfMan.registerDefault("savepath", "./saves");
 #else
 	Common::String savePath;

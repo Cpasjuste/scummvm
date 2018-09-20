@@ -38,11 +38,11 @@ int main(int argc, char *argv[]) {
 #endif
 
 	// Create our OSystem instance
-	g_system = new OSystem_SWITCH();
+	g_system = new OSystem_Switch();
 	assert(g_system);
 
 	// Pre initialize the backend
-	((OSystem_SWITCH *)g_system)->init();
+	((OSystem_Switch *)g_system)->init();
 
 #ifdef DYNAMIC_MODULES
 	PluginManager::instance().addPluginProvider(new SDLPluginProvider());
@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
 	int res = scummvm_main(argc, argv);
 
 	// Free OSystem
-	delete (OSystem_SWITCH *)g_system;
+	delete (OSystem_Switch *)g_system;
 
 #ifdef __SWITCH_DEBUG__
 	socketExit();
