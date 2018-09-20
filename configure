@@ -1660,6 +1660,7 @@ switch)
 	datarootdir='${prefix}/data'
 	datadir='${datarootdir}'
 	docdir='${prefix}/doc'
+	PKG_CONFIG_LIBDIR=$DEVKITPRO/portlibs/switch/lib/pkgconfig
 	;;
 tizen)
  	_host_os=tizen
@@ -2880,6 +2881,8 @@ case $_host_os in
 		append_var DEFINES "-DSWITCH -D__SWITCH__"
 		append_var CXXFLAGS "-march=armv8-a -mtune=cortex-a57 -mtp=hard -fPIE"
 		append_var CXXFLAGS "-ffunction-sections -fno-exceptions"
+		append_var CXXFLAGS "-I$DEVKITPRO/libnx/include -I$DEVKITPRO/portlibs/switch/include"
+		append_var LDFLAGS "-L$DEVKITPRO/libnx/lib -L$DEVKITPRO/portlibs/switch/lib"
 		append_var LDFLAGS "-specs=$DEVKITPRO/libnx/switch.specs"
 		add_line_to_config_mk 'SWITCH = 1'
 		if test "$_debug_build" = yes; then
