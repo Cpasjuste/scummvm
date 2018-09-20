@@ -88,6 +88,8 @@ const SciWorkaroundEntry arithmeticWorkarounds[] = {
 	{ GID_QFG2,           200,  200,  0,              "astro", "messages",                        NULL,     0,     0, { WORKAROUND_FAKE,   0 } }, // op_lsi: when getting asked for your name by the astrologer - bug #5152
 	{ GID_QFG3,           780,  999,  0,                   "", "export 6",                        NULL,     0,     0, { WORKAROUND_FAKE,   0 } }, // op_add: trying to talk to yourself at the top of the giant tree - bug #6692
 	{ GID_QFG4,           710,64941,  0,          "RandCycle", "doit",                            NULL,     0,     0, { WORKAROUND_FAKE,   1 } }, // op_gt: when the tentacle appears in the third room of the caves
+	{ GID_QFG4,            -1,  870,  0,         "hurtMyself", "changeState",                     NULL,     0,     0, { WORKAROUND_FAKE,   1 } }, // op_or: when hitting a necrotaur with a sword as a paladin
+	{ GID_QFG4,            -1,  830,  0,    "revenantForward", "doit",                            NULL,     0,     0, { WORKAROUND_FAKE,   1 } }, // op_or: when starting a fight with a revenant
 	{ GID_TORIN,        51400,64928,  0,              "Blink", "init",                            NULL,     0,     0, { WORKAROUND_FAKE,   1 } }, // op_div: when Lycentia knocks Torin out after he removes her collar
 	SCI_WORKAROUNDENTRY_TERMINATOR
 };
@@ -130,7 +132,6 @@ static const uint16 sig_uninitread_hoyle4_1[] = {
 //   Subroutine offset: 0x2fb2 (script 300)
 // Applies to at least: English PC demo
 static const uint16 sig_uninitread_hoyle5_1[] = {
-
 	0x7e, SIG_ADDTOOFFSET(2),        // line N
 	0x7d, 0x68, 0x65, 0x61, 0x72,
 	      0x74, 0x73, 0x2e, 0x73,
@@ -139,6 +140,55 @@ static const uint16 sig_uninitread_hoyle5_1[] = {
 	0x7e, SIG_ADDTOOFFSET(2),        // line N
 	0x39, 0x4b,                      // pushi 4bh
 	0x78,                            // push1
+	SIG_END
+};
+
+//                Game: Hoyle 5 (Solitaire)
+//      Calling methods: roomScript::changeState, beleaguered_castle::init, strategy::init
+//   Subroutine offsets: 0x25f4 (script 6001), 0x1d7a (script 6004), 0x239d (script 6002)
+// Applies to at least: English PC
+static const uint16 sig_uninitread_hoyle5_2[] = {
+	0x7e, SIG_ADDTOOFFSET(2),        // line N
+	0x7d, SIG_ADDTOOFFSET(8),
+	      0x2e, 0x73, 0x63, 0x00,    // file "calculat.sc" / "belcastl.sc" / "strategy.sc"
+	0x3f, 0x02,                      // link 02
+	0x7e, SIG_ADDTOOFFSET(2),        // line N
+	0x8d, 0x00,                      // lst temp[0]
+	0x35, 0x00,                      // ldi 00
+	0x1a,                            // eq?
+	SIG_END
+};
+
+//                Game: Hoyle 5 (Solitaire)
+//      Calling method: roomScript::changeState
+//   Subroutine offset: 0x494a (script 6023)
+// Applies to at least: English PC
+static const uint16 sig_uninitread_hoyle5_3[] = {
+	0x7e, SIG_ADDTOOFFSET(2),        // line N
+	0x7d, 0x67, 0x61, 0x70,	0x73,
+	      0x2e, 0x73, 0x63, 0x00,    // file "gaps.sc"
+	0x3f, 0x02,                      // link 02
+	0x7e, SIG_ADDTOOFFSET(2),        // line N
+	0x8d, 0x00,                      // lst temp[0]
+	0x35, 0x00,                      // ldi 00
+	0x1a,                            // eq?
+	SIG_END
+};
+
+//                Game: Hoyle 5 (Solitaire)
+//      Calling method: roomScript::changeState
+//   Subroutine offset: 0x2097 (script 6011)
+// Applies to at least: English PC
+static const uint16 sig_uninitread_hoyle5_4[] = {
+	0x7e, SIG_ADDTOOFFSET(2),        // line N
+	0x7d, 0x6c, 0x61, 0x62, 0x65,
+	      0x6c, 0x6c, 0x65,
+	      0x2e, 0x73, 0x63, 0x00,    // file "labelle.sc"
+	0x3f, 0x02,                      // link 02
+	0x7e, SIG_ADDTOOFFSET(2),        // line N
+	0x8d, 0x00,                      // lst temp[0]
+	0x35, 0x00,                      // ldi 00
+	0x1a,                            // eq?
 	SIG_END
 };
 
@@ -269,6 +319,19 @@ static const uint16 sig_uninitread_sq1_1[] = {
 	SIG_END
 };
 
+// Workarounds for uninitialized reads for parameters
+//    gameID,           room,script,lvl,          object-name, method-name,       local-call-signature, index-range,  workaround
+const SciWorkaroundEntry uninitializedReadForParamWorkarounds[] = {
+	{ GID_HOYLE5,         -1,    15, -1,               "Hand", "add",                             NULL,     1,     1,{ WORKAROUND_FAKE,   0 } }, // When the game adds cards to your hand in any mini-game
+	{ GID_HOYLE5,        700,   730,  0,                 NULL, "runningSuit",                     NULL,     2,     2,{ WORKAROUND_FAKE,   0 } }, // when an opponent is playing in Bridge
+	{ GID_HOYLE5,       1100,    22, -1,           "HandPile", "show",                            NULL,     1,     1,{ WORKAROUND_FAKE,   0 } }, // when showing money piles in Poker
+	{ GID_PHANTASMAGORIA2,-1, 64926,  0,              "Thumb", "action",                          NULL,     1,     1,{ WORKAROUND_FAKE,   0 } }, // When dragging one of the volume sliders and releasing the mouse button over the +/- buttons
+	{ GID_PHANTASMAGORIA2,-1, 63019,  0,     "WynDocTextView", "cue",                             NULL,     2,     2,{ WORKAROUND_FAKE,   0 } }, // When dragging the slider next to an e-mail message
+	{ GID_SHIVERS,        -1, 64918,  0,                "Str", "strip",                           NULL,     1,     1,{ WORKAROUND_FAKE,   0 } }, // When starting a new game and entering a name
+	SCI_WORKAROUNDENTRY_TERMINATOR
+};
+
+// Workarounds for uninitialized reads for temporary variables
 //    gameID,           room,script,lvl,          object-name, method-name,       local-call-signature, index-range,  workaround
 const SciWorkaroundEntry uninitializedReadWorkarounds[] = {
 	{ GID_CAMELOT,        40,    40,  0,               "Rm40", "handleEvent",                     NULL,     0,     0, { WORKAROUND_FAKE,   0 } }, // when looking at the ground at the pool of Siloam - bug #6401
@@ -324,6 +387,20 @@ const SciWorkaroundEntry uninitializedReadWorkarounds[] = {
 	{ GID_HOYLE5,         -1, 64937, -1,                 NULL, "select",                          NULL,     7,     7, { WORKAROUND_FAKE,   0 } }, // clicking the "control" and "options" buttons in the icon bar
 	{ GID_HOYLE5,         -1, 64937, -1,            "IconBar", "handleEvent",                     NULL,     0,     0, { WORKAROUND_FAKE,   0 } }, // clicking on any button in the icon bar
 	{ GID_HOYLE5,        300,   300,  0,                   "", "export 2",     sig_uninitread_hoyle5_1,     0,     0, { WORKAROUND_FAKE,   0 } }, // after passing around cards in hearts
+	{ GID_HOYLE5,        400,   400,  1,            "GinHand", "calcRuns",                        NULL,     4,     4, { WORKAROUND_FAKE,   0 } }, // when starting Gin
+	{ GID_HOYLE5,        700,   700,  1,         "BridgeHand", "calcQTS",                         NULL,     3,     3, { WORKAROUND_FAKE,   0 } }, // when an opponent is playing in Bridge
+	{ GID_HOYLE5,        700,   747,  0,   "LeadReturn_Trump", "think",                           NULL,    17,    17, { WORKAROUND_FAKE,   0 } }, // when an opponent is playing in Bridge
+	{ GID_HOYLE5,       1100,    18,  0,               "Tray", "init",                            NULL,     0,     0, { WORKAROUND_FAKE,   0 } }, // when playing Poker
+	{ GID_HOYLE5,       1100,  1100,  0,         "anteButton", "handleEvent",                     NULL,     1,     1, { WORKAROUND_FAKE,   0 } }, // when exiting Poker
+	{ GID_HOYLE5,       6029,  6029,  1,        "ControlIcon", "select",                          NULL,     1,     1, { WORKAROUND_FAKE,   0 } }, // Solitaire: when changing any slider in the Card Flip mini-game's options window
+	{ GID_HOYLE5,         -1,  6000,  1,              "sHand", "handleEvent",                     NULL,     4,     4, { WORKAROUND_FAKE,   0 } }, // Solitaire: when clicking on an empty card base in any game
+	{ GID_HOYLE5,       6001,  6001,  0,         "roomScript", "changeState",  sig_uninitread_hoyle5_2,     0,     0, { WORKAROUND_FAKE,   0 } }, // Solitaire: when starting Calculation
+	{ GID_HOYLE5,       6004,  6004,  0,         "roomScript", "changeState",  sig_uninitread_hoyle5_2,     0,     0, { WORKAROUND_FAKE,   0 } }, // Solitaire: when starting Beleaguered Castle
+	{ GID_HOYLE5,       6004,  6004,  0, "beleaguered_castle", "init",         sig_uninitread_hoyle5_2,     0,     0, { WORKAROUND_FAKE,   0 } }, // Solitaire: when starting Beleaguered Castle
+	{ GID_HOYLE5,       6023,  6023,  0,         "roomScript", "changeState",  sig_uninitread_hoyle5_3,     0,     0, { WORKAROUND_FAKE,   0 } }, // Solitaire: when starting Gaps
+	{ GID_HOYLE5,       6011,  6011,  0,         "roomScript", "changeState",  sig_uninitread_hoyle5_4,     0,     0, { WORKAROUND_FAKE,   0 } }, // Solitaire: when starting La Belle Lucie
+	{ GID_HOYLE5,       6002,  6002,  0,         "roomScript", "changeState",  sig_uninitread_hoyle5_2,     0,     0, { WORKAROUND_FAKE,   0 } }, // Solitaire: when starting Strategy
+	{ GID_HOYLE5,       6002,  6002,  0,           "strategy", "init",         sig_uninitread_hoyle5_2,     0,     0, { WORKAROUND_FAKE,   0 } }, // Solitaire: when starting Strategy
 	{ GID_ISLANDBRAIN,   100,   937,  0,            "IconBar", "dispatchEvent",                   NULL,    58,    58, { WORKAROUND_FAKE,   0 } }, // when using ENTER at the startup menu - bug #5241
 	{ GID_ISLANDBRAIN,   140,   140,  0,              "piece", "init",                            NULL,     3,     3, { WORKAROUND_FAKE,   1 } }, // first puzzle right at the start, some initialization variable. bnt is done on it, and it should be non-0
 	{ GID_ISLANDBRAIN,   180,   190,  0,               "word", "dispatchEvent",                   NULL,    14,    15, { WORKAROUND_FAKE,   0 } }, // holding down enter key during the word search puzzle, temps 14 and 15
@@ -385,7 +462,6 @@ const SciWorkaroundEntry uninitializedReadWorkarounds[] = {
 	{ GID_PEPPER,         -1,   894,  0,            "Package", "doVerb",                          NULL,     3,     3, { WORKAROUND_FAKE,   0 } }, // using the hand on the book in the inventory - bug #5154
 	{ GID_PEPPER,        150,   928,  0,           "Narrator", "startText",                       NULL,     0,     0, { WORKAROUND_FAKE,   0 } }, // happens during the non-interactive demo of Pepper
 	{ GID_PHANTASMAGORIA, -1, 64921, -1,              "Print", "addEdit",                         NULL,     1,     1, { WORKAROUND_FAKE,   0 } }, // When trying to use the game debugger's flag setting command
-	{ GID_PHANTASMAGORIA2,-1, 64926, -1,              "Thumb", "action",                          NULL,     1,     1, { WORKAROUND_FAKE,   0 } }, // When dragging one of the volume sliders and releasing the mouse button over the +/- buttons
 	{ GID_PQ4,            -1,    25,  0,         "iconToggle", "select",                          NULL,     1,     1, { WORKAROUND_FAKE,   0 } }, // when toggling the icon bar to auto-hide or not
 	{ GID_PQ4,           170,   170, -1,        "hideAndSeek", "handleEvent",                     NULL,     1,     1, { WORKAROUND_FAKE,   0 } }, // when clicking to move right while still moving left during the Emo shootout - bug #9847
 	{ GID_PQ4,           275, 64964, -1,              "DPath", "init",                            NULL,     1,     1, { WORKAROUND_FAKE,   0 } }, // when Sherry walks out of the morgue on day 3
@@ -420,9 +496,9 @@ const SciWorkaroundEntry uninitializedReadWorkarounds[] = {
 	{ GID_QFG4,           -1, 64917, -1,       "controlPlane", "setBitmap",                       NULL,     3,     3, { WORKAROUND_FAKE,   0 } }, // floppy version, when entering the game menu
 	{ GID_QFG4,           -1, 64917, -1,              "Plane", "setBitmap",                       NULL,     3,     3, { WORKAROUND_FAKE,   0 } }, // floppy version, happens sometimes in fight scenes
 	{ GID_QFG4,          380,    80, -1,           "myButton", "select",                          NULL,     2,     2, { WORKAROUND_FAKE,   1 } }, // CD version, when clicking on a puzzle piece for the keyhole scrambled picture puzzle
-	{ GID_QFG4,          520, 64950,  0,             "fLake2", "handleEvent",                     NULL,     0,     0, { WORKAROUND_FAKE,   0 } }, // CD version, at the lake, when meeting the Rusalka and attempting to leave
-	{ GID_QFG4,          780, 64964,  0,              "DPath", "init",                            NULL,     1,     1, { WORKAROUND_FAKE,   0 } }, // CD version, walking down to the monastery basement
-	{ GID_QFG4,          800, 64950,  0,               "View", "handleEvent",                     NULL,     0,     0, { WORKAROUND_FAKE,   0 } }, // CD version, in the room with the spider pillar, when climbing on the pillar
+	{ GID_QFG4,           -1, 64950, -1,            "Feature", "handleEvent",                     NULL,     0,     0, { WORKAROUND_FAKE,   0 } }, // CD version, at the lake, when meeting the Rusalka and attempting to leave, and after Ad Avis catches you, and finishes his monologue
+	{ GID_QFG4,           -1, 64964,  0,              "DPath", "init",                            NULL,     1,     1, { WORKAROUND_FAKE,   0 } }, // CD version, walking down to the monastery basement or entering the Gypsy Camp
+	{ GID_QFG4,           -1, 64950,  0,               "View", "handleEvent",                     NULL,     0,     0, { WORKAROUND_FAKE,   0 } }, // CD version, in the room with the spider pillar, when climbing on the pillar, or when using the Glide spell in the swamp
 	{ GID_RAMA,           -1, 64950, -1,                 NULL, "handleEvent",                     NULL,     0,     0, { WORKAROUND_FAKE,   0 } }, // When clicking on the main game interface, or the main menu buttons, or mousing over things in the main game window
 	{ GID_RAMA,           -1, 64923, -1,              "Inset", "init",                            NULL,     0,     0, { WORKAROUND_FAKE,   0 } }, // When receiving a message on the pocket computer at the start of the game
 	{ GID_RAMA,          6107, 6107, -1,                 NULL, "doVerb",         sig_uninitread_rama_2,     0,     0, { WORKAROUND_FAKE,   0 } }, // When pressing keys on the final console in the Avian Lair
@@ -630,7 +706,7 @@ const SciWorkaroundEntry kDoSoundFade_workarounds[] = {
 	{ GID_KQ5,           213,   989,  0,       "globalSound3", "fade",                      NULL,     0,     0, { WORKAROUND_STILLCALL, 0 } }, // english floppy: when bandits leave the secret temple, parameter 4 is an object - bug #5078
 	{ GID_KQ6,           105,   989,  0,        "globalSound", "fade",                      NULL,     0,     0, { WORKAROUND_STILLCALL, 0 } }, // floppy: during intro, parameter 4 is an object
 	{ GID_KQ6,           460,   989,  0,       "globalSound2", "fade",                      NULL,     0,     0, { WORKAROUND_STILLCALL, 0 } }, // after pulling the black widow's web on the isle of wonder, parameter 4 is an object - bug #4954
-	{ GID_QFG4,           -1, 64989,  0,           "longSong", "fade",                      NULL,     0,     0, { WORKAROUND_STILLCALL, 0 } }, // CD version: many places, parameter 4 is an object (longSong)
+	{ GID_QFG4,           -1, 64989,  1,          "GlorySong", "fade",                      NULL,     0,     0, { WORKAROUND_STILLCALL, 0 } }, // CD version: many places, parameter 4 is an object (the sound object itself)
 	{ GID_SQ5,           800,   989,  0,          "sq5Music1", "fade",                      NULL,     0,     0, { WORKAROUND_STILLCALL, 0 } }, // when cutting the wrong part of Goliath with the laser - bug #6341
 	SCI_WORKAROUNDENTRY_TERMINATOR
 };
@@ -774,6 +850,13 @@ const SciWorkaroundEntry kIsObject_workarounds[] = {
 const SciWorkaroundEntry kListAt_workarounds[] = {
 	{ GID_HOYLE5,        100, 64999,  0,           "theHands", "at",                           NULL,     0,     0, { WORKAROUND_FAKE, 0 } }, // After the first hand is dealt in Crazy Eights game in demo, an object is passed instead of a number
 	{ GID_LIGHTHOUSE,     24, 64999,  0,           "LightInv", "at",                           NULL,     0,     0, { WORKAROUND_FAKE, 0 } }, // When taking the car keys from the table at the start of the game
+	SCI_WORKAROUNDENTRY_TERMINATOR
+};
+
+//    gameID,           room,script,lvl,          object-name, method-name, local-call-signature, index-range,   workaround
+const SciWorkaroundEntry kLock_workarounds[] = {
+	{ GID_PQSWAT,       6400,  6400,  0,      "rookerTrains3", "changeState",                  NULL,     0,     0, { WORKAROUND_STILLCALL,    0 } }, // After completing Small Arms Training, at the end of the Tactics Training
+	{ GID_PQSWAT,       6400,  6400,  0,      "rookerTrains5", "changeState",                  NULL,     0,     0, { WORKAROUND_STILLCALL,    0 } }, // After completing Small Arms Training, at the end of the Tactics Training
 	SCI_WORKAROUNDENTRY_TERMINATOR
 };
 

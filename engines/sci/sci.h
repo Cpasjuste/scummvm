@@ -59,6 +59,7 @@ namespace Sci {
 #define GAMEOPTION_HQ_VIDEO                 GUIO_GAMEOPTIONS10
 #define GAMEOPTION_ENABLE_CENSORING         GUIO_GAMEOPTIONS11
 #define GAMEOPTION_LARRYSCALE               GUIO_GAMEOPTIONS12
+#define GAMEOPTION_UPSCALE_VIDEOS           GUIO_GAMEOPTIONS13
 
 struct EngineState;
 class Vocabulary;
@@ -316,7 +317,7 @@ public:
 	void scriptDebug();
 	bool checkExportBreakpoint(uint16 script, uint16 pubfunct);
 	bool checkSelectorBreakpoint(BreakpointType breakpointType, reg_t send_obj, int selector);
-	bool checkAddressBreakpoint(const reg32_t &address);
+	bool checkAddressBreakpoint(const reg_t &address);
 
 public:
 	bool checkKernelBreakpoint(const Common::String &name);

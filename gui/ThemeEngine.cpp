@@ -254,9 +254,9 @@ ThemeEngine::~ThemeEngine() {
  *********************************************************/
 const ThemeEngine::Renderer ThemeEngine::_rendererModes[] = {
 	{ _s("Disabled GFX"), _sc("Disabled GFX", "lowres"), "none", kGfxDisabled },
-	{ _s("Standard Renderer"), _s("Standard"), "normal", kGfxStandard },
+	{ _s("Standard renderer"), _s("Standard"), "normal", kGfxStandard },
 #ifndef DISABLE_FANCY_THEMES
-	{ _s("Antialiased Renderer"), _s("Antialiased"), "antialias", kGfxAntialias }
+	{ _s("Antialiased renderer"), _s("Antialiased"), "antialias", kGfxAntialias }
 #endif
 };
 
@@ -839,7 +839,7 @@ void ThemeEngine::drawDD(DrawData type, const Common::Rect &r, uint32 dynamic, b
 		return;
 
 	if (kDrawDataDefaults[type].parent != kDDNone && kDrawDataDefaults[type].parent != type)
-		drawDD(kDrawDataDefaults[type].parent, r);
+		drawDD(kDrawDataDefaults[type].parent, r, dynamic);
 
 	Common::Rect area = r;
 	area.clip(_screen.w, _screen.h);

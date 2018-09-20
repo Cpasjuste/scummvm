@@ -41,17 +41,24 @@ TTparser::TTparser(CScriptHandler *owner) : _owner(owner), _sentenceConcept(null
 }
 
 TTparser::~TTparser() {
+	clear();
+}
+
+void TTparser::clear() {
 	if (_nodesP) {
 		_nodesP->deleteSiblings();
 		delete _nodesP;
+		_nodesP = nullptr;
 	}
 
 	if (_conceptP) {
 		_conceptP->deleteSiblings();
 		delete _conceptP;
+		_conceptP = nullptr;
 	}
 
 	delete _currentWordP;
+	_currentWordP = nullptr;
 }
 
 void TTparser::loadArray(StringArray &arr, const CString &name) {
@@ -531,6 +538,7 @@ int TTparser::findFrames(TTsentence *sentence) {
 
 	if (status <= 1) {
 		status = checkForAction();
+		clear();
 	}
 
 	delete line;

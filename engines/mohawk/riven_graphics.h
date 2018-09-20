@@ -25,6 +25,12 @@
 
 #include "mohawk/graphics.h"
 
+#include "common/ustr.h"
+
+namespace Graphics {
+class Font;
+}
+
 namespace Mohawk {
 
 class MohawkEngine_Riven;
@@ -50,6 +56,13 @@ enum RivenTransitionMode {
 	kRivenTransitionModeFastest  = 5001,
 	kRivenTransitionModeNormal   = 5002,
 	kRivenTransitionModeBest     = 5003
+};
+
+enum RivenCreditsImageNumber {
+	kRivenCreditsZeroImage   = 302,
+	kRivenCreditsFirstImage  = 303,
+	kRivenCreditsSecondImage = 304,
+	kRivenCreditsLastImage   = 320
 };
 
 class RivenGraphics : public GraphicsManager {
@@ -91,6 +104,9 @@ public:
 	void fadeToBlack();
 	void setTransitionMode(RivenTransitionMode mode);
 
+	// Main menu
+	void drawText(const Common::U32String &text, const Common::Rect &dest, uint8 greyLevel);
+
 	// Credits
 	void beginCredits();
 	void updateCredits();
@@ -127,6 +143,11 @@ private:
 	Graphics::PixelFormat _pixelFormat;
 	void updateScreen();
 	void clearMainScreen();
+
+	// Main menu
+	Graphics::Font *_menuFont;
+	void loadMenuFont();
+	const Graphics::Font *getMenuFont() const;
 
 	// Credits
 	uint _creditsImage, _creditsPos;

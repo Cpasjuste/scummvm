@@ -387,7 +387,7 @@ public:
 private:
 
 	int _compressedSoundType;
-	int _compressedSoundFlags;
+	uint16 _compressedSoundFlags;
 	Common::File _fCompressedSound;
 };
 
@@ -466,7 +466,7 @@ protected:
 	void waitForTimer(int ticksCount);
 	void parseEvents();
 	void updateCursorPos(int x, int y);
-	void setCursorStyle(CursorStyle num);
+	void setCursorStyle(CursorStyle style);
 	void setCursorState(CursorState state);
 	void showCursor(bool visible);
 	void setupNewLocation();
@@ -1165,7 +1165,7 @@ private:
 	const SoundSequenceData *_soundSeqData;
 	uint8 *_offscreenBuffer;
 	int _updateScreenWidth;
-	int _updateScreenPicture;
+	bool _updateScreenPicture;
 	int _updateScreenCounter;
 	int _updateScreenIndex;
 	int _frameCounter;
