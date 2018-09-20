@@ -131,6 +131,19 @@ static const QueenGameDescription gameDescriptions[] = {
 		},
 	},
 
+	// DOS Interview Demo - Russian
+	{
+		{
+			"queen",
+			"Interview",
+			AD_ENTRY1s("queen.1c", "246dd55f475c9ea6524c556227fd0383", 1889658),
+			Common::RU_RUS,
+			Common::kPlatformDOS,
+			ADGF_DEMO,
+			GUIO1(GUIO_NOSPEECH)
+		},
+	},
+
 	// PCGAMES DOS Demo - English
 	{
 		{
@@ -400,6 +413,19 @@ static const QueenGameDescription gameDescriptions[] = {
 			"Talkie",
 			AD_ENTRY1s("queen.1c", "21fd690b372f8a6289f6f33bc986276c", 51329031),
 			Common::HU_HUN,
+			Common::kPlatformDOS,
+			ADGF_NO_FLAGS,
+			GUIO1(GAMEOPTION_ALT_INTRO)
+		},
+	},
+
+	// DOS CD - Russian (Compressed Freeware Release v1.0)
+	{
+		{
+			"queen",
+			"Talkie",
+			AD_ENTRY1s("queen.1c", "908d04940d40537d32c50a8429cd8631", 51222412),
+			Common::RU_RUS,
 			Common::kPlatformDOS,
 			ADGF_NO_FLAGS,
 			GUIO1(GAMEOPTION_ALT_INTRO)

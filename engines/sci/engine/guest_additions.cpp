@@ -112,8 +112,7 @@ bool GuestAdditions::shouldSyncAudioToScummVM() const {
 		} else if ((gameId == GID_GK1 || gameId == GID_SQ6) && (objName == "musicBar" ||
 																objName == "soundBar")) {
 			return true;
-		} else if (gameId == GID_PQ4 && (objName == "increaseVolume" ||
-										 objName == "decreaseVolume")) {
+		} else if (gameId == GID_GK2 && objName == "soundSlider") {
 			return true;
 		} else if (gameId == GID_KQ7 && (objName == "volumeUp" ||
 										 objName == "volumeDown")) {
@@ -121,14 +120,11 @@ bool GuestAdditions::shouldSyncAudioToScummVM() const {
 		} else if (gameId == GID_LSL6HIRES && (objName == "hiResMenu" ||
 											   objName == "volumeDial")) {
 			return true;
+		} else if ((gameId == GID_LSL7 || gameId == GID_TORIN) && (objName == "oMusicScroll" ||
+																   objName == "oSFXScroll" ||
+																   objName == "oAudioScroll")) {
+			return true;
 		} else if (gameId == GID_MOTHERGOOSEHIRES && objName == "MgButtonBar") {
-			return true;
-		} else if (gameId == GID_PQSWAT && (objName == "volumeDownButn" ||
-											objName == "volumeUpButn")) {
-			return true;
-		} else if (gameId == GID_SHIVERS && objName == "spVolume") {
-			return true;
-		} else if (gameId == GID_GK2 && objName == "soundSlider") {
 			return true;
 		} else if (gameId == GID_PHANTASMAGORIA && (objName == "midiVolDown" ||
 													objName == "midiVolUp" ||
@@ -137,9 +133,13 @@ bool GuestAdditions::shouldSyncAudioToScummVM() const {
 			return true;
 		} else if (gameId == GID_PHANTASMAGORIA2 && objName == "foo2") {
 			return true;
-		} else if ((gameId == GID_LSL7 || gameId == GID_TORIN) && (objName == "oMusicScroll" ||
-																   objName == "oSFXScroll" ||
-																   objName == "oAudioScroll")) {
+		} else if (gameId == GID_PQ4 && (objName == "increaseVolume" ||
+										 objName == "decreaseVolume")) {
+			return true;
+		} else if (gameId == GID_PQSWAT && (objName == "volumeDownButn" ||
+											objName == "volumeUpButn")) {
+			return true;
+		} else if (gameId == GID_SHIVERS && objName == "spVolume") {
 			return true;
 #endif
 		}
@@ -163,6 +163,18 @@ void GuestAdditions::writeVarHook(const int type, const int index, const reg_t v
 				syncAudioVolumeGlobalsToScummVM(index, value);
 			} else if (g_sci->getGameId() == GID_GK1) {
 				syncGK1StartupVolumeFromScummVM(index, value);
+			} else if (g_sci->getGameId() == GID_HOYLE5 && index == kGlobalVarHoyle5MusicVolume) {
+				syncHoyle5VolumeFromScummVM((ConfMan.getInt("music_volume") + 1) * kHoyle5VolumeMax / Audio::Mixer::kMaxMixerVolume);
+			} else if (g_sci->getGameId() == GID_HOYLE5 && index == kkGlobalVarHoyle5ResponseTime && value.getOffset() == 0) {
+				// WORKAROUND: Global 899 contains the response time value,
+				// which may have values between 1 and 15. There is a script
+				// bug when loading values from game.opt, where this variable
+				// may be incorrectly set to 0. This makes the opponent freeze
+				// while playing Backgammon and Bridge. Fix this case here, by
+				// setting the correct minimum value, 1.
+				// TODO: Either make this a script patch, or find out if it's
+				// a bug with ScummVM when reading values from text files.
+				_state->variables[VAR_GLOBAL][index].setOffset(1);
 			} else if (g_sci->getGameId() == GID_RAMA && !g_sci->isDemo() && index == kGlobalVarRamaMusicVolume) {
 				syncRamaVolumeFromScummVM((ConfMan.getInt("music_volume") + 1) * kRamaVolumeMax / Audio::Mixer::kMaxMixerVolume);
 			}
@@ -188,6 +200,11 @@ bool GuestAdditions::kDoSoundMasterVolumeHook(const int volume) const {
 void GuestAdditions::sciEngineInitGameHook() {
 	if (g_sci->getGameId() == GID_PHANTASMAGORIA2 && Common::checkGameGUIOption(GAMEOPTION_ENABLE_CENSORING, ConfMan.get("guioptions"))) {
 		_state->variables[VAR_GLOBAL][kGlobalVarPhant2CensorshipFlag] = make_reg(0, ConfMan.getBool("enable_censoring"));
+	}
+
+	if (g_sci->getGameId() == GID_KQ7 && Common::checkGameGUIOption(GAMEOPTION_UPSCALE_VIDEOS, ConfMan.get("guioptions"))) {
+		uint16 value = ConfMan.getBool("enable_video_upscale") ? 32 : 0;
+		_state->variables[VAR_GLOBAL][kGlobalVarKQ7UpscaleVideos] = make_reg(0, value);
 	}
 }
 
@@ -1004,6 +1021,13 @@ void GuestAdditions::syncAudioVolumeGlobalsFromScummVM() const {
 		break;
 	}
 
+	case GID_HOYLE5: {
+		const int16 musicVolume = (ConfMan.getInt("music_volume") + 1) * kHoyle5VolumeMax / Audio::Mixer::kMaxMixerVolume;
+		syncHoyle5VolumeFromScummVM(musicVolume);
+		syncHoyle5UI(musicVolume);
+		break;
+	}
+
 	case GID_LSL6HIRES: {
 		const int16 musicVolume = (ConfMan.getInt("music_volume") + 1) * kLSL6HiresUIVolumeMax / Audio::Mixer::kMaxMixerVolume;
 		syncLSL6HiresVolumeFromScummVM(musicVolume);
@@ -1136,6 +1160,11 @@ void GuestAdditions::syncGK2VolumeFromScummVM(const int16 musicVolume) const {
 	}
 }
 
+void GuestAdditions::syncHoyle5VolumeFromScummVM(const int16 musicVolume) const {
+	_state->variables[VAR_GLOBAL][kGlobalVarHoyle5MusicVolume] = make_reg(0, musicVolume);
+	g_sci->_soundCmd->setMasterVolume(ConfMan.getBool("mute") ? 0 : (musicVolume * MUSIC_MASTERVOLUME_MAX / kHoyle5VolumeMax));
+}
+
 void GuestAdditions::syncLSL6HiresVolumeFromScummVM(const int16 musicVolume) const {
 	_state->variables[VAR_GLOBAL][kGlobalVarLSL6HiresMusicVolume] = make_reg(0, musicVolume);
 	g_sci->_soundCmd->setMasterVolume(ConfMan.getBool("mute") ? 0 : (musicVolume * MUSIC_MASTERVOLUME_MAX / kLSL6HiresUIVolumeMax));
@@ -1192,6 +1221,15 @@ void GuestAdditions::syncAudioVolumeGlobalsToScummVM(const int index, const reg_
 		if (index == kGlobalVarGK2MusicVolume) {
 			const int16 musicVolume = value.toSint16() * Audio::Mixer::kMaxMixerVolume / Audio32::kMaxVolume;
 			ConfMan.setInt("music_volume", musicVolume);
+		}
+		break;
+
+	case GID_HOYLE5:
+		if (index == kGlobalVarHoyle5MusicVolume) {
+			const int16 masterVolume = value.toSint16() * Audio::Mixer::kMaxMixerVolume / kHoyle5VolumeMax;
+			ConfMan.setInt("music_volume", masterVolume);
+			ConfMan.setInt("sfx_volume", masterVolume);
+			ConfMan.setInt("speech_volume", masterVolume);
 		}
 		break;
 
@@ -1299,6 +1337,10 @@ void GuestAdditions::syncInGameUI(const int16 musicVolume, const int16 sfxVolume
 		syncQFG4UI(musicVolume);
 		break;
 
+	case GID_HOYLE5:
+		syncHoyle5UI(musicVolume);
+		break;
+
 	case GID_SHIVERS:
 		syncShivers1UI(sfxVolume);
 		break;
@@ -1341,6 +1383,22 @@ void GuestAdditions::syncGK2UI() const {
 		invokeSelector(sliderId, SELECTOR(initialOff));
 		writeSelector(_segMan, sliderId, SELECTOR(x), _state->r_acc);
 		_state->r_acc = oldAcc;
+	}
+}
+
+void GuestAdditions::syncHoyle5UI(const int16 musicVolume) const {
+	const reg_t sliderId = _segMan->findObjectByName("volumeSlider");
+	if (!sliderId.isNull()) {
+		const int16 yPosition = 167 - musicVolume * 145 / 10;
+		writeSelectorValue(_segMan, sliderId, SELECTOR(y), yPosition);
+
+		// There does not seem to be any good way to learn whether the
+		// volume slider is visible (and thus eligible for
+		// kUpdateScreenItem)
+		const reg_t planeId = readSelector(_segMan, sliderId, SELECTOR(plane));
+		if (g_sci->_gfxFrameout->getPlanes().findByObject(planeId) != nullptr) {
+			g_sci->_gfxFrameout->kernelUpdateScreenItem(sliderId);
+		}
 	}
 }
 

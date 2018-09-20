@@ -55,7 +55,7 @@ public:
 
 	Vector3(float ax, float ay, float az) : x(ax), y(ay), z(az) {}
 
-	float length() { return sqrtf(x * x + y * y + z * z); }
+	float length() { return sqrt(x * x + y * y + z * z); }
 	Vector3 normalize() {
 		float len = length();
 		if (len == 0) {
@@ -146,14 +146,6 @@ inline float distance(const Vector2 &v1, const Vector2 &v2) {
 
 inline float distance(const Vector3 &v1, const Vector3 &v2) {
 	return distance(v1.x, v1.z, v2.x, v2.z);
-}
-
-inline float cos_1024(int angle1024) {
-	return cos(angle1024 * (M_PI / 512.0f));
-}
-
-inline float sin_1024(int angle1024) {
-	return sin(angle1024 * (M_PI / 512.0f));
 }
 
 inline bool lineIntersection(Vector2 a1, Vector2 a2, Vector2 b1, Vector2 b2, Vector2 *intersection) {

@@ -910,12 +910,193 @@ static const uint16 hoyle5PatchSpinLoop[] = {
 	PATCH_END
 };
 
+// There are two derived collections of Hoyle Classic Games:
+// 1) The Hoyle Children's Collection, which includes the following games:
+// - Crazy Eights (script 100)
+// - Old Maid (script 200)
+// - Checkers (script 1200)
+// 2) Hoyle Bridge, which includes the following games:
+// - Bridge (script 700)
+// In these two collections, the scripts for the other games have been removed.
+// Choosing any other game than the above results in a "No script found" error.
+// The original game did not show the game selection screen, as there were
+// direct shortucts to each game.
+// Since we do show the game selection screen, we remove all the games
+// which from the ones below, which are not included in each version:
+// - Crazy Eights (script 100)
+// - Old Maid (script 200)
+// - Hearts (script 300)
+// - Gin Rummy (script 400)
+// - Cribbage (script 500)
+// - Klondike / Solitaire (script 600)
+// - Bridge (script 700)
+// - Poker (script 1100)
+// - Checkers (script 1200)
+// - Backgammon (script 1300)
+static const uint16 hoyle5SignatureCrazyEights[] = {
+	SIG_MAGICDWORD,
+	0x38, 0x8e, 0x00,      // pushi 008e
+	0x76,                  // push0
+	0x38, 0xf0, 0x02,      // pushi 02f0
+	0x76,                  // push0
+	0x72, 0x9c, 0x01,      // lofsa chooseCrazy8s
+	0x4a, 0x08, 0x00,      // send  0008
+	SIG_END
+};
+
+static const uint16 hoyle5SignatureOldMaid[] = {
+	SIG_MAGICDWORD,
+	0x38, 0x8e, 0x00,      // pushi 008e
+	0x76,                  // push0
+	0x38, 0xf0, 0x02,      // pushi 02f0
+	0x76,                  // push0
+	0x72, 0x2c, 0x02,      // lofsa chooseOldMaid
+	0x4a, 0x08, 0x00,      // send  0008
+	SIG_END
+};
+
+static const uint16 hoyle5SignatureHearts[] = {
+	SIG_MAGICDWORD,
+	0x38, 0x8e, 0x00,      // pushi 008e
+	0x76,                  // push0
+	0x38, 0xf0, 0x02,      // pushi 02f0
+	0x76,                  // push0
+	0x72, 0xdc, 0x03,      // lofsa chooseHearts
+	0x4a, 0x08, 0x00,      // send  0008
+	SIG_END
+};
+
+static const uint16 hoyle5SignatureGinRummy[] = {
+	SIG_MAGICDWORD,
+	0x38, 0x8e, 0x00,      // pushi 008e
+	0x76,                  // push0
+	0x38, 0xf0, 0x02,      // pushi 02f0
+	0x76,                  // push0
+	0x72, 0xbc, 0x02,      // lofsa chooseGinRummy
+	0x4a, 0x08, 0x00,      // send  0008
+	SIG_END
+};
+
+static const uint16 hoyle5SignatureCribbage[] = {
+	SIG_MAGICDWORD,
+	0x38, 0x8e, 0x00,      // pushi 008e
+	0x76,                  // push0
+	0x38, 0xf0, 0x02,      // pushi 02f0
+	0x76,                  // push0
+	0x72, 0x4c, 0x03,      // lofsa chooseCribbage
+	0x4a, 0x08, 0x00,      // send  0008
+	SIG_END
+};
+
+static const uint16 hoyle5SignatureKlondike[] = {
+	SIG_MAGICDWORD,
+	0x38, 0x8e, 0x00,      // pushi 008e
+	0x76,                  // push0
+	0x38, 0xf0, 0x02,      // pushi 02f0
+	0x76,                  // push0
+	0x72, 0xfc, 0x04,      // lofsa chooseKlondike
+	0x4a, 0x08, 0x00,      // send  0008
+	SIG_END
+};
+
+static const uint16 hoyle5SignatureBridge[] = {
+	SIG_MAGICDWORD,
+	0x38, 0x8e, 0x00,      // pushi 008e
+	0x76,                  // push0
+	0x38, 0xf0, 0x02,      // pushi 02f0
+	0x76,                  // push0
+	0x72, 0x6c, 0x04,      // lofsa chooseBridge
+	0x4a, 0x08, 0x00,      // send  0008
+	SIG_END
+};
+
+static const uint16 hoyle5SignaturePoker[] = {
+	SIG_MAGICDWORD,
+	0x38, 0x8e, 0x00,      // pushi 008e
+	0x76,                  // push0
+	0x38, 0xf0, 0x02,      // pushi 02f0
+	0x76,                  // push0
+	0x72, 0x8c, 0x05,      // lofsa choosePoker
+	0x4a, 0x08, 0x00,      // send  0008
+	SIG_END
+};
+
+static const uint16 hoyle5SignatureCheckers[] = {
+	SIG_MAGICDWORD,
+	0x38, 0x8e, 0x00,      // pushi 008e
+	0x76,                  // push0
+	0x38, 0xf0, 0x02,      // pushi 02f0
+	0x76,                  // push0
+	0x72, 0x1c, 0x06,      // lofsa chooseCheckers
+	0x4a, 0x08, 0x00,      // send  0008
+	SIG_END
+};
+
+static const uint16 hoyle5SignatureBackgammon[] = {
+	SIG_MAGICDWORD,
+	0x38, 0x8e, 0x00,      // pushi 008e
+	0x76,                  // push0
+	0x38, 0xf0, 0x02,      // pushi 02f0
+	0x76,                  // push0
+	0x72, 0xac, 0x06,      // lofsa chooseBackgammon
+	0x4a, 0x08, 0x00,      // send  0008
+	SIG_END
+};
+
+static const uint16 hoyle5PatchDisableGame[] = {
+	0x35, 0x00,                      // ldi 00
+	0x35, 0x00,                      // ldi 00
+	0x35, 0x00,                      // ldi 00
+	0x35, 0x00,                      // ldi 00
+	0x35, 0x00,                      // ldi 00
+	0x35, 0x00,                      // ldi 00
+	0x35, 0x00,                      // ldi 00
+	PATCH_END
+};
+
 //          script, description,                                      signature                         patch
 static const SciScriptPatcherEntry hoyle5Signatures[] = {
 	{  true,     3, "remove kGetTime spin",                        1, hoyle5SignatureSpinLoop,          hoyle5PatchSpinLoop },
 	{  true,    23, "remove kGetTime spin",                        1, hoyle5SignatureSpinLoop,          hoyle5PatchSpinLoop },
 	{  true,   500, "remove kGetTime spin",                        1, hoyle5SignatureSpinLoop,          hoyle5PatchSpinLoop },
 	{  true, 64937, "remove kGetTime spin",                        1, hoyle5SignatureSpinLoop,          hoyle5PatchSpinLoop },
+	{  true, 64908, "disable video benchmarking",                  1, sci2BenchmarkSignature,           sci2BenchmarkPatch },
+	SCI_SIGNATUREENTRY_TERMINATOR
+};
+
+//          script, description,                                      signature                         patch
+static const SciScriptPatcherEntry hoyle5ChildrensCollectionSignatures[] = {
+	{  true,     3, "remove kGetTime spin",                        1, hoyle5SignatureSpinLoop,          hoyle5PatchSpinLoop },
+	{  true,    23, "remove kGetTime spin",                        1, hoyle5SignatureSpinLoop,          hoyle5PatchSpinLoop },
+	{  true,   500, "remove kGetTime spin",                        1, hoyle5SignatureSpinLoop,          hoyle5PatchSpinLoop },
+	{  true, 64937, "remove kGetTime spin",                        1, hoyle5SignatureSpinLoop,          hoyle5PatchSpinLoop },
+	{  true, 64908, "disable video benchmarking",                  1, sci2BenchmarkSignature,           sci2BenchmarkPatch },
+	{  true,   975, "disable Gin Rummy",                           1, hoyle5SignatureGinRummy,          hoyle5PatchDisableGame },
+	{  true,   975, "disable Cribbage",                            1, hoyle5SignatureCribbage,          hoyle5PatchDisableGame },
+	{  true,   975, "disable Klondike",                            1, hoyle5SignatureKlondike,          hoyle5PatchDisableGame },
+	{  true,   975, "disable Bridge",                              1, hoyle5SignatureBridge,            hoyle5PatchDisableGame },
+	{  true,   975, "disable Poker",                               1, hoyle5SignaturePoker,             hoyle5PatchDisableGame },
+	{  true,   975, "disable Hearts",                              1, hoyle5SignatureHearts,            hoyle5PatchDisableGame },
+	{  true,   975, "disable Backgammon",                          1, hoyle5SignatureBackgammon,        hoyle5PatchDisableGame },
+	SCI_SIGNATUREENTRY_TERMINATOR
+};
+
+//          script, description,                                      signature                         patch
+static const SciScriptPatcherEntry hoyle5BridgeSignatures[] = {
+	{  true,     3, "remove kGetTime spin",                        1, hoyle5SignatureSpinLoop,          hoyle5PatchSpinLoop },
+	{  true,    23, "remove kGetTime spin",                        1, hoyle5SignatureSpinLoop,          hoyle5PatchSpinLoop },
+	{  true,   500, "remove kGetTime spin",                        1, hoyle5SignatureSpinLoop,          hoyle5PatchSpinLoop },
+	{  true, 64937, "remove kGetTime spin",                        1, hoyle5SignatureSpinLoop,          hoyle5PatchSpinLoop },
+	{  true, 64908, "disable video benchmarking",                  1, sci2BenchmarkSignature,           sci2BenchmarkPatch },
+	{  true,   975, "disable Gin Rummy",                           1, hoyle5SignatureGinRummy,          hoyle5PatchDisableGame },
+	{  true,   975, "disable Cribbage",                            1, hoyle5SignatureCribbage,          hoyle5PatchDisableGame },
+	{  true,   975, "disable Klondike",                            1, hoyle5SignatureKlondike,          hoyle5PatchDisableGame },
+	{  true,   975, "disable Poker",                               1, hoyle5SignaturePoker,             hoyle5PatchDisableGame },
+	{  true,   975, "disable Hearts",                              1, hoyle5SignatureHearts,            hoyle5PatchDisableGame },
+	{  true,   975, "disable Backgammon",                          1, hoyle5SignatureBackgammon,        hoyle5PatchDisableGame },
+	{  true,   975, "disable Crazy Eights",                        1, hoyle5SignatureCrazyEights,       hoyle5PatchDisableGame },
+	{  true,   975, "disable Old Maid",                            1, hoyle5SignatureOldMaid,           hoyle5PatchDisableGame },
+	{  true,   975, "disable Checkers",                            1, hoyle5SignatureCheckers,          hoyle5PatchDisableGame },
 	SCI_SIGNATUREENTRY_TERMINATOR
 };
 
@@ -1192,6 +1373,39 @@ static const uint16 gk1InterrogationBugPatch[] = {
 	PATCH_END
 };
 
+// In Madame Cazanoux's house, when Gabriel is leaving, he is placed on
+// the edge of the walkable area initially. This leads to a failure in
+// the pathfinding algorithm, and the pathfinding area is then ignored,
+// so Gabriel goes straight to the door by walking through the wall.
+// This is an edge case, which was apparently acceptable in SSCI. We
+// change the upper border of the walk area slightly, so that Gabriel
+// can be placed inside, and the pathfinding algorithm works correctly.
+static const uint16 gk1CazanouxPathfindingSignature[] = {
+	SIG_MAGICDWORD,
+	0x78,                            // push1 x = 1
+	0x38, SIG_UINT16(0x0090),        // pushi y = 144
+	0x38, SIG_UINT16(0x00f6),        // pushi x = 246
+	0x38, SIG_UINT16(0x0092),        // pushi y = 146
+	0x38, SIG_UINT16(0x00f2),        // pushi x = 242
+	0x39, 0x69,                      // pushi y = 105
+	0x39, 0x7c,                      // pushi x = 124
+	0x39, 0x68,                      // pushi y = 104
+	0x39, 0x56,                      // pushi x = 86
+	0x39, 0x6f,                      // pushi y = 111
+	0x39, 0x45,                      // pushi x = 69
+	0x39, 0x7c,                      // pushi y = 124
+	0x39, 0x2e,                      // pushi x = 46
+	0x38, SIG_UINT16(0x0081),        // pushi y = 129
+	SIG_END
+};
+
+static const uint16 gk1CazanouxPathfindingPatch[] = {
+	PATCH_ADDTOOFFSET(+15),
+	0x39, 0x7c,                      // pushi x = 124
+	0x39, 0x67,                      // pushi y = 103 (was 104)
+	PATCH_END
+};
+
 //          script, description,                                      signature                         patch
 static const SciScriptPatcherEntry gk1Signatures[] = {
 	{  true,    51, "fix interrogation bug",                       1, gk1InterrogationBugSignature,     gk1InterrogationBugPatch },
@@ -1200,6 +1414,7 @@ static const SciScriptPatcherEntry gk1Signatures[] = {
 	{  true,   230, "fix day 6 police beignet timer issue (1/2)",  1, gk1Day6PoliceBeignetSignature1,   gk1Day6PoliceBeignetPatch1 },
 	{  true,   230, "fix day 6 police beignet timer issue (2/2)",  1, gk1Day6PoliceBeignetSignature2,   gk1Day6PoliceBeignetPatch2 },
 	{  true,   230, "fix day 6 police sleep timer issue",          1, gk1Day6PoliceSleepSignature,      gk1Day6PoliceSleepPatch },
+	{  true,   280, "fix pathfinding in Madame Cazanoux's house",  1, gk1CazanouxPathfindingSignature,  gk1CazanouxPathfindingPatch },
 	{  true,   710, "fix day 9 vine swing speech playing",         1, gk1Day9VineSwingSignature,        gk1Day9VineSwingPatch },
 	{  true, 64908, "disable video benchmarking",                  1, sci2BenchmarkSignature,           sci2BenchmarkPatch },
 	{  true, 64990, "increase number of save games (1/2)",         1, sci2NumSavesSignature1,           sci2NumSavesPatch1 },
@@ -2643,7 +2858,7 @@ static const uint16 larry2PatchWearParachutePoints[] = {
 
 //          script, description,                                      signature                           patch
 static const SciScriptPatcherEntry larry2Signatures[] = {
-	{  true,    63, "plane: no points for wearing plane",          1, larry2SignatureWearParachutePoints, larry2PatchWearParachutePoints },
+	{  true,    63, "plane: no points for wearing parachute",      1, larry2SignatureWearParachutePoints, larry2PatchWearParachutePoints },
 	SCI_SIGNATUREENTRY_TERMINATOR
 };
 
@@ -3496,6 +3711,56 @@ static const uint16 laurabow2PatchRememberWiredEastDoor[] = {
 	PATCH_END
 };
 
+// The crate room (room 460) in act 5 locks up the game if you enter from the
+//  elevator (room 660), swing the hanging crate, and then attempt to leave
+//  back through the elevator door.
+//
+// The state of the wall crate that blocks the elevator door is tracked by
+//  setting local0 to 1 when you push it out of the way, but Sierra forgot
+//  to reinitialize local0 when you re-enter via the elevator door, causing
+//  it to be out of sync with the room state. When you then swing the hanging
+//  crate, sSwingIt:changeState(6) tests local0 to see which polygon it should
+//  set as the room's obstacle and incorrectly uses the one that blocks both
+//  doors. Attempting to use the elevator door then locks up the game as the
+//  obstacle polygon prevents ego from reaching the destination.
+//
+// Someone noticed that local0 wasn't always initialized as shoveCrate:doVerb(4)
+//  tests both local0 and the previous room to see if it was the elevator.
+//
+// We fix this by setting local0 to 1 if the previous room was the elevator
+//  during sSwingIt:changeState(3), just in time before it gets tested in
+//  sSwingIt:changeState(6). Luckily for us, the handlers for states 3 and 4
+//  don't do anything but load zero, making them two consecutive conditions
+//  of no-ops. By merging them into a single condition for state 3 we have
+//  a whopping 13 bytes available to add code to set local0 correctly.
+//
+// Affects floppy/cd, all versions, all languages, and occurs in Sierra's interpreter.
+// Fixes bug #10701
+static const uint16 laurabow2SignatureFixCrateRoomEastDoorLockup[] = {
+	0x1a,                               // eq? [ state 3? ]
+	SIG_MAGICDWORD,
+	0x31, 0x05,                         // bnt [ state 4 ]
+	0x35, 0x00,                         // ldi 0
+	0x32, SIG_ADDTOOFFSET(2),           // jmp [ exit switch. floppy: b3, cd: bb ]
+	0x3c,                               // dup
+	0x35, 0x04,                         // ldi 4
+	0x1a,                               // eq? [ state 4? ]
+	0x31, 0x05,                         // bnt [ state 5 ]
+	SIG_END
+};
+
+static const uint16 laurabow2PatchFixCrateRoomEastDoorLockup[] = {
+	PATCH_ADDTOOFFSET(1),               // eq? [ state 3? ]
+	0x31, 0x10,                         // bnt [ state 5 ]
+	0x89, 0x0c,                         // lsg global12 [ previous room # ]
+	0x34, PATCH_UINT16(0x0294),         // ldi 660d [ elevator room # ]
+	0x1a,                               // eq?
+	0x8b, 0x00,                         // lsl local0
+	0x02,                               // add
+	0xa3, 0x00,                         // sal local0 [ local0 += (global12 == 660d) ]
+	PATCH_END
+};
+
 // Laura Bow 2 CD resets the audio mode to speech on init/restart
 //  We already sync the settings from ScummVM (see SciEngine::syncIngameAudioOptions())
 //  and this script code would make it impossible to see the intro using "dual" mode w/o using debugger command
@@ -3588,6 +3853,7 @@ static const SciScriptPatcherEntry laurabow2Signatures[] = {
 	{  true,   350, "CD/Floppy: museum party fix entering south 2/2", 1, laurabow2SignatureMuseumPartyFixEnteringSouth2, laurabow2PatchMuseumPartyFixEnteringSouth2 },
 	{  true,   430, "CD/Floppy: make wired east door persistent",     1, laurabow2SignatureRememberWiredEastDoor,        laurabow2PatchRememberWiredEastDoor },
 	{  true,   430, "CD/Floppy: fix wired east door",                 1, laurabow2SignatureFixWiredEastDoor,             laurabow2PatchFixWiredEastDoor },
+	{  true,   460, "CD/Floppy: fix crate room east door lockup",     1, laurabow2SignatureFixCrateRoomEastDoorLockup,   laurabow2PatchFixCrateRoomEastDoorLockup },
 	// King's Quest 6 and Laura Bow 2 share basic patches for audio + text support
 	{ false,   924, "CD: audio + text support 1",                     1, kq6laurabow2CDSignatureAudioTextSupport1,       kq6laurabow2CDPatchAudioTextSupport1 },
 	{ false,   924, "CD: audio + text support 2",                     1, kq6laurabow2CDSignatureAudioTextSupport2,       kq6laurabow2CDPatchAudioTextSupport2 },
@@ -5979,11 +6245,52 @@ static const uint16 qfg4SlidingDownSlopePatch[] = {
 	PATCH_END
 };
 
+// At the inn, there is a path that goes off screen. In our pathfinding
+// algorithm, we move all the pathfinding points so that they are within
+// the visible area. However, two points of the path are outside the
+// screen, so moving them will place them both on top of each other,
+// thus creating an impossible pathfinding area. This makes the
+// pathfinding algorithm ignore the walkable area when the hero moves
+// up the ladder to his room. We therefore move one of the points
+// slightly, so that it is already within the visible screen, so that
+// the walkable polygon is valid, and the pathfinding algorithm can
+// work properly.
+//
+// Applies to: English CD, English floppy, German floppy
+//
+// Fixes bug #10693
+static const uint16 qg4InnPathfindingSignature[] = {
+	SIG_MAGICDWORD,
+	0x38, SIG_UINT16(0x0154),  // pushi x = 340
+	0x39, 0x77,                // pushi y = 119
+	0x38, SIG_UINT16(0x0114),  // pushi x = 276
+	0x39, 0x31,                // pushi y = 49
+	0x38, SIG_UINT16(0x00fc),  // pushi x = 252
+	0x39, 0x30,                // pushi y = 48
+	0x38, SIG_UINT16(0x00a5),  // pushi x = 165
+	0x39, 0x55,                // pushi y = 85
+	0x38, SIG_UINT16(0x00c0),  // pushi x = 192
+	0x39, 0x55,                // pushi y = 85
+	0x38, SIG_UINT16(0x010b),  // pushi x = 267
+	0x39, 0x34,                // pushi y = 52
+	0x38, SIG_UINT16(0x0144),  // pushi x = 324
+	0x39, 0x77,                // pushi y = 119
+	SIG_END
+};
+
+static const uint16 qg4InnPathfindingPatch[] = {
+	PATCH_ADDTOOFFSET(+30),
+	0x38, PATCH_UINT16(0x013f), // pushi x = 319 (was 324)
+	0x39, 0x77,                 // pushi y = 119
+	PATCH_END
+};
+
 //          script, description,                                     signature                      patch
 static const SciScriptPatcherEntry qfg4Signatures[] = {
 	{  true,     1, "disable volume reset on startup",             1, sci2VolumeResetSignature,      sci2VolumeResetPatch },
 	{  true,     1, "disable video benchmarking",                  1, qfg4BenchmarkSignature,        qfg4BenchmarkPatch },
 	{  true,    83, "fix incorrect array type",                    1, qfg4TrapArrayTypeSignature,    qfg4TrapArrayTypePatch },
+	{  true,   320, "fix pathfinding at the inn",                  1, qg4InnPathfindingSignature,    qg4InnPathfindingPatch },
 	{  true,   803, "fix sliding down slope",                      1, qfg4SlidingDownSlopeSignature, qfg4SlidingDownSlopePatch },
 	{  true, 64990, "increase number of save games (1/2)",         1, sci2NumSavesSignature1,        sci2NumSavesPatch1 },
 	{  true, 64990, "increase number of save games (2/2)",         1, sci2NumSavesSignature2,        sci2NumSavesPatch2 },
@@ -7613,7 +7920,15 @@ void ScriptPatcher::processScript(uint16 scriptNr, SciSpan<byte> scriptData) {
 		break;
 #ifdef ENABLE_SCI32
 	case GID_HOYLE5:
-		signatureTable = hoyle5Signatures;
+		if (g_sci->getResMan()->testResource(ResourceId(kResourceTypeScript, 100)) &&
+			g_sci->getResMan()->testResource(ResourceId(kResourceTypeScript, 700)))
+			signatureTable = hoyle5Signatures;
+		else if (g_sci->getResMan()->testResource(ResourceId(kResourceTypeScript, 100)) &&
+			    !g_sci->getResMan()->testResource(ResourceId(kResourceTypeScript, 700)))
+			signatureTable = hoyle5ChildrensCollectionSignatures;
+		else if (!g_sci->getResMan()->testResource(ResourceId(kResourceTypeScript, 100)) &&
+			      g_sci->getResMan()->testResource(ResourceId(kResourceTypeScript, 700)))
+			signatureTable = hoyle5BridgeSignatures;
 		break;
 	case GID_GK1:
 		signatureTable = gk1Signatures;

@@ -36,20 +36,18 @@ class LilliputEngine;
 
 class LilliputSound: public Audio::MidiPlayer {
 public:
-	LilliputSound(LilliputEngine *vm);
+	LilliputSound();
 	~LilliputSound();
 
 	void init();
 	void refresh();
-	void play(int var1, Common::Point var2, Common::Point var3, Common::Point var4);
-	void stop(Common::Point pos);
+	void playSound(int var1, Common::Point var2, Common::Point var3, Common::Point var4);
+	void stopSound(Common::Point pos);
 	void toggleOnOff();
 	void update();
 	void remove();
 
 private:
-	LilliputEngine *_vm;
-
 	int _fileNumb;
 	byte **_unpackedFiles;
 	uint16 *_unpackedSizes;

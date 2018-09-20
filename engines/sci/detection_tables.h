@@ -1077,7 +1077,6 @@ static const struct ADGameDescription SciGameDescriptions[] = {
 		AD_LISTEND},
 		Common::EN_ANY, Common::kPlatformMacintosh, 0, GUIO5(GUIO_NOSPEECH, GAMEOPTION_EGA_UNDITHER, GAMEOPTION_PREFER_DIGITAL_SFX, GAMEOPTION_ORIGINAL_SAVELOAD, GAMEOPTION_FB01_MIDI)	},
 
-#if 0 // TODO: unknown if these files are corrupt
 	// Hoyle 3 - English Amiga (from www.back2roots.org)
 	// Executable scanning reports "1.005.000"
 	// SCI interpreter version 1.000.510
@@ -1087,7 +1086,6 @@ static const struct ADGameDescription SciGameDescriptions[] = {
 		{"resource.001", 0, "143df8aef214a2db34c2d48190742012", 632273},
 		AD_LISTEND},
 		Common::EN_ANY, Common::kPlatformAmiga, 0, GUIO4(GUIO_NOSPEECH, GAMEOPTION_PREFER_DIGITAL_SFX, GAMEOPTION_ORIGINAL_SAVELOAD, GAMEOPTION_FB01_MIDI)	},
-#endif
 
 	// Hoyle 3 - English DOS Non-Interactive Demo
 	// Executable scanning reports "x.yyy.zzz"
@@ -1836,10 +1834,11 @@ static const struct ADGameDescription SciGameDescriptions[] = {
                             GUIO_LINKMUSICTOSFX, \
                             GUIO_LINKSPEECHTOSFX, \
                             GUIO_NOASPECT)
-#define GUIO_KQ7      GUIO4(GUIO_NOASPECT, \
+#define GUIO_KQ7      GUIO5(GUIO_NOASPECT, \
                             GUIO_LINKMUSICTOSFX, \
                             GUIO_LINKSPEECHTOSFX, \
-                            GAMEOPTION_HQ_VIDEO)
+                            GAMEOPTION_HQ_VIDEO, \
+                            GAMEOPTION_UPSCALE_VIDEOS)
 
 	// King's Quest 7 - English Windows (from the King's Quest Collection)
 	// Executable scanning reports "2.100.002", VERSION file reports "1.4"
@@ -2730,9 +2729,10 @@ static const struct ADGameDescription SciGameDescriptions[] = {
 
 #undef GUIO_LSL6HIRES
 
-#define GUIO_LSL7_DEMO GUIO3(GUIO_NOASPECT, \
+#define GUIO_LSL7_DEMO GUIO4(GUIO_NOASPECT, \
                              GUIO_NOMIDI, \
-                             GUIO_NOLAUNCHLOAD)
+                             GUIO_NOLAUNCHLOAD, \
+                             GAMEOPTION_LARRYSCALE)
 #define GUIO_LSL7      GUIO6(GUIO_NOASPECT, \
                              GUIO_NOMIDI, \
                              GAMEOPTION_ENABLE_BLACK_LINED_VIDEO, \

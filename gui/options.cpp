@@ -80,7 +80,8 @@ enum {
 	kChooseThemeCmd			= 'chtf',
 	kUpdatesCheckCmd		= 'updc',
 	kKbdMouseSpeedChanged	= 'kmsc',
-	kJoystickDeadzoneChanged= 'jodc'
+	kJoystickDeadzoneChanged= 'jodc',
+	kGraphicsTabContainerReflowCmd = 'gtcr'
 };
 
 enum {
@@ -118,7 +119,7 @@ enum {
 	kApplyCmd = 'appl'
 };
 
-static const char *savePeriodLabels[] = { _s("Never"), _s("every 5 mins"), _s("every 10 mins"), _s("every 15 mins"), _s("every 30 mins"), 0 };
+static const char *savePeriodLabels[] = { _s("Never"), _s("Every 5 mins"), _s("Every 10 mins"), _s("Every 15 mins"), _s("Every 30 mins"), 0 };
 static const int savePeriodValues[] = { 0, 5 * 60, 10 * 60, 15 * 60, 30 * 60, -1 };
 // The keyboard mouse speed values range from 0 to 7 and correspond to speeds shown in the label
 // "10" (value 3) is the default speed corresponding to the speed before introduction of this control
@@ -154,6 +155,8 @@ void OptionsDialog::init() {
 	_gfxPopUpDesc = 0;
 	_renderModePopUp = 0;
 	_renderModePopUpDesc = 0;
+	_stretchPopUp = 0;
+	_stretchPopUpDesc = 0;
 	_fullscreenCheckbox = 0;
 	_filteringCheckbox = 0;
 	_aspectCheckbox = 0;
@@ -283,6 +286,25 @@ void OptionsDialog::build() {
 					sel = p->id;
 			}
 			_renderModePopUp->setSelectedTag(sel);
+		}
+
+		_stretchPopUp->setSelected(0);
+
+		if (g_system->hasFeature(OSystem::kFeatureStretchMode)) {
+			if (ConfMan.hasKey("stretch_mode", _domain)) {
+				const OSystem::GraphicsMode *sm = g_system->getSupportedStretchModes();
+				Common::String stretchMode(ConfMan.get("stretch_mode", _domain));
+				int stretchCount = 1;
+				while (sm->name) {
+					stretchCount++;
+					if (scumm_stricmp(sm->name, stretchMode.c_str()) == 0)
+						_stretchPopUp->setSelected(stretchCount);
+					sm++;
+				}
+			}
+		} else {
+			_stretchPopUpDesc->setVisible(false);
+			_stretchPopUp->setVisible(false);
 		}
 
 #ifdef GUI_ONLY_FULLSCREEN
@@ -470,6 +492,23 @@ void OptionsDialog::apply() {
 
 			if ((int32)_renderModePopUp->getSelectedTag() >= 0)
 				ConfMan.set("render_mode", Common::getRenderModeCode((Common::RenderMode)_renderModePopUp->getSelectedTag()), _domain);
+
+			isSet = false;
+			if ((int32)_stretchPopUp->getSelectedTag() >= 0) {
+				const OSystem::GraphicsMode *sm = g_system->getSupportedStretchModes();
+				while (sm->name) {
+					if (sm->id == (int)_stretchPopUp->getSelectedTag()) {
+						if (ConfMan.get("stretch_mode", _domain) != sm->name)
+							graphicsModeChanged = true;
+						ConfMan.set("stretch_mode", sm->name, _domain);
+						isSet = true;
+						break;
+					}
+					sm++;
+				}
+			}
+			if (!isSet)
+				ConfMan.removeKey("stretch_mode", _domain);
 		} else {
 			ConfMan.removeKey("fullscreen", _domain);
 			ConfMan.removeKey("filtering", _domain);
@@ -484,6 +523,8 @@ void OptionsDialog::apply() {
 		g_system->beginGFXTransaction();
 		g_system->setGraphicsMode(ConfMan.get("gfx_mode", _domain).c_str());
 
+		if (ConfMan.hasKey("stretch_mode"))
+			g_system->setStretchMode(ConfMan.get("stretch_mode", _domain).c_str());
 		if (ConfMan.hasKey("aspect_ratio"))
 			g_system->setFeatureState(OSystem::kFeatureAspectRatioCorrection, ConfMan.getBool("aspect_ratio", _domain));
 		if (ConfMan.hasKey("fullscreen"))
@@ -519,7 +560,20 @@ void OptionsDialog::apply() {
 					gm++;
 				}
 				message += "\n";
-				message += _("the video mode could not be changed.");
+				message += _("the video mode could not be changed");
+			}
+
+			if (gfxError & OSystem::kTransactionStretchModeSwitchFailed) {
+				const OSystem::GraphicsMode *sm = g_system->getSupportedStretchModes();
+				while (sm->name) {
+					if (sm->id == g_system->getStretchMode()) {
+						ConfMan.set("stretch_mode", sm->name, _domain);
+						break;
+					}
+					sm++;
+				}
+				message += "\n";
+				message += _("the stretch mode could not be changed");
 			}
 
 			if (gfxError & OSystem::kTransactionAspectRatioFailed) {
@@ -783,6 +837,9 @@ void OptionsDialog::handleCommand(CommandSender *sender, uint32 cmd, uint32 data
 		_joystickDeadzoneLabel->setValue(_joystickDeadzoneSlider->getValue());
 		_joystickDeadzoneLabel->markAsDirty();
 		break;
+	case kGraphicsTabContainerReflowCmd:
+		setupGraphicsTab();
+		break;
 	case kApplyCmd:
 		apply();
 		break;
@@ -805,6 +862,8 @@ void OptionsDialog::setGraphicSettingsState(bool enabled) {
 	_gfxPopUp->setEnabled(enabled);
 	_renderModePopUpDesc->setEnabled(enabled);
 	_renderModePopUp->setEnabled(enabled);
+	_stretchPopUpDesc->setEnabled(enabled);
+	_stretchPopUp->setEnabled(enabled);
 	_filteringCheckbox->setEnabled(enabled);
 #ifndef GUI_ENABLE_KEYSDIALOG
 #ifndef GUI_ONLY_FULLSCREEN
@@ -1014,6 +1073,18 @@ void OptionsDialog::addGraphicControls(GuiObject *boss, const Common::String &pr
 			_renderModePopUp->appendEntry(_c(rm->description, context), rm->id);
 	}
 
+	// The Stretch mode popup
+	const OSystem::GraphicsMode *sm = g_system->getSupportedStretchModes();
+	_stretchPopUpDesc = new StaticTextWidget(boss, prefix + "grStretchModePopupDesc", _("Stretch mode:"));
+	_stretchPopUp = new PopUpWidget(boss, prefix + "grStretchModePopup");
+
+	_stretchPopUp->appendEntry(_("<default>"));
+	_stretchPopUp->appendEntry("");
+	while (sm->name) {
+		_stretchPopUp->appendEntry(_c(sm->description, context), sm->id);
+		sm++;
+	}
+
 	// Fullscreen checkbox
 	_fullscreenCheckbox = new CheckboxWidget(boss, prefix + "grFullscreenCheckbox", _("Fullscreen mode"));
 
@@ -1029,9 +1100,9 @@ void OptionsDialog::addGraphicControls(GuiObject *boss, const Common::String &pr
 void OptionsDialog::addAudioControls(GuiObject *boss, const Common::String &prefix) {
 	// The MIDI mode popup & a label
 	if (g_system->getOverlayWidth() > 320)
-		_midiPopUpDesc = new StaticTextWidget(boss, prefix + "auMidiPopupDesc", _domain == Common::ConfigManager::kApplicationDomain ? _("Preferred Device:") : _("Music Device:"), _domain == Common::ConfigManager::kApplicationDomain ? _("Specifies preferred sound device or sound card emulator") : _("Specifies output sound device or sound card emulator"));
+		_midiPopUpDesc = new StaticTextWidget(boss, prefix + "auMidiPopupDesc", _domain == Common::ConfigManager::kApplicationDomain ? _("Preferred device:") : _("Music device:"), _domain == Common::ConfigManager::kApplicationDomain ? _("Specifies preferred sound device or sound card emulator") : _("Specifies output sound device or sound card emulator"));
 	else
-		_midiPopUpDesc = new StaticTextWidget(boss, prefix + "auMidiPopupDesc", _domain == Common::ConfigManager::kApplicationDomain ? _c("Preferred Dev.:", "lowres") : _c("Music Device:", "lowres"), _domain == Common::ConfigManager::kApplicationDomain ? _("Specifies preferred sound device or sound card emulator") : _("Specifies output sound device or sound card emulator"));
+		_midiPopUpDesc = new StaticTextWidget(boss, prefix + "auMidiPopupDesc", _domain == Common::ConfigManager::kApplicationDomain ? _c("Preferred dev.:", "lowres") : _c("Music device:", "lowres"), _domain == Common::ConfigManager::kApplicationDomain ? _("Specifies preferred sound device or sound card emulator") : _("Specifies output sound device or sound card emulator"));
 	_midiPopUp = new PopUpWidget(boss, prefix + "auMidiPopup", _("Specifies output sound device or sound card emulator"));
 
 	// Populate it
@@ -1072,7 +1143,7 @@ void OptionsDialog::addAudioControls(GuiObject *boss, const Common::String &pref
 }
 
 void OptionsDialog::addMIDIControls(GuiObject *boss, const Common::String &prefix) {
-	_gmDevicePopUpDesc = new StaticTextWidget(boss, prefix + "auPrefGmPopupDesc", _("GM Device:"), _("Specifies default sound device for General MIDI output"));
+	_gmDevicePopUpDesc = new StaticTextWidget(boss, prefix + "auPrefGmPopupDesc", _("GM device:"), _("Specifies default sound device for General MIDI output"));
 	_gmDevicePopUp = new PopUpWidget(boss, prefix + "auPrefGmPopup");
 
 	// Populate
@@ -1137,7 +1208,7 @@ void OptionsDialog::addMT32Controls(GuiObject *boss, const Common::String &prefi
 		_mt32Checkbox = new CheckboxWidget(boss, prefix + "mcMt32Checkbox", _c("True Roland MT-32 (no GM emulation)", "lowres"), _("Check if you want to use your real hardware Roland-compatible sound device connected to your computer"));
 
 	// GS Extensions setting
-	_enableGSCheckbox = new CheckboxWidget(boss, prefix + "mcGSCheckbox", _("Roland GS Device (enable MT-32 mappings)"), _("Check if you want to enable patch mappings to emulate an MT-32 on a Roland GS device"));
+	_enableGSCheckbox = new CheckboxWidget(boss, prefix + "mcGSCheckbox", _("Roland GS device (enable MT-32 mappings)"), _("Check if you want to enable patch mappings to emulate an MT-32 on a Roland GS device"));
 
 	const PluginList p = MusicMan.getPlugins();
 	// Make sure the null device is the first one in the list to avoid undesired
@@ -1173,7 +1244,7 @@ void OptionsDialog::addMT32Controls(GuiObject *boss, const Common::String &prefi
 void OptionsDialog::addSubtitleControls(GuiObject *boss, const Common::String &prefix, int maxSliderVal) {
 
 	if (g_system->getOverlayWidth() > 320) {
-		_subToggleDesc = new StaticTextWidget(boss, prefix + "subToggleDesc", _("Text and Speech:"));
+		_subToggleDesc = new StaticTextWidget(boss, prefix + "subToggleDesc", _("Text and speech:"));
 
 		_subToggleGroup = new RadiobuttonGroup(boss, kSubtitleToggle);
 
@@ -1183,7 +1254,7 @@ void OptionsDialog::addSubtitleControls(GuiObject *boss, const Common::String &p
 
 		_subSpeedDesc = new StaticTextWidget(boss, prefix + "subSubtitleSpeedDesc", _("Subtitle speed:"));
 	} else {
-		_subToggleDesc = new StaticTextWidget(boss, prefix + "subToggleDesc", _c("Text and Speech:", "lowres"));
+		_subToggleDesc = new StaticTextWidget(boss, prefix + "subToggleDesc", _c("Text and speech:", "lowres"));
 
 		_subToggleGroup = new RadiobuttonGroup(boss, kSubtitleToggle);
 
@@ -1216,7 +1287,7 @@ void OptionsDialog::addVolumeControls(GuiObject *boss, const Common::String &pre
 	_musicVolumeSlider->setMaxValue(Audio::Mixer::kMaxMixerVolume);
 	_musicVolumeLabel->setFlags(WIDGET_CLEARBG);
 
-	_muteCheckbox = new CheckboxWidget(boss, prefix + "vcMuteCheckbox", _("Mute All"), 0, kMuteAllChanged);
+	_muteCheckbox = new CheckboxWidget(boss, prefix + "vcMuteCheckbox", _("Mute all"), 0, kMuteAllChanged);
 
 	if (g_system->getOverlayWidth() > 320)
 		_sfxVolumeDesc = new StaticTextWidget(boss, prefix + "vcSfxText", _("SFX volume:"), _("Special sound effects volume"));
@@ -1343,6 +1414,29 @@ void OptionsDialog::reflowLayout() {
 		_tabWidget->setTabTitle(_graphicsTabId, g_system->getOverlayWidth() > 320 ? _("Graphics") : _("GFX"));
 
 	Dialog::reflowLayout();
+	setupGraphicsTab();
+}
+
+void OptionsDialog::setupGraphicsTab() {
+	if (!_fullscreenCheckbox)
+		return;
+	_gfxPopUpDesc->setVisible(true);
+	_gfxPopUp->setVisible(true);
+	if (g_system->hasFeature(OSystem::kFeatureStretchMode)) {
+		_stretchPopUpDesc->setVisible(true);
+		_stretchPopUp->setVisible(true);
+	} else {
+		_stretchPopUpDesc->setVisible(false);
+		_stretchPopUp->setVisible(false);
+	}
+	_fullscreenCheckbox->setVisible(true);
+	if (g_system->hasFeature(OSystem::kFeatureFilteringMode))
+		_filteringCheckbox->setVisible(true);
+	else
+		_filteringCheckbox->setVisible(false);
+	_aspectCheckbox->setVisible(true);
+	_renderModePopUpDesc->setVisible(true);
+	_renderModePopUp->setVisible(true);
 }
 
 #pragma mark -
@@ -1426,7 +1520,9 @@ void GlobalOptionsDialog::build() {
 	// 1) The graphics tab
 	//
 	_graphicsTabId = tab->addTab(g_system->getOverlayWidth() > 320 ? _("Graphics") : _("GFX"));
-	addGraphicControls(tab, "GlobalOptions_Graphics.");
+	ScrollContainerWidget *graphicsContainer = new ScrollContainerWidget(tab, "GlobalOptions_Graphics.Container", kGraphicsTabContainerReflowCmd);
+	graphicsContainer->setTarget(this);
+	addGraphicControls(graphicsContainer, "GlobalOptions_Graphics_Container.");
 
 	//
 	// The shader tab (currently visible only for Vita platform), visibility checking by features
@@ -1538,7 +1634,7 @@ void GlobalOptionsDialog::build() {
 	_curTheme = new StaticTextWidget(tab, "GlobalOptions_Misc.CurTheme", g_gui.theme()->getThemeName());
 
 
-	_rendererPopUpDesc = new StaticTextWidget(tab, "GlobalOptions_Misc.RendererPopupDesc", _("GUI Renderer:"));
+	_rendererPopUpDesc = new StaticTextWidget(tab, "GlobalOptions_Misc.RendererPopupDesc", _("GUI renderer:"));
 	_rendererPopUp = new PopUpWidget(tab, "GlobalOptions_Misc.RendererPopup");
 
 	if (g_system->getOverlayWidth() > 320) {
@@ -1567,7 +1663,7 @@ void GlobalOptionsDialog::build() {
 
 
 #ifdef USE_TRANSLATION
-	_guiLanguagePopUpDesc = new StaticTextWidget(tab, "GlobalOptions_Misc.GuiLanguagePopupDesc", _("GUI Language:"), _("Language of ScummVM GUI"));
+	_guiLanguagePopUpDesc = new StaticTextWidget(tab, "GlobalOptions_Misc.GuiLanguagePopupDesc", _("GUI language:"), _("Language of ScummVM GUI"));
 	_guiLanguagePopUp = new PopUpWidget(tab, "GlobalOptions_Misc.GuiLanguagePopup");
 #ifdef USE_DETECTLANG
 	_guiLanguagePopUp->appendEntry(_("<default>"), Common::kTranslationAutodetectId);

@@ -31,6 +31,7 @@
 #include "mohawk/myst_stacks/myst.h"
 
 #include "common/events.h"
+#include "common/math.h"
 #include "common/system.h"
 #include "common/textconsole.h"
 
@@ -2024,6 +2025,10 @@ void Myst::o_boilerIncreasePressureStop(uint16 var, const ArgumentsArray &args) 
 	_boilerPressureIncreasing = false;
 	_state.treeLastMoveTime = _vm->getTotalPlayTime();
 
+	while (_vm->_sound->isEffectPlaying()) {
+		_vm->doFrame();
+	}
+
 	if (_state.cabinPilotLightLit == 1) {
 		if (_state.cabinValvePosition > 0)
 			_vm->_sound->playBackground(8098, 49152);
@@ -2094,6 +2099,10 @@ void Myst::o_boilerDecreasePressureStop(uint16 var, const ArgumentsArray &args) 
 	_treeStopped = false;
 	_boilerPressureDecreasing = false;
 	_state.treeLastMoveTime = _vm->getTotalPlayTime();
+
+	while (_vm->_sound->isEffectPlaying()) {
+		_vm->doFrame();
+	}
 
 	if (_state.cabinPilotLightLit == 1) {
 		if (_state.cabinValvePosition > 0)
@@ -3251,9 +3260,9 @@ Common::Point Myst::towerRotationMapComputeCoords(uint16 angle) {
 	Common::Point end;
 
 	// Polar to rect coords
-	double radians = angle * M_PI / 180.0;
-	end.x = (int16)(_towerRotationCenter.x + cos(radians) * 310.0);
-	end.y = (int16)(_towerRotationCenter.y + sin(radians) * 310.0);
+	float radians = Common::deg2rad<uint16,float>(angle);
+	end.x = (int16)(_towerRotationCenter.x + cos(radians) * 310.0f);
+	end.y = (int16)(_towerRotationCenter.y + sin(radians) * 310.0f);
 
 	return end;
 }

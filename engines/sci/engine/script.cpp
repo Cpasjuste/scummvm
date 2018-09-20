@@ -99,8 +99,7 @@ void Script::load(int script_nr, ResourceManager *resMan, ScriptPatcher *scriptP
 		// However, since we address the heap with a 16-bit pointer, the
 		// combined size of the stack and the heap must be 64KB. So far this has
 		// worked for SCI11, SCI2 and SCI21 games. SCI3 games use a different
-		// script format, and theoretically they can exceed the 64KB boundary
-		// using relocation.
+		// script format, and they can exceed the 64KB boundary using relocation.
 		Resource *heap = resMan->findResource(ResourceId(kResourceTypeHeap, script_nr), false);
 		bufSize += heap->size();
 
@@ -1061,11 +1060,7 @@ void Script::initializeClasses(SegManager *segMan) {
 				error("Invalid species %d(0x%x) unknown max %d(0x%x) while instantiating script %d",
 						  species, species, segMan->classTableSize(), segMan->classTableSize(), _nr);
 
-			SegmentId segmentId = segMan->getScriptSegment(_nr);
-			reg_t classOffset;
-			classOffset.setSegment(segmentId);
-			classOffset.setOffset(classpos);
-			segMan->setClassOffset(species, classOffset);
+			segMan->setClassOffset(species, make_reg32(segMan->getScriptSegment(_nr), classpos));
 		}
 
 		seeker += seeker.getUint16SEAt(2) * mult;
@@ -1196,14 +1191,7 @@ void Script::initializeObjectsSci3(SegManager *segMan, SegmentId segmentId) {
 	SciSpan<const byte> seeker = getSci3ObjectsPointer();
 
 	while (seeker.getUint16SEAt(0) == SCRIPT_OBJECT_MAGIC_NUMBER) {
-		// We call setSegment and setOffset directly here, instead of using
-		// make_reg, as in large scripts, seeker - _buf can be larger than
-		// a 16-bit integer
-		reg_t reg;
-		reg.setSegment(segmentId);
-		reg.setOffset(seeker - *_buf);
-
-		Object *obj = scriptObjInit(reg);
+		Object *obj = scriptObjInit(make_reg32(segmentId, seeker - *_buf));
 		obj->setSuperClassSelector(segMan->getClassAddress(obj->getSuperClassSelector().getOffset(), SCRIPT_GET_LOCK, 0));
 		seeker += seeker.getUint16SEAt(2);
 	}
